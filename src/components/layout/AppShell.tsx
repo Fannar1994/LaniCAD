@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { ChatPanel } from '@/components/chat/ChatPanel'
@@ -17,6 +18,7 @@ export function AppShell() {
         </main>
       </div>
       <ChatPanel />
+      <Toaster position="top-right" richColors />
     </div>
   )
 }

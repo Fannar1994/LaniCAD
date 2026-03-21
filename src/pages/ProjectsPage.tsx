@@ -106,6 +106,7 @@ export function ProjectsPage() {
                     <div className="flex items-center justify-end gap-2">
                       <Link
                         to={`/calculator/${p.type}`}
+                        state={{ project: { id: p.id, name: p.name, data: p.data, client: p.client } }}
                         className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-brand-dark"
                         title="Opna"
                       >

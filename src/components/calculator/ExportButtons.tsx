@@ -1,11 +1,39 @@
 interface Props {
   onExportPdf: () => void
   onExportExcel: () => void
+  onSave?: () => void
+  saving?: boolean
+  onSaveTemplate?: () => void
+  savingTemplate?: boolean
 }
 
-export function ExportButtons({ onExportPdf, onExportExcel }: Props) {
+export function ExportButtons({ onExportPdf, onExportExcel, onSave, saving, onSaveTemplate, savingTemplate }: Props) {
   return (
     <div className="flex flex-wrap gap-2">
+      {onSave && (
+        <button
+          onClick={onSave}
+          disabled={saving}
+          className="inline-flex items-center gap-2 rounded-md bg-brand-accent px-4 py-2 text-sm font-medium text-brand-dark hover:bg-brand-accent-hover transition disabled:opacity-50"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+          </svg>
+          {saving ? 'Vista...' : 'Vista verkefni'}
+        </button>
+      )}
+      {onSaveTemplate && (
+        <button
+          onClick={onSaveTemplate}
+          disabled={savingTemplate}
+          className="inline-flex items-center gap-2 rounded-md border border-brand-accent bg-white px-4 py-2 text-sm font-medium text-brand-dark hover:bg-brand-accent/10 transition disabled:opacity-50"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L12 12.75l-5.571-3m11.142 0 4.179 2.25L12 17.25l-9.75-5.25 4.179-2.25" />
+          </svg>
+          {savingTemplate ? 'Vista...' : 'Vista sniðmát'}
+        </button>
+      )}
       <button
         onClick={onExportPdf}
         className="inline-flex items-center gap-2 rounded-md bg-brand-dark px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition"

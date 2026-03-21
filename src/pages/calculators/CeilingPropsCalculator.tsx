@@ -1,11 +1,14 @@
 import { useState, useMemo, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
+import { toast } from 'sonner'
 import { LOFTASTODIR, MOTABITAR, AUKAHLUTIR, CLASS_INFO } from '@/data/ceiling-props'
 import { calcStandardRental } from '@/lib/calculations/rental'
 import { formatKr } from '@/lib/format'
 import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
-import type { ClientInfo } from '@/types'
+import { createProject, updateProject, createTemplate } from '@/lib/db'
+import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
@@ -17,15 +20,25 @@ interface LineItem {
 }
 
 export function CeilingPropsCalculator() {
-  const [rentalDays, setRentalDays] = useState(14)
-  const [selectedPropIdx, setSelectedPropIdx] = useState(3)
-  const [propQty, setPropQty] = useState(10)
-  const [selectedBeamIdx, setSelectedBeamIdx] = useState(0)
-  const [beamQty, setBeamQty] = useState(4)
-  const [accessoryQtys, setAccessoryQtys] = useState<number[]>(AUKAHLUTIR.map(() => 0))
-  const [client, setClient] = useState<ClientInfo>(emptyClient)
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  const location = useLocation()
+  const loadedProject = location.state?.project as { id: string; name: string; data: Record<string, unknown>; client: ClientInfo } | undefined
+  const loadedTemplate = location.state?.template as { id: string; name: string; config: Record<string, unknown> } | undefined
+  const initData = loadedProject?.data ?? loadedTemplate?.config ?? {}
+
+  const [rentalDays, setRentalDays] = useState(initData.rentalDays as number ?? 14)
+  const [selectedPropIdx, setSelectedPropIdx] = useState(initData.selectedPropIdx as number ?? 3)
+  const [propQty, setPropQty] = useState(initData.propQty as number ?? 10)
+  const [selectedBeamIdx, setSelectedBeamIdx] = useState(initData.selectedBeamIdx as number ?? 0)
+  const [beamQty, setBeamQty] = useState(initData.beamQty as number ?? 4)
+  const [accessoryQtys, setAccessoryQtys] = useState<number[]>(
+    (initData.accessoryQtys as number[] | undefined) ?? AUKAHLUTIR.map(() => 0)
+  )
+  const [client, setClient] = useState<ClientInfo>(loadedProject?.client ?? emptyClient)
+  const [startDate, setStartDate] = useState(initData.startDate as string ?? '')
+  const [endDate, setEndDate] = useState(initData.endDate as string ?? '')
+  const [saving, setSaving] = useState(false)
+  const [savingTemplate, setSavingTemplate] = useState(false)
+  const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
 
   const selectedProp = LOFTASTODIR[selectedPropIdx]
   const selectedBeam = MOTABITAR[selectedBeamIdx]
@@ -93,11 +106,58 @@ export function CeilingPropsCalculator() {
     totalValue: formatKr(totalRental),
   }), [client, startDate, endDate, rentalDays, selectedProp, propQty, selectedBeam, beamQty, lines, totalRental])
 
+  const handleSave = useCallback(async () => {
+    const name = client.name
+      ? `Loftastoðir — ${client.name}`
+      : `Loftastoðir — ${new Date().toLocaleDateString('is-IS')}`
+    const sharedLines: SharedLineItem[] = lines.map(l => ({
+      rentalNo: l.id,
+      description: l.desc,
+      quantity: l.qty,
+      rentalCost: l.rentalCost,
+    }))
+    const data: Record<string, unknown> = {
+      rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate,
+    }
+    try {
+      setSaving(true)
+      if (projectId) {
+        await updateProject(projectId, { name, client, data, line_items: sharedLines })
+        toast.success('Verkefni uppfært')
+      } else {
+        const created = await createProject({ name, type: 'ceiling', client, data, line_items: sharedLines })
+        setProjectId(created.id)
+        toast.success('Verkefni vistað')
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Villa við vistun')
+    } finally {
+      setSaving(false)
+    }
+  }, [client, lines, rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate, projectId])
+
+  const handleSaveTemplate = useCallback(async () => {
+    const name = prompt('Heiti sniðmáts:', 'Loftastoðir')
+    if (!name) return
+    const config: Record<string, unknown> = {
+      rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate,
+    }
+    try {
+      setSavingTemplate(true)
+      await createTemplate({ type: 'ceiling', name, config })
+      toast.success('Sniðmát vistað')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Villa við vistun sniðmáts')
+    } finally {
+      setSavingTemplate(false)
+    }
+  }, [rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate])
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Loftastoðir og mótabitar</h1>
-        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} />
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={handleSaveTemplate} savingTemplate={savingTemplate} />
       </div>
 
       {/* Client info + Date range */}

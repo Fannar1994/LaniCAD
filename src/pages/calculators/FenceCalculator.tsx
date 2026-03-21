@@ -1,4 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
+import { toast } from 'sonner'
 import { FENCE_PRODUCTS, FENCE_TYPES, MIN_RENTAL_DAYS, type FenceProductData } from '@/data/fence'
 import { calcFenceRental } from '@/lib/calculations/rental'
 import { calcFenceGeometry } from '@/lib/calculations/geometry'
@@ -6,7 +8,8 @@ import { formatKr } from '@/lib/format'
 import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
-import type { ClientInfo } from '@/types'
+import { createProject, updateProject, createTemplate } from '@/lib/db'
+import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
@@ -17,16 +20,24 @@ interface LineItem {
 }
 
 export function FenceCalculator() {
-  const [selectedType, setSelectedType] = useState(FENCE_TYPES[0].key)
-  const [totalLength, setTotalLength] = useState(100)
-  const [rentalDays, setRentalDays] = useState(30)
-  const [includeGate, setIncludeGate] = useState(false)
-  const [includeWheels, setIncludeWheels] = useState(false)
-  const [includeLock, setIncludeLock] = useState(false)
-  const [stoneType, setStoneType] = useState<'concrete' | 'pvc'>('concrete')
-  const [client, setClient] = useState<ClientInfo>(emptyClient)
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  const location = useLocation()
+  const loadedProject = location.state?.project as { id: string; name: string; data: Record<string, unknown>; client: ClientInfo } | undefined
+  const loadedTemplate = location.state?.template as { id: string; name: string; config: Record<string, unknown> } | undefined
+  const initData = loadedProject?.data ?? loadedTemplate?.config ?? {}
+
+  const [selectedType, setSelectedType] = useState(initData.selectedType as string ?? FENCE_TYPES[0].key)
+  const [totalLength, setTotalLength] = useState(initData.totalLength as number ?? 100)
+  const [rentalDays, setRentalDays] = useState(initData.rentalDays as number ?? 30)
+  const [includeGate, setIncludeGate] = useState(initData.includeGate as boolean ?? false)
+  const [includeWheels, setIncludeWheels] = useState(initData.includeWheels as boolean ?? false)
+  const [includeLock, setIncludeLock] = useState(initData.includeLock as boolean ?? false)
+  const [stoneType, setStoneType] = useState<'concrete' | 'pvc'>(initData.stoneType as 'concrete' | 'pvc' ?? 'concrete')
+  const [client, setClient] = useState<ClientInfo>(loadedProject?.client ?? emptyClient)
+  const [startDate, setStartDate] = useState(initData.startDate as string ?? '')
+  const [endDate, setEndDate] = useState(initData.endDate as string ?? '')
+  const [saving, setSaving] = useState(false)
+  const [savingTemplate, setSavingTemplate] = useState(false)
+  const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
 
   const fenceType = FENCE_TYPES.find(t => t.key === selectedType)!
   const fenceProduct = FENCE_PRODUCTS[fenceType.productKey]
@@ -124,11 +135,58 @@ export function FenceCalculator() {
     }
   }, [selectedType, client, startDate, endDate, effectiveDays, totalLength, geometry, lines, totalRental])
 
+  const handleSave = useCallback(async () => {
+    const name = client.name
+      ? `Girðingar — ${client.name}`
+      : `Girðingar — ${new Date().toLocaleDateString('is-IS')}`
+    const sharedLines: SharedLineItem[] = lines.map(l => ({
+      rentalNo: l.product.rentalNo,
+      description: l.product.description,
+      quantity: l.qty,
+      rentalCost: l.rentalCost,
+    }))
+    const data: Record<string, unknown> = {
+      selectedType, totalLength, rentalDays: effectiveDays, includeGate, includeWheels, includeLock, stoneType, startDate, endDate,
+    }
+    try {
+      setSaving(true)
+      if (projectId) {
+        await updateProject(projectId, { name, client, data, line_items: sharedLines })
+        toast.success('Verkefni uppfært')
+      } else {
+        const created = await createProject({ name, type: 'fence', client, data, line_items: sharedLines })
+        setProjectId(created.id)
+        toast.success('Verkefni vistað')
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Villa við vistun')
+    } finally {
+      setSaving(false)
+    }
+  }, [client, lines, selectedType, totalLength, effectiveDays, includeGate, includeWheels, includeLock, stoneType, startDate, endDate, projectId])
+
+  const handleSaveTemplate = useCallback(async () => {
+    const name = prompt('Heiti sniðmáts:', `Girðingar — ${selectedType}`)
+    if (!name) return
+    const config: Record<string, unknown> = {
+      selectedType, totalLength, rentalDays: effectiveDays, includeGate, includeWheels, includeLock, stoneType, startDate, endDate,
+    }
+    try {
+      setSavingTemplate(true)
+      await createTemplate({ type: 'fence', name, config })
+      toast.success('Sniðmát vistað')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Villa við vistun sniðmáts')
+    } finally {
+      setSavingTemplate(false)
+    }
+  }, [selectedType, totalLength, effectiveDays, includeGate, includeWheels, includeLock, stoneType, startDate, endDate])
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Girðingareiknivél</h1>
-        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} />
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={handleSaveTemplate} savingTemplate={savingTemplate} />
       </div>
 
       {/* Client info + Date range */}

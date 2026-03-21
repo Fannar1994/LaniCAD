@@ -10,6 +10,7 @@ import {
   ArrowUpDown,
   PenTool,
   FileText,
+  Layers,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -21,6 +22,7 @@ interface SidebarProps {
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Yfirlit' },
   { to: '/projects', icon: FolderOpen, label: 'Verkefni' },
+  { to: '/templates', icon: Layers, label: 'Sniðmát' },
 ]
 
 const calculatorItems = [

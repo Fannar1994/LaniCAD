@@ -2,35 +2,30 @@
 
 > Checked items completed. Unchecked items are pending. Updated after every task.
 
-## Priority 1 — Infrastructure (DONE)
-- [x] Rewrite CLAUDE.md for LániCAD identity
-- [x] Create .claude/skills/ (6 skill files)
-- [x] Create SESSION.md, TODO.md, AI-MISTAKES.md
-- [x] Create API.md, DEPLOYMENT.md
-- [x] Fix all "Leigukerfi" references → "LániCAD"
+## Infrastructure (DONE)
+- [x] Project scaffolding (Vite + React + TypeScript + Tailwind)
+- [x] .claude/ docs (CLAUDE.md, skills/, SESSION.md, TODO.md, API.md, DEPLOYMENT.md)
+- [x] PostgreSQL + Express API backend (server/)
+- [x] GitHub Actions CI/CD (deploy.yml)
+- [x] Auth system (JWT + localStorage AuthProvider)
 
-## Priority 2 — Missing Components
-- [ ] Create `src/pages/calculators/CeilingPropsCalculator.tsx`
-- [ ] Create `src/pages/calculators/FormworkCalculator.tsx`
-- [ ] Create `src/data/formwork.ts` (formwork product data)
+## Core Features (DONE)
+- [x] All 5 calculators: Fence, Scaffolding, Formwork, Rolling, Ceiling
+- [x] PDF export (jsPDF) for all calculators
+- [x] Excel export (xlsx) for all calculators
+- [x] Project save/load from all 5 calculators (create + update)
+- [x] Templates management (save/load/delete, TemplatesPage)
+- [x] Dashboard with stats, quick links, recent projects
+- [x] Settings page (General, Products, Users tabs)
+- [x] AI Chat panel (Claude Sonnet 4 via Express)
+- [x] 2D Drawing viewer (Maker.js → SVG)
+- [x] 3D Schematics viewer (Three.js + React Three Fiber)
+- [x] Toast notifications (sonner)
+- [x] 108 calculation tests passing (vitest)
 
-## Priority 3 — Build & Test
-- [ ] Run `npm install`
-- [ ] Run `npm run build` — fix all errors
-- [ ] Test `npm run dev` — verify all routes work
-- [ ] Verify all 5 calculator pages render
-
-## Priority 4 — GitHub
-- [x] Create GitHub repo: Fannar1994/LaniCAD
-- [ ] Initial commit and push
-- [ ] Set up GitHub Actions for GitHub Pages deploy
-- [ ] Create favicon
-
-## Priority 5 — Features (Future)
-- [ ] 2D viewer component (Maker.js → SVG)
-- [ ] 3D viewer component (Three.js + R3F)
-- [ ] PDF export for each calculator
-- [ ] Excel export for each calculator
-- [ ] Project save/load (PostgreSQL via Express API)
+## Remaining / Future
+- [ ] PDF import/OCR (PDF.js + Tesseract.js)
 - [ ] DXF/DWG import
-- [ ] Product catalog management in Settings
+- [ ] Offline mode / service worker
+- [ ] Product catalog sync with PostgreSQL
+- [ ] Multi-language support (currently Icelandic only)

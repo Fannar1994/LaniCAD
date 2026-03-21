@@ -1,4 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
+import { toast } from 'sonner'
 import { SCAFFOLD_ITEMS, BOARD_LENGTH_M } from '@/data/scaffolding'
 import { calculateLevelsFromHeight, calculateFacadeMaterials } from '@/lib/calculations/geometry'
 import { calcScaffoldingRental } from '@/lib/calculations/rental'
@@ -6,7 +8,8 @@ import { formatKr } from '@/lib/format'
 import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
-import type { ClientInfo } from '@/types'
+import { createProject, updateProject, createTemplate } from '@/lib/db'
+import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
@@ -19,13 +22,21 @@ interface Facade {
 }
 
 export function ScaffoldCalculator() {
-  const [rentalDays, setRentalDays] = useState(30)
-  const [facades, setFacades] = useState<Facade[]>([
-    { id: 1, name: 'Hlið 1', length: 20, height: 8, endcaps: 2 }
-  ])
-  const [client, setClient] = useState<ClientInfo>(emptyClient)
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  const location = useLocation()
+  const loadedProject = location.state?.project as { id: string; name: string; data: Record<string, unknown>; client: ClientInfo } | undefined
+  const loadedTemplate = location.state?.template as { id: string; name: string; config: Record<string, unknown> } | undefined
+  const initData = loadedProject?.data ?? loadedTemplate?.config ?? {}
+
+  const [rentalDays, setRentalDays] = useState(initData.rentalDays as number ?? 30)
+  const [facades, setFacades] = useState<Facade[]>(
+    (initData.facades as Facade[] | undefined) ?? [{ id: 1, name: 'Hlið 1', length: 20, height: 8, endcaps: 2 }]
+  )
+  const [client, setClient] = useState<ClientInfo>(loadedProject?.client ?? emptyClient)
+  const [startDate, setStartDate] = useState(initData.startDate as string ?? '')
+  const [endDate, setEndDate] = useState(initData.endDate as string ?? '')
+  const [saving, setSaving] = useState(false)
+  const [savingTemplate, setSavingTemplate] = useState(false)
+  const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
 
   const addFacade = () => {
     const id = Math.max(0, ...facades.map(f => f.id)) + 1
@@ -86,11 +97,56 @@ export function ScaffoldCalculator() {
     totalValue: formatKr(totalRental),
   }), [client, startDate, endDate, rentalDays, facades.length, totalWeight, lineItems, totalRental])
 
+  const handleSave = useCallback(async () => {
+    const name = client.name
+      ? `Vinnupallar — ${client.name}`
+      : `Vinnupallar — ${new Date().toLocaleDateString('is-IS')}`
+    const sharedLines: SharedLineItem[] = lineItems.map(l => ({
+      rentalNo: l.itemNo,
+      description: l.name,
+      quantity: l.qty,
+      dailyRate: l.dailyRate,
+      rentalCost: l.rentalCost,
+      weight: l.weight,
+    }))
+    const data: Record<string, unknown> = { rentalDays, facades, startDate, endDate }
+    try {
+      setSaving(true)
+      if (projectId) {
+        await updateProject(projectId, { name, client, data, line_items: sharedLines })
+        toast.success('Verkefni uppfært')
+      } else {
+        const created = await createProject({ name, type: 'scaffolding', client, data, line_items: sharedLines })
+        setProjectId(created.id)
+        toast.success('Verkefni vistað')
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Villa við vistun')
+    } finally {
+      setSaving(false)
+    }
+  }, [client, lineItems, rentalDays, facades, startDate, endDate, projectId])
+
+  const handleSaveTemplate = useCallback(async () => {
+    const name = prompt('Heiti sniðmáts:', 'Vinnupallar')
+    if (!name) return
+    const config: Record<string, unknown> = { rentalDays, facades, startDate, endDate }
+    try {
+      setSavingTemplate(true)
+      await createTemplate({ type: 'scaffolding', name, config })
+      toast.success('Sniðmát vistað')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Villa við vistun sniðmáts')
+    } finally {
+      setSavingTemplate(false)
+    }
+  }, [rentalDays, facades, startDate, endDate])
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Vinnupalla&shy;reiknivél</h1>
-        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} />
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={handleSaveTemplate} savingTemplate={savingTemplate} />
       </div>
 
       {/* Client info + Date range */}

@@ -1,4 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
+import { toast } from 'sonner'
 import {
   NARROW_PRICING, WIDE_PRICING, QUICKLY_PRICING, SUPPORT_LEGS_PRICING,
   NARROW_COMPONENTS, ROLLING_TYPES, HEIGHT_OPTIONS
@@ -8,18 +10,27 @@ import { formatKr } from '@/lib/format'
 import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
-import type { ClientInfo } from '@/types'
+import { createProject, updateProject, createTemplate } from '@/lib/db'
+import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
 export function RollingScaffoldCalculator() {
-  const [scaffoldType, setScaffoldType] = useState<'narrow' | 'wide' | 'quickly'>('narrow')
-  const [height, setHeight] = useState('4.5')
-  const [rentalDays, setRentalDays] = useState(7)
-  const [includeSupportLegs, setIncludeSupportLegs] = useState(false)
-  const [client, setClient] = useState<ClientInfo>(emptyClient)
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  const location = useLocation()
+  const loadedProject = location.state?.project as { id: string; name: string; data: Record<string, unknown>; client: ClientInfo } | undefined
+  const loadedTemplate = location.state?.template as { id: string; name: string; config: Record<string, unknown> } | undefined
+  const initData = loadedProject?.data ?? loadedTemplate?.config ?? {}
+
+  const [scaffoldType, setScaffoldType] = useState<'narrow' | 'wide' | 'quickly'>(initData.scaffoldType as 'narrow' | 'wide' | 'quickly' ?? 'narrow')
+  const [height, setHeight] = useState(initData.height as string ?? '4.5')
+  const [rentalDays, setRentalDays] = useState(initData.rentalDays as number ?? 7)
+  const [includeSupportLegs, setIncludeSupportLegs] = useState(initData.includeSupportLegs as boolean ?? false)
+  const [client, setClient] = useState<ClientInfo>(loadedProject?.client ?? emptyClient)
+  const [startDate, setStartDate] = useState(initData.startDate as string ?? '')
+  const [endDate, setEndDate] = useState(initData.endDate as string ?? '')
+  const [saving, setSaving] = useState(false)
+  const [savingTemplate, setSavingTemplate] = useState(false)
+  const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
 
   const isQuickly = scaffoldType === 'quickly'
 
@@ -74,11 +85,62 @@ export function RollingScaffoldCalculator() {
     totalValue: formatKr(rentalCost),
   }), [client, startDate, endDate, rentalDays, typeLabel, isQuickly, height, includeSupportLegs, rentalCost, pricing])
 
+  const handleSave = useCallback(async () => {
+    const name = client.name
+      ? `Hjólapallar — ${client.name}`
+      : `Hjólapallar — ${new Date().toLocaleDateString('is-IS')}`
+    const sharedLines: SharedLineItem[] = [{
+      rentalNo: scaffoldType,
+      description: `${typeLabel}${!isQuickly ? ` ${height}m` : ''}`,
+      quantity: 1,
+      rentalCost,
+    }]
+    if (includeSupportLegs) {
+      sharedLines.push({
+        rentalNo: 'support-legs',
+        description: 'Stoðfætur',
+        quantity: 1,
+        rentalCost: calcRollingRental(rentalDays, SUPPORT_LEGS_PRICING),
+      })
+    }
+    const data: Record<string, unknown> = { scaffoldType, height, rentalDays, includeSupportLegs, startDate, endDate }
+    try {
+      setSaving(true)
+      if (projectId) {
+        await updateProject(projectId, { name, client, data, line_items: sharedLines })
+        toast.success('Verkefni uppfært')
+      } else {
+        const created = await createProject({ name, type: 'rolling', client, data, line_items: sharedLines })
+        setProjectId(created.id)
+        toast.success('Verkefni vistað')
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Villa við vistun')
+    } finally {
+      setSaving(false)
+    }
+  }, [client, scaffoldType, typeLabel, isQuickly, height, rentalDays, rentalCost, includeSupportLegs, startDate, endDate, projectId])
+
+  const handleSaveTemplate = useCallback(async () => {
+    const name = prompt('Heiti sniðmáts:', `Hjólapallar — ${typeLabel}`)
+    if (!name) return
+    const config: Record<string, unknown> = { scaffoldType, height, rentalDays, includeSupportLegs, startDate, endDate }
+    try {
+      setSavingTemplate(true)
+      await createTemplate({ type: 'rolling', name, config })
+      toast.success('Sniðmát vistað')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Villa við vistun sniðmáts')
+    } finally {
+      setSavingTemplate(false)
+    }
+  }, [scaffoldType, typeLabel, height, rentalDays, includeSupportLegs, startDate, endDate])
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Hjólapalla&shy;reiknivél</h1>
-        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} />
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={handleSaveTemplate} savingTemplate={savingTemplate} />
       </div>
 
       {/* Client info + Date range */}

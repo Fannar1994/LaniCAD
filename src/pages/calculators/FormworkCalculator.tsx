@@ -1,4 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
+import { useLocation } from 'react-router-dom'
+import { toast } from 'sonner'
 import { FORMWORK_SYSTEMS, MANTO_HEIGHTS, TIE_BAR_OPTIONS } from '@/data/formwork'
 import {
   calculateModeA,
@@ -12,19 +14,28 @@ import { formatKr } from '@/lib/format'
 import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
-import type { ClientInfo } from '@/types'
+import { createProject, updateProject, createTemplate } from '@/lib/db'
+import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
 type SystemKey = 'manto' | 'rasto' | 'alufort'
 
 export function FormworkCalculator() {
-  const [system, setSystem] = useState<SystemKey>('manto')
-  const [rentalDays, setRentalDays] = useState(14)
-  const [discount, setDiscount] = useState(0)
-  const [client, setClient] = useState<ClientInfo>(emptyClient)
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  const location = useLocation()
+  const loadedProject = location.state?.project as { id: string; name: string; data: Record<string, unknown>; client: ClientInfo } | undefined
+  const loadedTemplate = location.state?.template as { id: string; name: string; config: Record<string, unknown> } | undefined
+  const initData = loadedProject?.data ?? loadedTemplate?.config ?? {}
+
+  const [system, setSystem] = useState<SystemKey>(initData.system as SystemKey ?? 'manto')
+  const [rentalDays, setRentalDays] = useState(initData.rentalDays as number ?? 14)
+  const [discount, setDiscount] = useState(initData.discount as number ?? 0)
+  const [client, setClient] = useState<ClientInfo>(loadedProject?.client ?? emptyClient)
+  const [startDate, setStartDate] = useState(initData.startDate as string ?? '')
+  const [endDate, setEndDate] = useState(initData.endDate as string ?? '')
+  const [saving, setSaving] = useState(false)
+  const [savingTemplate, setSavingTemplate] = useState(false)
+  const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
 
   // Mode A (Rasto/Takko)
   const [aWallLength, setAWallLength] = useState(12)
@@ -95,11 +106,70 @@ export function FormworkCalculator() {
     totalValue: formatKr(totalCost),
   }), [client, startDate, endDate, rentalDays, discount, result, totalCost])
 
+  const handleSave = useCallback(async () => {
+    const name = client.name
+      ? `Steypumót — ${client.name}`
+      : `Steypumót — ${new Date().toLocaleDateString('is-IS')}`
+    const sharedLines: SharedLineItem[] = result.boq.map(item => ({
+      rentalNo: item.id,
+      description: item.desc,
+      quantity: item.qty,
+      rentalCost: calcFormworkItemCost(item, rentalDays),
+    }))
+    const data: Record<string, unknown> = {
+      system, rentalDays, discount, startDate, endDate,
+      aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
+      bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
+      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
+    }
+    try {
+      setSaving(true)
+      if (projectId) {
+        await updateProject(projectId, { name, client, data, line_items: sharedLines })
+        toast.success('Verkefni uppfært')
+      } else {
+        const created = await createProject({ name, type: 'formwork', client, data, line_items: sharedLines })
+        setProjectId(created.id)
+        toast.success('Verkefni vistað')
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Villa við vistun')
+    } finally {
+      setSaving(false)
+    }
+  }, [client, result.boq, rentalDays, system, discount, startDate, endDate,
+      aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
+      bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
+      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID, projectId])
+
+  const handleSaveTemplate = useCallback(async () => {
+    const name = prompt('Heiti sniðmáts:', `Steypumót — ${system}`)
+    if (!name) return
+    const config: Record<string, unknown> = {
+      system, rentalDays, discount, startDate, endDate,
+      aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
+      bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
+      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
+    }
+    try {
+      setSavingTemplate(true)
+      await createTemplate({ type: 'formwork', name, config })
+      toast.success('Sniðmát vistað')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Villa við vistun sniðmáts')
+    } finally {
+      setSavingTemplate(false)
+    }
+  }, [system, rentalDays, discount, startDate, endDate,
+      aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
+      bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
+      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID])
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Steypumótareiknivél</h1>
-        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} />
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={handleSaveTemplate} savingTemplate={savingTemplate} />
       </div>
 
       {/* Client info + Date range */}

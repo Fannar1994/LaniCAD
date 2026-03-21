@@ -12,6 +12,7 @@ import { CeilingPropsCalculator } from '@/pages/calculators/CeilingPropsCalculat
 import { FormworkCalculator } from '@/pages/calculators/FormworkCalculator'
 import { DrawingPage } from '@/pages/DrawingPage'
 import { SchematicsPage } from '@/pages/SchematicsPage'
+import { TemplatesPage } from '@/pages/TemplatesPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
@@ -45,6 +46,7 @@ export function App() {
         <Route path="calculator/formwork" element={<FormworkCalculator />} />
         <Route path="drawing" element={<DrawingPage />} />
         <Route path="schematics" element={<SchematicsPage />} />
+        <Route path="templates" element={<TemplatesPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
