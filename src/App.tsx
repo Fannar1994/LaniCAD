@@ -10,6 +10,8 @@ import { ScaffoldCalculator } from '@/pages/calculators/ScaffoldCalculator'
 import { RollingScaffoldCalculator } from '@/pages/calculators/RollingScaffoldCalculator'
 import { CeilingPropsCalculator } from '@/pages/calculators/CeilingPropsCalculator'
 import { FormworkCalculator } from '@/pages/calculators/FormworkCalculator'
+import { DrawingPage } from '@/pages/DrawingPage'
+import { SchematicsPage } from '@/pages/SchematicsPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
@@ -41,6 +43,8 @@ export function App() {
         <Route path="calculator/rolling" element={<RollingScaffoldCalculator />} />
         <Route path="calculator/ceiling" element={<CeilingPropsCalculator />} />
         <Route path="calculator/formwork" element={<FormworkCalculator />} />
+        <Route path="drawing" element={<DrawingPage />} />
+        <Route path="schematics" element={<SchematicsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

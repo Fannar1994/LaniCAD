@@ -8,6 +8,8 @@ import {
   Box,
   Columns3,
   ArrowUpDown,
+  PenTool,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -27,6 +29,11 @@ const calculatorItems = [
   { to: '/calculator/formwork', icon: Box, label: 'Steypumót' },
   { to: '/calculator/rolling', icon: ArrowUpDown, label: 'Hjólapallar' },
   { to: '/calculator/ceiling', icon: Ruler, label: 'Loftastoðir' },
+]
+
+const drawingItems = [
+  { to: '/drawing', icon: PenTool, label: 'Teikning' },
+  { to: '/schematics', icon: FileText, label: 'Teikningar' },
 ]
 
 const bottomItems = [
@@ -67,6 +74,17 @@ export function Sidebar({ open }: SidebarProps) {
         {!open && <div className="my-3 border-t border-gray-200" />}
 
         {calculatorItems.map(item => (
+          <SidebarLink key={item.to} {...item} open={open} />
+        ))}
+
+        {open && (
+          <div className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            Teikningar
+          </div>
+        )}
+        {!open && <div className="my-3 border-t border-gray-200" />}
+
+        {drawingItems.map(item => (
           <SidebarLink key={item.to} {...item} open={open} />
         ))}
       </nav>

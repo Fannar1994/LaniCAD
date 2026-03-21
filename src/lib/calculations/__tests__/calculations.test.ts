@@ -31,11 +31,11 @@ import {
 } from '../formwork'
 
 // Product data
-import { FENCE_PRODUCTS, FENCE_TYPES, MIN_RENTAL_DAYS } from '@/data/fence'
+import { FENCE_PRODUCTS, FENCE_TYPES } from '@/data/fence'
 import { SCAFFOLD_ITEMS } from '@/data/scaffolding'
 import { NARROW_PRICING, WIDE_PRICING, QUICKLY_PRICING, SUPPORT_LEGS_PRICING } from '@/data/rolling-scaffold'
-import { LOFTASTODIR, MOTABITAR, AUKAHLUTIR } from '@/data/ceiling-props'
-import { HM01, HM02, KM01, TIE_BAR_OPTIONS } from '@/data/formwork'
+import { LOFTASTODIR, MOTABITAR } from '@/data/ceiling-props'
+import { HM01, TIE_BAR_OPTIONS } from '@/data/formwork'
 
 // Formatting and utilities
 import { formatKr, formatKennitala, daysBetween, formatDate, formatNumber } from '@/lib/format'
@@ -370,8 +370,7 @@ describe('calculateLevelsFromHeight', () => {
 describe('calculateFacadeMaterials', () => {
   it('20m facade, 3 levels 2m, 0 levels 0.7m, 2 endcaps, first facade', () => {
     const mats = calculateFacadeMaterials(20, 3, 0, 2, true)
-    const bays = Math.ceil(20 / 1.8) // 12 bays
-    const framesPerLevel = bays + 1 // 13
+    // bays = ceil(20/1.8) = 12, framesPerLevel = bays + 1 = 13
 
     expect(mats['Rammar 2,0m']).toBe(13 * 3) // 39
     expect(mats['Rammar 0,7m']).toBe(0)
@@ -412,8 +411,7 @@ describe('calculateFacadeMaterials', () => {
 
   it('with 0.7m levels', () => {
     const mats = calculateFacadeMaterials(10, 2, 1, 0, true)
-    const bays = Math.ceil(10 / 1.8) // 6
-    const framesPerLevel = 7
+    // bays = ceil(10/1.8) = 6, framesPerLevel = 7
     expect(mats['Rammar 2,0m']).toBe(7 * 2) // 14
     expect(mats['Rammar 0,7m']).toBe(7 * 1) // 7
     expect(mats['Splitti']).toBe((7 * 2 + 7 * 1) * 2) // 42
@@ -480,7 +478,7 @@ describe('calculateModeA (Rasto/Takko)', () => {
   })
 
   it('open ends add end-stop items', () => {
-    const noEnds = calculateModeA(12, 'rasto', 0, 0, 0, TIE_BAR_OPTIONS[0].id)
+    calculateModeA(12, 'rasto', 0, 0, 0, TIE_BAR_OPTIONS[0].id)
     const withEnds = calculateModeA(12, 'rasto', 0, 0, 2, TIE_BAR_OPTIONS[0].id)
     const endItems = withEnds.boq.filter(i => i.cat === 'Endar')
     expect(endItems.length).toBeGreaterThan(0)
@@ -658,7 +656,7 @@ describe('Ceiling props data', () => {
 // ═══════════════════════════════════════════════════
 describe('Product data integrity', () => {
   it('all fence products have 12 rate tiers', () => {
-    for (const [key, product] of Object.entries(FENCE_PRODUCTS)) {
+    for (const [, product] of Object.entries(FENCE_PRODUCTS)) {
       expect(product.rates).toHaveLength(12)
       for (const rate of product.rates) {
         expect(rate).toBeGreaterThanOrEqual(0)
@@ -667,7 +665,7 @@ describe('Product data integrity', () => {
   })
 
   it('fence rates are declining or constant', () => {
-    for (const [key, product] of Object.entries(FENCE_PRODUCTS)) {
+    for (const [, product] of Object.entries(FENCE_PRODUCTS)) {
       for (let i = 1; i < product.rates.length; i++) {
         expect(product.rates[i]).toBeLessThanOrEqual(product.rates[i - 1])
       }
@@ -702,7 +700,7 @@ describe('Product data integrity', () => {
   })
 
   it('rolling scaffold pricing consistency: week ≈ 2.5× 24h', () => {
-    for (const [h, p] of Object.entries(NARROW_PRICING)) {
+    for (const [, p] of Object.entries(NARROW_PRICING)) {
       // Week should be less than 7 × 24h (discount for weekly)
       expect(p.week).toBeLessThan(p['24h'] * 7)
       // But more than 24h
@@ -711,7 +709,7 @@ describe('Product data integrity', () => {
   })
 
   it('rolling scaffold: extra day ≈ 50% of 24h', () => {
-    for (const [h, p] of Object.entries(NARROW_PRICING)) {
+    for (const [, p] of Object.entries(NARROW_PRICING)) {
       // Extra should be roughly half of 24h
       const ratio = p.extra / p['24h']
       expect(ratio).toBeGreaterThan(0.4)
@@ -834,7 +832,6 @@ describe('End-to-end scenarios', () => {
   it('Fence: 200m heavy fence, 90 days, with gate + stones', () => {
     const fenceProduct = FENCE_PRODUCTS['fence-3500x2000x1.7']
     const stoneProduct = FENCE_PRODUCTS['stone-concrete']
-    const clampProduct = FENCE_PRODUCTS['clamps']
     const gateProduct = FENCE_PRODUCTS['walking-gate']
 
     const geo = calcFenceGeometry(200, 3.5)
