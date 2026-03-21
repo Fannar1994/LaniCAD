@@ -1,71 +1,65 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { UserProfile } from '@/types'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const TOKEN_KEY = 'lanicad_token'
+
 interface AuthContextType {
   user: UserProfile | null
-  login: (email: string, password: string) => boolean
+  login: (email: string, password: string) => Promise<boolean>
   logout: () => void
   isAdmin: boolean
+  token: string | null
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-const STORAGE_KEY = 'lanicad_users'
-const SESSION_KEY = 'lanicad_session'
-
-// Default admin user (created on first run)
-const DEFAULT_ADMIN: UserProfile & { password: string } = {
-  id: '1',
-  email: 'admin@lanicad.is',
-  name: 'Kerfisstjóri',
-  role: 'admin',
-  password: 'admin123', // User should change this in settings
-  created_at: new Date().toISOString(),
-}
-
-function getStoredUsers(): Array<UserProfile & { password: string }> {
-  const raw = localStorage.getItem(STORAGE_KEY)
-  if (!raw) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([DEFAULT_ADMIN]))
-    return [DEFAULT_ADMIN]
-  }
-  return JSON.parse(raw)
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null)
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY))
 
+  // Restore session from stored token
   useEffect(() => {
-    const sessionEmail = localStorage.getItem(SESSION_KEY)
-    if (sessionEmail) {
-      const users = getStoredUsers()
-      const found = users.find(u => u.email === sessionEmail)
-      if (found) {
-        const { password: _, ...profile } = found
-        setUser(profile)
-      }
-    }
-  }, [])
+    if (!token) return
+    fetch(`${API_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then((profile: UserProfile) => setUser(profile))
+      .catch(() => {
+        // Token expired or invalid
+        localStorage.removeItem(TOKEN_KEY)
+        setToken(null)
+        setUser(null)
+      })
+  }, [token])
 
-  const login = (email: string, password: string): boolean => {
-    const users = getStoredUsers()
-    const found = users.find(u => u.email === email && u.password === password)
-    if (found) {
-      const { password: _, ...profile } = found
-      setUser(profile)
-      localStorage.setItem(SESSION_KEY, email)
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      if (!res.ok) return false
+      const data = await res.json()
+      localStorage.setItem(TOKEN_KEY, data.token)
+      setToken(data.token)
+      setUser(data.user)
       return true
+    } catch {
+      return false
     }
-    return false
   }
 
   const logout = () => {
+    localStorage.removeItem(TOKEN_KEY)
+    setToken(null)
     setUser(null)
-    localStorage.removeItem(SESSION_KEY)
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAdmin: user?.role === 'admin' }}>
+    <AuthContext.Provider value={{ user, login, logout, isAdmin: user?.role === 'admin', token }}>
       {children}
     </AuthContext.Provider>
   )
@@ -75,41 +69,4 @@ export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
-}
-
-// User management functions (for Settings page)
-export function getAllUsers(): UserProfile[] {
-  return getStoredUsers().map(({ password: _, ...profile }) => profile)
-}
-
-export function createUser(email: string, name: string, password: string, role: 'admin' | 'user'): boolean {
-  const users = getStoredUsers()
-  if (users.some(u => u.email === email)) return false
-  users.push({
-    id: crypto.randomUUID(),
-    email,
-    name,
-    role,
-    password,
-    created_at: new Date().toISOString(),
-  })
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(users))
-  return true
-}
-
-export function deleteUser(id: string): boolean {
-  const users = getStoredUsers()
-  const filtered = users.filter(u => u.id !== id)
-  if (filtered.length === users.length) return false
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered))
-  return true
-}
-
-export function updateUserPassword(id: string, newPassword: string): boolean {
-  const users = getStoredUsers()
-  const user = users.find(u => u.id === id)
-  if (!user) return false
-  user.password = newPassword
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(users))
-  return true
 }

@@ -129,3 +129,53 @@ export async function upsertProduct(product: Omit<DbProduct, 'id' | 'created_at'
     body: JSON.stringify(product),
   })
 }
+
+export async function updateProduct(id: string, updates: Partial<Pick<DbProduct, 'description' | 'rates' | 'sale_price' | 'weight' | 'active'>>): Promise<DbProduct> {
+  return apiFetch<DbProduct>(`/products/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  })
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  await apiFetch(`/products/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
+// ── Users (admin) ──
+
+export interface DbUser {
+  id: string
+  email: string
+  name: string
+  role: 'admin' | 'user'
+  created_at: string
+}
+
+export async function fetchUsers(): Promise<DbUser[]> {
+  return apiFetch<DbUser[]>('/users')
+}
+
+export async function createApiUser(user: { email: string; name: string; password: string; role: 'admin' | 'user' }): Promise<DbUser> {
+  return apiFetch<DbUser>('/users', {
+    method: 'POST',
+    body: JSON.stringify(user),
+  })
+}
+
+export async function updateApiUser(id: string, updates: { name?: string; role?: 'admin' | 'user'; password?: string }): Promise<DbUser> {
+  return apiFetch<DbUser>(`/users/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  })
+}
+
+export async function deleteApiUser(id: string): Promise<void> {
+  await apiFetch(`/users/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
+export async function changeOwnPassword(currentPassword: string, newPassword: string): Promise<void> {
+  await apiFetch('/auth/password', {
+    method: 'PUT',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  })
+}

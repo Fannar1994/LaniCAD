@@ -65,6 +65,166 @@ app.post('/api/auth/login', async (req, res) => {
   }
 })
 
+// Admin-only middleware
+function requireAdmin(req, res, next) {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Aðeins stjórnendur hafa aðgang' })
+  }
+  next()
+}
+
+// Get current user profile
+app.get('/api/auth/me', authenticate, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, email, name, role, created_at FROM users WHERE id = $1',
+      [req.user.id]
+    )
+    if (rows.length === 0) return res.status(404).json({ error: 'Notandi fannst ekki' })
+    res.json(rows[0])
+  } catch (err) {
+    console.error('Fetch me error:', err)
+    res.status(500).json({ error: 'Villa' })
+  }
+})
+
+// Update own password
+app.put('/api/auth/password', authenticate, async (req, res) => {
+  const { currentPassword, newPassword } = req.body
+  if (!currentPassword || !newPassword || newPassword.length < 6) {
+    return res.status(400).json({ error: 'Lykilorð verður að vera a.m.k. 6 stafir' })
+  }
+  try {
+    const { rows } = await pool.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id])
+    if (rows.length === 0) return res.status(404).json({ error: 'Notandi fannst ekki' })
+    const valid = await bcrypt.compare(currentPassword, rows[0].password_hash)
+    if (!valid) return res.status(401).json({ error: 'Rangt núverandi lykilorð' })
+    const hash = await bcrypt.hash(newPassword, 10)
+    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, req.user.id])
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('Update password error:', err)
+    res.status(500).json({ error: 'Villa við að uppfæra lykilorð' })
+  }
+})
+
+// ══════════════════════════════════════════
+// Users (admin only)
+// ══════════════════════════════════════════
+
+app.get('/api/users', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, email, name, role, created_at FROM users ORDER BY created_at'
+    )
+    res.json(rows)
+  } catch (err) {
+    console.error('Fetch users error:', err)
+    res.status(500).json({ error: 'Villa við að sækja notendur' })
+  }
+})
+
+app.post('/api/users', authenticate, requireAdmin, async (req, res) => {
+  const { email, name, password, role } = req.body
+  if (!email || !name || !password) {
+    return res.status(400).json({ error: 'Vantar netfang, nafn og lykilorð' })
+  }
+  if (!['admin', 'user'].includes(role)) {
+    return res.status(400).json({ error: 'Ógilt hlutverk' })
+  }
+  try {
+    const hash = await bcrypt.hash(password, 10)
+    const { rows } = await pool.query(
+      `INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) RETURNING id, email, name, role, created_at`,
+      [email, hash, name, role || 'user']
+    )
+    res.status(201).json(rows[0])
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Netfang er nú þegar skráð' })
+    }
+    console.error('Create user error:', err)
+    res.status(500).json({ error: 'Villa við að búa til notanda' })
+  }
+})
+
+app.put('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
+  const { name, role, password } = req.body
+  try {
+    const sets = []
+    const vals = []
+    let i = 1
+    if (name !== undefined) { sets.push(`name = $${i++}`); vals.push(name) }
+    if (role !== undefined && ['admin', 'user'].includes(role)) { sets.push(`role = $${i++}`); vals.push(role) }
+    if (password) {
+      const hash = await bcrypt.hash(password, 10)
+      sets.push(`password_hash = $${i++}`); vals.push(hash)
+    }
+    if (sets.length === 0) return res.status(400).json({ error: 'Ekkert til að uppfæra' })
+    vals.push(req.params.id)
+    const { rows } = await pool.query(
+      `UPDATE users SET ${sets.join(', ')} WHERE id = $${i} RETURNING id, email, name, role, created_at`,
+      vals
+    )
+    if (rows.length === 0) return res.status(404).json({ error: 'Notandi fannst ekki' })
+    res.json(rows[0])
+  } catch (err) {
+    console.error('Update user error:', err)
+    res.status(500).json({ error: 'Villa við að uppfæra notanda' })
+  }
+})
+
+app.delete('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
+  if (req.params.id === req.user.id) {
+    return res.status(400).json({ error: 'Þú getur ekki eytt sjálfum þér' })
+  }
+  try {
+    const { rowCount } = await pool.query('DELETE FROM users WHERE id = $1', [req.params.id])
+    if (rowCount === 0) return res.status(404).json({ error: 'Notandi fannst ekki' })
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('Delete user error:', err)
+    res.status(500).json({ error: 'Villa við að eyða notanda' })
+  }
+})
+
+// Update product (admin)
+app.put('/api/products/:id', authenticate, requireAdmin, async (req, res) => {
+  const { description, rates, sale_price, weight, active } = req.body
+  try {
+    const sets = []
+    const vals = []
+    let i = 1
+    if (description !== undefined) { sets.push(`description = $${i++}`); vals.push(description) }
+    if (rates !== undefined) { sets.push(`rates = $${i++}`); vals.push(JSON.stringify(rates)) }
+    if (sale_price !== undefined) { sets.push(`sale_price = $${i++}`); vals.push(sale_price) }
+    if (weight !== undefined) { sets.push(`weight = $${i++}`); vals.push(weight) }
+    if (active !== undefined) { sets.push(`active = $${i++}`); vals.push(active) }
+    if (sets.length === 0) return res.status(400).json({ error: 'Ekkert til að uppfæra' })
+    vals.push(req.params.id)
+    const { rows } = await pool.query(
+      `UPDATE products SET ${sets.join(', ')} WHERE id = $${i} RETURNING *`,
+      vals
+    )
+    if (rows.length === 0) return res.status(404).json({ error: 'Vara fannst ekki' })
+    res.json(rows[0])
+  } catch (err) {
+    console.error('Update product error:', err)
+    res.status(500).json({ error: 'Villa við að uppfæra vöru' })
+  }
+})
+
+app.delete('/api/products/:id', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { rowCount } = await pool.query('DELETE FROM products WHERE id = $1', [req.params.id])
+    if (rowCount === 0) return res.status(404).json({ error: 'Vara fannst ekki' })
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('Delete product error:', err)
+    res.status(500).json({ error: 'Villa við að eyða vöru' })
+  }
+})
+
 // ══════════════════════════════════════════
 // Projects
 // ══════════════════════════════════════════

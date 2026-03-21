@@ -6,12 +6,19 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
-    if (!login(email, password)) {
-      setError('Rangt netfang eða lykilorð')
+    setLoading(true)
+    try {
+      const ok = await login(email, password)
+      if (!ok) setError('Rangt netfang eða lykilorð')
+    } catch {
+      setError('Villa við innskráningu')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -64,9 +71,10 @@ export function LoginPage() {
 
           <button
             type="submit"
-            className="w-full rounded-md bg-brand-accent px-4 py-2 font-medium text-brand-dark shadow-sm hover:bg-brand-accent-hover focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2"
+            disabled={loading}
+            className="w-full rounded-md bg-brand-accent px-4 py-2 font-medium text-brand-dark shadow-sm hover:bg-brand-accent-hover focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 disabled:opacity-50"
           >
-            Innskrá
+            {loading ? 'Skrái inn...' : 'Innskrá'}
           </button>
         </form>
 
