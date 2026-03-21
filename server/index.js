@@ -61,6 +61,42 @@ app.use(cors({
 
 app.use(express.json({ limit: '2mb' }))
 
+// Root route — landing page for tunnel visitors
+app.get('/', (_req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="is">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>LániCAD API</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #404042; color: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .card { background: #2a2a2c; border-radius: 16px; padding: 48px; max-width: 500px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+        h1 { font-size: 2rem; margin-bottom: 8px; }
+        h1 span { color: #f5c800; }
+        p { color: #aaa; margin-bottom: 24px; }
+        .status { display: inline-block; background: #1a1a1c; padding: 12px 24px; border-radius: 8px; font-family: monospace; color: #4ade80; }
+        a { color: #f5c800; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .links { margin-top: 24px; display: flex; flex-direction: column; gap: 8px; }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <h1>Láni<span>CAD</span> API</h1>
+        <p>REST API þjónn fyrir LániCAD kerfið</p>
+        <div class="status">● Online</div>
+        <div class="links">
+          <a href="/api/health">Heilsufarsskoðun (Health Check)</a>
+        </div>
+      </div>
+    </body>
+    </html>
+  `)
+})
+
 // JWT auth middleware
 function authenticate(req, res, next) {
   const header = req.headers.authorization
