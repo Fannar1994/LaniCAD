@@ -1,6 +1,8 @@
 require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
+const helmet = require('helmet')
+const rateLimit = require('express-rate-limit')
 const { Pool } = require('pg')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
@@ -10,15 +12,54 @@ const app = express()
 const PORT = process.env.PORT || 3001
 const JWT_SECRET = process.env.JWT_SECRET || 'change-this-to-a-random-secret'
 
+// Allowed origins for CORS (add your tunnel URL here)
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:4173')
+  .split(',').map(s => s.trim())
+
 // ── Claude AI ──
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 // ── Database ──
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 
-// ── Middleware ──
-app.use(cors())
-app.use(express.json())
+// ── Security Middleware ──
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
+app.set('trust proxy', 1) // trust first proxy (cloudflared/ngrok)
+
+// Rate limiting: 100 requests per 15 min per IP (general)
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Of margar beiðnir — reyndu aftur síðar' },
+})
+
+// Stricter rate limit for auth endpoints: 10 per 15 min
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Of margar innskráningartilraunir' },
+})
+
+app.use(generalLimiter)
+
+// CORS — allow configured origins
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (curl, mobile apps, server-to-server)
+    if (!origin) return callback(null, true)
+    if (ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.includes('*')) {
+      return callback(null, true)
+    }
+    callback(new Error('CORS not allowed'))
+  },
+  credentials: true,
+}))
+
+app.use(express.json({ limit: '2mb' }))
 
 // JWT auth middleware
 function authenticate(req, res, next) {
@@ -39,7 +80,7 @@ function authenticate(req, res, next) {
 // Auth
 // ══════════════════════════════════════════
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', authLimiter, async (req, res) => {
   const { email, password } = req.body
   if (!email || !password) {
     return res.status(400).json({ error: 'Vantar netfang og lykilorð' })
@@ -555,13 +596,191 @@ app.post('/api/chat', authenticate, async (req, res) => {
 app.get('/api/health', async (_req, res) => {
   try {
     await pool.query('SELECT 1')
-    res.json({ status: 'ok', db: 'connected' })
+    const { rows } = await pool.query(
+      "SELECT COUNT(*) as pending FROM request_queue WHERE status = 'pending'"
+    )
+    res.json({
+      status: 'ok',
+      db: 'connected',
+      pendingQueue: parseInt(rows[0].pending),
+      uptime: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString(),
+    })
   } catch {
     res.status(503).json({ status: 'error', db: 'disconnected' })
   }
 })
 
+// ══════════════════════════════════════════
+// Request Queue / Backlog System
+// ══════════════════════════════════════════
+
+// Queue a request for later processing (external clients use this when server might be offline)
+app.post('/api/queue', async (req, res) => {
+  const { method, path, headers, body } = req.body
+  if (!method || !path) {
+    return res.status(400).json({ error: 'Vantar method og path' })
+  }
+  const allowedMethods = ['GET', 'POST', 'PUT', 'DELETE']
+  if (!allowedMethods.includes(method.toUpperCase())) {
+    return res.status(400).json({ error: 'Ógild HTTP aðferð' })
+  }
+  // Prevent queuing to the queue endpoint itself
+  if (path.startsWith('/api/queue')) {
+    return res.status(400).json({ error: 'Ekki er hægt að biðraða í biðröð' })
+  }
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO request_queue (method, path, headers, body, source_ip)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, status, created_at`,
+      [method.toUpperCase(), path, JSON.stringify(headers || {}), JSON.stringify(body || {}), req.ip]
+    )
+    res.status(202).json({ queued: true, id: rows[0].id, created_at: rows[0].created_at })
+  } catch (err) {
+    console.error('Queue error:', err)
+    res.status(500).json({ error: 'Villa við að setja í biðröð' })
+  }
+})
+
+// Get queue status (admin)
+app.get('/api/queue', authenticate, requireAdmin, async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 50, 200)
+  const status = req.query.status || 'all'
+  try {
+    let query = 'SELECT * FROM request_queue'
+    const vals = []
+    if (status !== 'all') {
+      query += ' WHERE status = $1'
+      vals.push(status)
+    }
+    query += ' ORDER BY created_at DESC LIMIT $' + (vals.length + 1)
+    vals.push(limit)
+    const { rows } = await pool.query(query, vals)
+    res.json(rows)
+  } catch (err) {
+    console.error('Queue fetch error:', err)
+    res.status(500).json({ error: 'Villa' })
+  }
+})
+
+// Process pending queue items (admin trigger or startup)
+app.post('/api/queue/process', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const result = await processQueue()
+    res.json(result)
+  } catch (err) {
+    console.error('Queue process error:', err)
+    res.status(500).json({ error: 'Villa við að vinna úr biðröð' })
+  }
+})
+
+async function processQueue() {
+  const { rows: pending } = await pool.query(
+    "SELECT * FROM request_queue WHERE status = 'pending' ORDER BY created_at ASC LIMIT 100"
+  )
+  if (pending.length === 0) return { processed: 0, message: 'Engin beiðni í biðröð' }
+
+  let processed = 0
+  let failed = 0
+
+  for (const item of pending) {
+    try {
+      // Replay the request internally using the Express app
+      const http = require('http')
+      const result = await new Promise((resolve, reject) => {
+        const options = {
+          hostname: 'localhost',
+          port: PORT,
+          path: item.path,
+          method: item.method,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(item.headers?.authorization ? { Authorization: item.headers.authorization } : {}),
+          },
+        }
+        const req = http.request(options, (res) => {
+          let data = ''
+          res.on('data', chunk => data += chunk)
+          res.on('end', () => {
+            try {
+              resolve({ code: res.statusCode, body: JSON.parse(data) })
+            } catch {
+              resolve({ code: res.statusCode, body: { raw: data } })
+            }
+          })
+        })
+        req.on('error', reject)
+        if (['POST', 'PUT'].includes(item.method) && item.body) {
+          req.write(JSON.stringify(item.body))
+        }
+        req.end()
+      })
+
+      await pool.query(
+        `UPDATE request_queue SET status = $1, processed_at = now(), response_code = $2, response_body = $3
+         WHERE id = $4`,
+        [result.code < 400 ? 'completed' : 'failed', result.code, JSON.stringify(result.body), item.id]
+      )
+      if (result.code < 400) processed++
+      else failed++
+    } catch (err) {
+      console.error(`Queue item ${item.id} failed:`, err.message)
+      await pool.query(
+        "UPDATE request_queue SET status = 'failed', processed_at = now(), response_body = $1 WHERE id = $2",
+        [JSON.stringify({ error: err.message }), item.id]
+      )
+      failed++
+    }
+  }
+
+  return { processed, failed, total: pending.length }
+}
+
+// ══════════════════════════════════════════
+// Tunnel Info Endpoint
+// ══════════════════════════════════════════
+
+let tunnelUrl = null
+
+app.get('/api/tunnel', authenticate, async (_req, res) => {
+  res.json({
+    tunnelUrl: tunnelUrl,
+    active: !!tunnelUrl,
+    localPort: PORT,
+    hint: tunnelUrl
+      ? 'Deila þessari slóð með öðrum til að tengjast'
+      : 'Ræstu tunnel: npx cloudflared-tunnel tunnel --url http://localhost:3001',
+  })
+})
+
+// Set tunnel URL (called by tunnel start script)
+app.post('/api/tunnel', authenticate, requireAdmin, (req, res) => {
+  const { url } = req.body
+  if (url && typeof url === 'string' && url.startsWith('https://')) {
+    tunnelUrl = url
+    // Add tunnel URL to CORS allowed origins
+    if (!ALLOWED_ORIGINS.includes(url)) {
+      ALLOWED_ORIGINS.push(url)
+    }
+    console.log(`Tunnel URL set: ${url}`)
+    res.json({ ok: true, tunnelUrl: url })
+  } else {
+    res.status(400).json({ error: 'Ógild tunnel slóð' })
+  }
+})
+
 // ── Start ──
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`LániCAD API running on http://localhost:${PORT}`)
+  console.log(`Allowed origins: ${ALLOWED_ORIGINS.join(', ')}`)
+
+  // Process any backlogged queue items on startup
+  try {
+    const result = await processQueue()
+    if (result.processed > 0 || result.failed > 0) {
+      console.log(`Queue processed on startup: ${result.processed} OK, ${result.failed} failed out of ${result.total}`)
+    }
+  } catch (err) {
+    console.error('Queue startup processing failed:', err.message)
+  }
 })
