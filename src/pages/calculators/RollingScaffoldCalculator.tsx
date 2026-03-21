@@ -1,0 +1,168 @@
+import { useState, useMemo } from 'react'
+import {
+  NARROW_PRICING, WIDE_PRICING, QUICKLY_PRICING, SUPPORT_LEGS_PRICING,
+  NARROW_COMPONENTS, ROLLING_TYPES, HEIGHT_OPTIONS
+} from '@/data/rolling-scaffold'
+import { calcRollingRental } from '@/lib/calculations/rental'
+import { formatKr } from '@/lib/format'
+
+export function RollingScaffoldCalculator() {
+  const [scaffoldType, setScaffoldType] = useState<'narrow' | 'wide' | 'quickly'>('narrow')
+  const [height, setHeight] = useState('4.5')
+  const [rentalDays, setRentalDays] = useState(7)
+  const [includeSupportLegs, setIncludeSupportLegs] = useState(false)
+
+  const isQuickly = scaffoldType === 'quickly'
+
+  const pricing = useMemo(() => {
+    if (isQuickly) return QUICKLY_PRICING
+    return scaffoldType === 'narrow' ? NARROW_PRICING[height] : WIDE_PRICING[height]
+  }, [scaffoldType, height, isQuickly])
+
+  const rentalCost = useMemo(() => {
+    if (!pricing) return 0
+    let cost = calcRollingRental(rentalDays, pricing)
+    if (includeSupportLegs) {
+      cost += calcRollingRental(rentalDays, SUPPORT_LEGS_PRICING)
+    }
+    return cost
+  }, [pricing, rentalDays, includeSupportLegs])
+
+  // Component breakdown for detailed view
+  const components = useMemo(() => {
+    if (isQuickly || scaffoldType === 'wide') return []
+    return NARROW_COMPONENTS.map(c => ({
+      ...c,
+      qty: c.quantities[height] ?? 0,
+    })).filter(c => c.qty > 0)
+  }, [scaffoldType, height, isQuickly])
+
+  return (
+    <div className="space-y-6">
+      <h1 className="font-condensed text-2xl font-bold text-brand-dark">Hjólapalla&shy;reiknivél</h1>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Inputs */}
+        <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-5">
+          <h2 className="font-condensed text-lg font-semibold text-brand-dark">Tegund palls</h2>
+          <div className="flex flex-wrap gap-2">
+            {ROLLING_TYPES.map(rt => (
+              <button
+                key={rt.key}
+                onClick={() => setScaffoldType(rt.key)}
+                className={`rounded-md border px-4 py-2 text-sm transition ${
+                  scaffoldType === rt.key
+                    ? 'border-brand-accent bg-brand-accent/10 font-medium text-brand-dark'
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                {rt.label}
+              </button>
+            ))}
+          </div>
+
+          {!isQuickly && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Hæð (m)</label>
+              <select
+                value={height}
+                onChange={e => setHeight(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 text-sm focus:border-brand-accent focus:ring-brand-accent"
+              >
+                {HEIGHT_OPTIONS.map(h => (
+                  <option key={h} value={h}>{h} m</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Leigudagar</label>
+            <input
+              type="number" min={1} value={rentalDays}
+              onChange={e => setRentalDays(Math.max(1, Number(e.target.value)))}
+              className="mt-1 block w-full rounded-md border-gray-300 text-sm focus:border-brand-accent focus:ring-brand-accent"
+            />
+          </div>
+
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox" checked={includeSupportLegs}
+              onChange={e => setIncludeSupportLegs(e.target.checked)}
+              className="rounded text-brand-accent focus:ring-brand-accent"
+            />
+            Bæta við stoðfætur
+          </label>
+        </div>
+
+        {/* Summary + pricing */}
+        <div className="space-y-4">
+          {pricing && (
+            <div className="rounded-lg border border-gray-200 bg-white p-5">
+              <h2 className="font-condensed text-lg font-semibold text-brand-dark">Verðskrá</h2>
+              <dl className="mt-3 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-gray-500">24 klst</dt>
+                  <dd className="font-medium">{formatKr(pricing['24h'])}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-gray-500">Aukadagur</dt>
+                  <dd className="font-medium">{formatKr(pricing.extra)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-gray-500">Vika</dt>
+                  <dd className="font-medium">{formatKr(pricing.week)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-gray-500">Trygging</dt>
+                  <dd className="font-medium">{formatKr(pricing.deposit)}</dd>
+                </div>
+              </dl>
+            </div>
+          )}
+
+          <div className="rounded-lg border-2 border-brand-accent bg-brand-accent/5 p-5">
+            <div className="text-sm font-medium text-gray-500">Leigukostnaður ({rentalDays} dagar)</div>
+            <div className="mt-1 font-condensed text-3xl font-bold text-brand-dark">
+              {formatKr(rentalCost)}
+            </div>
+            {includeSupportLegs && (
+              <div className="mt-1 text-xs text-gray-500">
+                (með stoðfótum: {formatKr(calcRollingRental(rentalDays, SUPPORT_LEGS_PRICING))})
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Component breakdown (narrow scaffolds only) */}
+      {components.length > 0 && (
+        <div className="rounded-lg border border-gray-200 bg-white">
+          <div className="border-b border-gray-200 px-5 py-3">
+            <h2 className="font-condensed text-lg font-semibold text-brand-dark">Hlutalisti</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-5 py-2 text-left font-medium text-gray-600">Vörunúmer</th>
+                  <th className="px-5 py-2 text-left font-medium text-gray-600">Lýsing</th>
+                  <th className="px-5 py-2 text-right font-medium text-gray-600">Magn</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {components.map((c, i) => (
+                  <tr key={i}>
+                    <td className="px-5 py-2 font-mono text-xs text-gray-500">{c.itemNo}</td>
+                    <td className="px-5 py-2">{c.name}</td>
+                    <td className="px-5 py-2 text-right">{c.qty}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

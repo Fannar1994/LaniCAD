@@ -1,0 +1,275 @@
+import { useState, useMemo } from 'react'
+import { FENCE_PRODUCTS, FENCE_TYPES, MIN_RENTAL_DAYS, type FenceProductData } from '@/data/fence'
+import { calcFenceRental } from '@/lib/calculations/rental'
+import { calcFenceGeometry } from '@/lib/calculations/geometry'
+import { formatKr } from '@/lib/format'
+
+interface LineItem {
+  product: FenceProductData
+  qty: number
+  rentalCost: number
+}
+
+export function FenceCalculator() {
+  const [selectedType, setSelectedType] = useState(FENCE_TYPES[0].key)
+  const [totalLength, setTotalLength] = useState(100)
+  const [rentalDays, setRentalDays] = useState(30)
+  const [includeGate, setIncludeGate] = useState(false)
+  const [includeWheels, setIncludeWheels] = useState(false)
+  const [includeLock, setIncludeLock] = useState(false)
+  const [stoneType, setStoneType] = useState<'concrete' | 'pvc'>('concrete')
+
+  const fenceType = FENCE_TYPES.find(t => t.key === selectedType)!
+  const fenceProduct = FENCE_PRODUCTS[fenceType.productKey]
+
+  const geometry = useMemo(
+    () => calcFenceGeometry(totalLength, fenceType.fenceLength),
+    [totalLength, fenceType.fenceLength]
+  )
+
+  const effectiveDays = Math.max(rentalDays, MIN_RENTAL_DAYS)
+
+  const lines = useMemo(() => {
+    const items: LineItem[] = []
+
+    // Mobile fence panels
+    items.push({
+      product: fenceProduct,
+      qty: geometry.panels,
+      rentalCost: calcFenceRental(effectiveDays, fenceProduct.rates, geometry.panels),
+    })
+
+    // Stones
+    const stoneProduct = FENCE_PRODUCTS[stoneType === 'concrete' ? 'stone-concrete' : 'stone-pvc']
+    items.push({
+      product: stoneProduct,
+      qty: geometry.stones,
+      rentalCost: calcFenceRental(effectiveDays, stoneProduct.rates, geometry.stones),
+    })
+
+    // Clamps
+    if (geometry.clamps > 0) {
+      const clampProduct = FENCE_PRODUCTS['clamps']
+      items.push({
+        product: clampProduct,
+        qty: geometry.clamps,
+        rentalCost: calcFenceRental(effectiveDays, clampProduct.rates, geometry.clamps),
+      })
+    }
+
+    // Gate
+    if (includeGate) {
+      const gateProduct = FENCE_PRODUCTS['walking-gate']
+      items.push({
+        product: gateProduct,
+        qty: 1,
+        rentalCost: calcFenceRental(effectiveDays, gateProduct.rates, 1),
+      })
+    }
+
+    // Wheels
+    if (includeWheels) {
+      const wheelProduct = FENCE_PRODUCTS['wheels']
+      items.push({
+        product: wheelProduct,
+        qty: 2,
+        rentalCost: calcFenceRental(effectiveDays, wheelProduct.rates, 2),
+      })
+    }
+
+    // Lock
+    if (includeLock) {
+      const lockProduct = FENCE_PRODUCTS['lock']
+      items.push({
+        product: lockProduct,
+        qty: 1,
+        rentalCost: calcFenceRental(effectiveDays, lockProduct.rates, 1),
+      })
+    }
+
+    return items
+  }, [fenceProduct, geometry, effectiveDays, stoneType, includeGate, includeWheels, includeLock])
+
+  const totalRental = lines.reduce((sum, l) => sum + l.rentalCost, 0)
+
+  return (
+    <div className="space-y-6">
+      <h1 className="font-condensed text-2xl font-bold text-brand-dark">Girðingareiknivél</h1>
+
+      {/* Input section */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-5">
+          <h2 className="font-condensed text-lg font-semibold text-brand-dark">Tegund girðingar</h2>
+          <div className="grid grid-cols-2 gap-2">
+            {FENCE_TYPES.map(ft => (
+              <button
+                key={ft.key}
+                onClick={() => setSelectedType(ft.key)}
+                className={`rounded-md border px-3 py-2 text-left text-sm transition ${
+                  selectedType === ft.key
+                    ? 'border-brand-accent bg-brand-accent/10 font-medium text-brand-dark'
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                {ft.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Heildarlengd (m)
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={totalLength}
+                onChange={e => setTotalLength(Math.max(1, Number(e.target.value)))}
+                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Leigudagar
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={rentalDays}
+                onChange={e => setRentalDays(Math.max(1, Number(e.target.value)))}
+                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+              />
+              {rentalDays < MIN_RENTAL_DAYS && (
+                <p className="mt-1 text-xs text-amber-600">
+                  Lágmark {MIN_RENTAL_DAYS} dagar — reiknað sem {MIN_RENTAL_DAYS} dagar
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Steinar</label>
+            <div className="mt-1 flex gap-4">
+              <label className="inline-flex items-center text-sm">
+                <input
+                  type="radio"
+                  value="concrete"
+                  checked={stoneType === 'concrete'}
+                  onChange={() => setStoneType('concrete')}
+                  className="text-brand-accent focus:ring-brand-accent"
+                />
+                <span className="ml-2">Steinsteypa</span>
+              </label>
+              <label className="inline-flex items-center text-sm">
+                <input
+                  type="radio"
+                  value="pvc"
+                  checked={stoneType === 'pvc'}
+                  onChange={() => setStoneType('pvc')}
+                  className="text-brand-accent focus:ring-brand-accent"
+                />
+                <span className="ml-2">PVC</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Aukahlutir</label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={includeGate} onChange={e => setIncludeGate(e.target.checked)} className="rounded text-brand-accent focus:ring-brand-accent" />
+              Gönguhliðar
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={includeWheels} onChange={e => setIncludeWheels(e.target.checked)} className="rounded text-brand-accent focus:ring-brand-accent" />
+              Hjól f/hliðar (2x)
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={includeLock} onChange={e => setIncludeLock(e.target.checked)} className="rounded text-brand-accent focus:ring-brand-accent" />
+              Lás
+            </label>
+          </div>
+        </div>
+
+        {/* Summary */}
+        <div className="space-y-4">
+          <div className="rounded-lg border border-gray-200 bg-white p-5">
+            <h2 className="font-condensed text-lg font-semibold text-brand-dark">Samantekt</h2>
+            <dl className="mt-3 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Tegund</dt>
+                <dd className="font-medium">{fenceType.label}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Heildarlengd</dt>
+                <dd className="font-medium">{totalLength} m</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Fjöldi grindar</dt>
+                <dd className="font-medium">{geometry.panels}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Fjöldi steina</dt>
+                <dd className="font-medium">{geometry.stones}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Fjöldi klemmur</dt>
+                <dd className="font-medium">{geometry.clamps}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Leigutímabil</dt>
+                <dd className="font-medium">{effectiveDays} dagar</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="rounded-lg border-2 border-brand-accent bg-brand-accent/5 p-5">
+            <div className="text-sm font-medium text-gray-500">Heildarkostnaður leigu</div>
+            <div className="mt-1 font-condensed text-3xl font-bold text-brand-dark">
+              {formatKr(totalRental)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Materials table */}
+      <div className="rounded-lg border border-gray-200 bg-white">
+        <div className="border-b border-gray-200 px-5 py-3">
+          <h2 className="font-condensed text-lg font-semibold text-brand-dark">Efnislisti</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-5 py-2 text-left font-medium text-gray-600">Leiguvörunúmer</th>
+                <th className="px-5 py-2 text-left font-medium text-gray-600">Lýsing</th>
+                <th className="px-5 py-2 text-right font-medium text-gray-600">Magn</th>
+                <th className="px-5 py-2 text-right font-medium text-gray-600">Leiga</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {lines.map((line, i) => (
+                <tr key={i}>
+                  <td className="px-5 py-2 font-mono text-xs text-gray-500">{line.product.rentalNo}</td>
+                  <td className="px-5 py-2">{line.product.description}</td>
+                  <td className="px-5 py-2 text-right">{line.qty}</td>
+                  <td className="px-5 py-2 text-right font-medium">{formatKr(line.rentalCost)}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-brand-dark bg-gray-50">
+                <td colSpan={3} className="px-5 py-2 text-right font-condensed font-bold text-brand-dark">
+                  Samtals:
+                </td>
+                <td className="px-5 py-2 text-right font-condensed font-bold text-brand-dark">
+                  {formatKr(totalRental)}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}

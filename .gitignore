@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+*.tsbuildinfo
+
+# Reference data (keep in repo but not in build)
+# Reiknivelar-main/  — original calculators (reference)
+# Steypumót/         — PDF manuals (reference)
