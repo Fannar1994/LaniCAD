@@ -106,5 +106,5 @@ And `BrowserRouter` basename in `src/main.tsx`:
 1. **ALWAYS `npm run build` before pushing** — broken builds break the live site
 2. **Never force push to main** — ask user first
 3. **Never commit secrets** — all env vars are in `.env` (gitignored)
-4. **Supabase anon key is OK to expose** — it's designed to be public
+4. **Never commit server/.env** — contains DB password and JWT secret
 5. **Commit frequently** — small, focused commits over large batches

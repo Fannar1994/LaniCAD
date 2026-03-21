@@ -1,7 +1,7 @@
 ---
 name: data-models
-description: TypeScript interfaces, product data structures, Supabase schema, and data flow patterns for LániCAD.
-argument-hint: What data? (types | products | supabase | schema)
+description: TypeScript interfaces, product data structures, PostgreSQL schema, and data flow patterns for LániCAD.
+argument-hint: What data? (types | products | database | schema)
 allowed-tools:
   - read_file
   - replace_string_in_file
@@ -133,14 +133,15 @@ interface MonthlyRates {
 }
 ```
 
-## Supabase Schema (Planned)
+## PostgreSQL Schema — `server/schema.sql`
 
 ```sql
--- profiles: extends Supabase auth.users
-CREATE TABLE profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id),
-  email TEXT NOT NULL,
-  name TEXT,
+-- users: app users with bcrypt password hashes
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  name TEXT DEFAULT '',
   role TEXT CHECK (role IN ('admin', 'user')) DEFAULT 'user',
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -148,10 +149,12 @@ CREATE TABLE profiles (
 -- projects: saved calculator/CAD projects
 CREATE TABLE projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   type TEXT CHECK (type IN ('fence','scaffolding','formwork','rolling','ceiling')),
-  data JSONB NOT NULL DEFAULT '{}',
+  client JSONB DEFAULT '{}',
+  data JSONB DEFAULT '{}',
+  line_items JSONB DEFAULT '[]',
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -159,21 +162,25 @@ CREATE TABLE projects (
 -- templates: reusable equipment configurations
 CREATE TABLE templates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   type TEXT NOT NULL,
   name TEXT NOT NULL,
-  config JSONB NOT NULL DEFAULT '{}',
+  config JSONB DEFAULT '{}',
+  is_public BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- products: dynamic product catalog (optional — can keep in code)
+-- products: dynamic product catalog
 CREATE TABLE products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   calculator_type TEXT NOT NULL,
-  rental_no TEXT,
-  sale_no TEXT,
+  rental_no TEXT NOT NULL UNIQUE,
+  sale_no TEXT DEFAULT '',
   description TEXT NOT NULL,
-  rates JSONB,
-  sale_price NUMERIC,
+  category TEXT DEFAULT '',
+  rates JSONB DEFAULT '{}',
+  sale_price NUMERIC(12,2) DEFAULT 0,
+  weight NUMERIC(8,2) DEFAULT 0,
   active BOOLEAN DEFAULT true
 );
 ```
@@ -186,7 +193,7 @@ User Input (form)
     → Calculation (src/lib/calculations/)
       → Display (formatted with formatKr)
         → Export (PDF/Excel)
-        → Save (localStorage now, Supabase later)
+        → Save (via Express API → PostgreSQL)
 ```
 
 ## Auth Data Flow

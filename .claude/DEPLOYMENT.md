@@ -7,11 +7,8 @@ GitHub (main branch)
   → GitHub Actions (build on push)
     → GitHub Pages (static SPA at https://fannar1994.github.io/LaniCAD/)
 
-Supabase (free tier, when connected)
+Express API (server/)
   → PostgreSQL database
-  → Auth service
-  → REST API (auto-generated from schema)
-  → Realtime (optional)
 ```
 
 ## Current Status: LOCAL DEVELOPMENT ONLY
@@ -114,39 +111,45 @@ And in `src/main.tsx`:
 <BrowserRouter basename="/LaniCAD/">
 ```
 
-## Supabase Setup (When Ready)
+## PostgreSQL + Express Setup
 
-### 1. Create Supabase Project
-- Go to https://supabase.com → New Project
-- Region: EU West (closest to Iceland)
-- Free tier: 500MB database, 50MB storage
+### 1. Install PostgreSQL
+Download and install PostgreSQL from https://www.postgresql.org/download/
 
-### 2. Get Credentials
-- Project URL: `https://xxxxx.supabase.co`
-- Anon key: `eyJ...` (safe to expose publicly)
-
-### 3. Configure Environment
-Create `.env` (gitignored):
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+### 2. Create Database
+```bash
+createdb lanicad
 ```
 
-### 4. Run Schema
-Execute SQL from `.claude/API.md` in Supabase SQL Editor.
+### 3. Run Schema
+```bash
+psql -d lanicad -f server/schema.sql
+```
 
-### 5. Enable RLS
-Apply Row Level Security policies from `.claude/API.md`.
+### 4. Configure Server
+```bash
+cd server
+cp .env.example .env
+# Edit .env with your PostgreSQL credentials and JWT secret
+npm install
+npm run dev
+```
+
+### 5. Configure Frontend
+Create `.env` in project root:
+```env
+VITE_API_URL=http://localhost:3001/api
+```
 
 ## Environment Variables
 
 | Variable | Where | Purpose |
 |---|---|---|
-| `VITE_SUPABASE_URL` | .env (local) | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | .env (local) | Supabase public API key |
+| `VITE_API_URL` | .env (frontend) | Express API URL |
+| `DATABASE_URL` | server/.env | PostgreSQL connection string |
+| `JWT_SECRET` | server/.env | JWT signing secret |
+| `PORT` | server/.env | Express API port |
 | `GITHUB_TOKEN` | GitHub Actions (auto) | Deployment auth |
-
-**Important**: The Supabase anon key is designed to be public. RLS policies protect the data, not the key.
 
 ## Pre-Deployment Checklist
 

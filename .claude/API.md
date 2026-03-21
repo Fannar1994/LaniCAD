@@ -1,157 +1,143 @@
-# LániCAD — Supabase API Reference
+# LániCAD — PostgreSQL + Express API Reference
 
-> Database schema, RLS policies, and API patterns for when Supabase is connected.
+> Database schema and REST API patterns for LániCAD backend.
 
-## Status: PLANNED (not yet connected)
+## Architecture
 
-Currently using localStorage for auth and data. Supabase will be connected later for:
-- Persistent user auth (replacing localStorage)
-- Project save/load across devices
-- Product catalog management
-- Row-Level Security for multi-user access
+```
+Frontend (Vite SPA)  →  Express API (server/)  →  PostgreSQL
+```
+
+- Frontend uses `fetch()` via `src/lib/db.ts`
+- Express server connects to PostgreSQL via `pg` pool
+- Auth: JWT tokens stored in localStorage, verified server-side
 
 ## Environment Variables
 
+### Frontend (`.env`)
 ```env
-# .env (gitignored)
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
+VITE_API_URL=http://localhost:3001/api
 ```
 
-The anon key is **safe to expose** — Supabase designed it to be public. RLS policies protect data.
-
-## Supabase Client — `src/lib/supabase.ts`
-
-```ts
-import { createClient } from '@supabase/supabase-js'
-
-const url = import.meta.env.VITE_SUPABASE_URL
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-// Conditional: works without config (returns null client)
-export const supabase = url && key ? createClient(url, key) : null
+### Server (`server/.env`)
+```env
+DATABASE_URL=postgresql://lanicad:yourpassword@localhost:5432/lanicad
+JWT_SECRET=change-this-to-a-random-secret
+PORT=3001
 ```
 
-## Database Schema
+## Database Schema — `server/schema.sql`
 
-### `profiles`
-Extends Supabase `auth.users` with app-specific fields.
+### `users`
 
 | Column | Type | Constraints |
 |---|---|---|
-| id | UUID | PK, references auth.users(id) |
-| email | TEXT | NOT NULL |
-| name | TEXT | — |
+| id | UUID | PK, DEFAULT gen_random_uuid() |
+| email | TEXT | NOT NULL, UNIQUE |
+| password_hash | TEXT | NOT NULL (bcrypt) |
+| name | TEXT | DEFAULT '' |
 | role | TEXT | CHECK ('admin', 'user'), DEFAULT 'user' |
 | created_at | TIMESTAMPTZ | DEFAULT now() |
 
 ### `projects`
-Saved calculator/CAD projects per user.
 
 | Column | Type | Constraints |
 |---|---|---|
 | id | UUID | PK, DEFAULT gen_random_uuid() |
-| user_id | UUID | FK → profiles(id), ON DELETE CASCADE |
+| user_id | UUID | FK → users(id), ON DELETE CASCADE |
 | name | TEXT | NOT NULL |
 | type | TEXT | CHECK ('fence','scaffolding','formwork','rolling','ceiling') |
-| data | JSONB | NOT NULL, DEFAULT '{}' |
+| client | JSONB | DEFAULT '{}' |
+| data | JSONB | DEFAULT '{}' |
+| line_items | JSONB | DEFAULT '[]' |
 | created_at | TIMESTAMPTZ | DEFAULT now() |
-| updated_at | TIMESTAMPTZ | DEFAULT now() |
+| updated_at | TIMESTAMPTZ | DEFAULT now() (auto-trigger) |
 
 ### `templates`
-Reusable equipment configurations (shared across users).
 
 | Column | Type | Constraints |
 |---|---|---|
 | id | UUID | PK, DEFAULT gen_random_uuid() |
-| type | TEXT | NOT NULL |
+| user_id | UUID | FK → users(id), ON DELETE SET NULL |
+| type | TEXT | CHECK (5 calculator types) |
 | name | TEXT | NOT NULL |
-| config | JSONB | NOT NULL, DEFAULT '{}' |
+| description | TEXT | DEFAULT '' |
+| config | JSONB | DEFAULT '{}' |
+| is_public | BOOLEAN | DEFAULT false |
 | created_at | TIMESTAMPTZ | DEFAULT now() |
 
 ### `products`
-Dynamic product catalog (optional — products are currently hardcoded in `src/data/`).
 
 | Column | Type | Constraints |
 |---|---|---|
 | id | UUID | PK, DEFAULT gen_random_uuid() |
-| calculator_type | TEXT | NOT NULL |
-| rental_no | TEXT | — |
-| sale_no | TEXT | — |
+| calculator_type | TEXT | CHECK (5 calculator types) |
+| rental_no | TEXT | NOT NULL, UNIQUE |
+| sale_no | TEXT | DEFAULT '' |
 | description | TEXT | NOT NULL |
-| rates | JSONB | — |
-| sale_price | NUMERIC | — |
+| category | TEXT | DEFAULT '' |
+| rates | JSONB | DEFAULT '{}' |
+| sale_price | NUMERIC(12,2) | DEFAULT 0 |
+| weight | NUMERIC(8,2) | DEFAULT 0 |
 | active | BOOLEAN | DEFAULT true |
+| created_at | TIMESTAMPTZ | DEFAULT now() |
+| updated_at | TIMESTAMPTZ | DEFAULT now() (auto-trigger) |
 
-## RLS Policies (Planned)
+## REST API Endpoints
 
-```sql
--- profiles: users can read own profile, admins can read all
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users read own profile" ON profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Admins read all profiles" ON profiles FOR SELECT USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-);
+### Auth
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/auth/login` | No | Login, returns JWT + user |
 
--- projects: users manage own projects
-ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users manage own projects" ON projects FOR ALL USING (auth.uid() = user_id);
-CREATE POLICY "Admins manage all projects" ON projects FOR ALL USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-);
+### Projects
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/api/projects` | JWT | List user's projects |
+| GET | `/api/projects/:id` | JWT | Get single project |
+| POST | `/api/projects` | JWT | Create project |
+| PUT | `/api/projects/:id` | JWT | Update project |
+| DELETE | `/api/projects/:id` | JWT | Delete project |
 
--- templates: everyone reads, admins write
-ALTER TABLE templates ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Anyone reads templates" ON templates FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Admins manage templates" ON templates FOR ALL USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-);
+### Templates
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/api/templates` | JWT | List templates (own + public) |
+| POST | `/api/templates` | JWT | Create template |
+| DELETE | `/api/templates/:id` | JWT | Delete template |
 
--- products: everyone reads, admins write
-ALTER TABLE products ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Anyone reads products" ON products FOR SELECT USING (true);
-CREATE POLICY "Admins manage products" ON products FOR ALL USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-);
-```
+### Products
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/api/products` | No | List active products |
+| POST | `/api/products` | JWT | Upsert product (by rental_no) |
 
-## API Usage Patterns
+### Health
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/api/health` | No | DB connectivity check |
 
-### Fetch projects
+## Frontend Data Layer — `src/lib/db.ts`
+
+Uses `fetch()` with JWT Bearer tokens:
+
 ```ts
-const { data, error } = await supabase
-  .from('projects')
-  .select('*')
-  .order('updated_at', { ascending: false })
+// Fetch projects
+const projects = await fetchProjects()
+
+// Create project
+const project = await createProject({ name, type, client, data, line_items })
+
+// Delete project
+await deleteProject(id)
 ```
 
-### Save project
-```ts
-const { data, error } = await supabase
-  .from('projects')
-  .upsert({
-    id: projectId || undefined,
-    user_id: user.id,
-    name: projectName,
-    type: calculatorType,
-    data: projectData,
-    updated_at: new Date().toISOString(),
-  })
-  .select()
-  .single()
-```
+## Setup
 
-### Auth flow (future)
-```ts
-// Sign in
-const { data, error } = await supabase.auth.signInWithPassword({
-  email,
-  password,
-})
-
-// Get session
-const { data: { session } } = await supabase.auth.getSession()
-
-// Sign out
-await supabase.auth.signOut()
-```
+1. Install PostgreSQL
+2. Create database: `createdb lanicad`
+3. Run schema: `psql -d lanicad -f server/schema.sql`
+4. Copy `server/.env.example` → `server/.env`, fill in credentials
+5. `cd server && npm install && npm run dev`
+6. Copy `.env.example` → `.env` (frontend)
+7. `npm run dev` (frontend)

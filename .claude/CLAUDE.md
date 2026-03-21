@@ -14,8 +14,8 @@ LániCAD is a general-purpose 2D/3D CAD system for construction equipment rental
 | PDF Read | PDF.js + Tesseract.js | Client-side PDF reading and OCR (no paid APIs) |
 | PDF Write | jsPDF | Export professional PDF documents |
 | Calculators | Existing formulas, modernized into React components | Fence, scaffolding, concrete form calculators |
-| Database | Supabase (PostgreSQL) — free tier | Projects, templates, users (client SDK, no backend) |
-| Auth | localStorage-based (future: Supabase Auth + RLS) | AuthProvider with useAuth() hook |
+| Database | PostgreSQL + Express REST API | Projects, templates, users, products |
+| Auth | localStorage-based (JWT tokens for API) | AuthProvider with useAuth() hook |
 | Hosting | GitHub Pages (auto-deploy via GitHub Actions) | Static SPA hosting |
 
 ## Repository
@@ -41,7 +41,7 @@ npm run preview      # Preview production build locally
   SESSION.md         # Current session context and progress
   TODO.md            # Active task tracking
   AI-MISTAKES.md     # Lessons learned from AI mistakes
-  API.md             # Supabase schema and API reference
+  API.md             # PostgreSQL schema and REST API reference
   DEPLOYMENT.md      # Deployment and hosting instructions
   skills/            # Skill files for AI token efficiency
     calculator-patterns/SKILL.md
@@ -85,19 +85,21 @@ Steypumót/           # Reference docs: Hünnebeck manuals, pricing Excel files
 ## Auth (Current Implementation)
 
 - **localStorage-based** AuthProvider with useAuth() hook
-- Default admin: `admin@byko.is` / `admin123`
+- Default admin: `admin@lanicad.is` / `admin123`
 - Roles: `admin`, `user`
 - Storage keys: `lanicad_users`, `lanicad_session`
 - Users created/managed in Settings page (admin only)
-- **Future**: Migrate to Supabase Auth with RLS
+- JWT tokens used for API authentication
 
-## Supabase Database Schema (Planned)
+## PostgreSQL Database Schema
+
+Schema lives at `server/schema.sql`. Run via `psql -d lanicad -f server/schema.sql`.
 
 | Table | Description |
 |---|---|
-| `profiles` | User profiles (id, email, name, role, created_at) |
-| `projects` | Saved CAD projects (id, user_id, name, type, data JSONB, created_at, updated_at) |
-| `templates` | Reusable equipment templates (id, type, name, config JSONB) |
+| `users` | User accounts (id, email, password_hash, name, role, created_at) |
+| `projects` | Saved CAD projects (id, user_id, name, type, client JSONB, data JSONB, line_items JSONB) |
+| `templates` | Reusable equipment templates (id, user_id, type, name, config JSONB, is_public) |
 | `products` | Product catalog (id, calculator_type, rental_no, sale_no, description, rates JSONB, sale_price) |
 
 ## Settings Page
@@ -113,13 +115,14 @@ Steypumót/           # Reference docs: Hünnebeck manuals, pricing Excel files
 ```
 GitHub (main) → GitHub Pages (frontend SPA, auto-deploy via GitHub Actions)
                        ↓
-              Supabase (PostgreSQL + Auth + REST API — free tier, when ready)
+              Express API (server/) → PostgreSQL
 ```
 
 - Push to `main` → GitHub Actions builds and deploys to GitHub Pages
 - **Always `npm run build` locally before pushing**
-- Supabase client connects directly from browser (anon key + RLS = secure)
-- No backend server needed — all via Supabase client SDK
+- Frontend calls Express REST API via fetch()
+- Express API connects to PostgreSQL via pg pool
+- JWT tokens for authenticated API requests
 
 ## Important Rules
 
@@ -127,9 +130,9 @@ GitHub (main) → GitHub Pages (frontend SPA, auto-deploy via GitHub Actions)
 2. **No paid APIs** — no OpenAI, no Azure, no paid services. AI features use browser-only tools (PDF.js, Tesseract.js)
 3. **Build before push** — always run `npm run build` and verify success before `git push`
 4. **GitHub Pages safe** — no server-side secrets, no environment variables with API keys
-5. **Supabase anon key is safe** — it's designed to be public, RLS protects data
+5. **PostgreSQL backend** — Express API in `server/`, JWT auth, no Supabase
 6. **Icelandic UI** — all user-facing text in Icelandic
-7. **BYKO Leiga branding** — use the established design tokens (dark gray + yellow accent)
+7. **LániCAD branding** — use the established design tokens (dark gray + yellow accent)
 8. **Skills first** — always check `.claude/skills/` before writing code, to save tokens
 9. **Track everything** — update SESSION.md, TODO.md, and AI-MISTAKES.md as you work
 10. **Transparency** — every action, mistake, and decision gets documented

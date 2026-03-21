@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Trash2, ExternalLink } from 'lucide-react'
-import { isSupabaseConfigured } from '@/lib/supabase'
-import { fetchProjects, deleteProject } from '@/lib/db'
+import { isApiConfigured, fetchProjects, deleteProject } from '@/lib/db'
 import type { Project } from '@/types'
 
 const TYPE_LABELS: Record<string, string> = {
@@ -43,20 +42,20 @@ export function ProjectsPage() {
     }
   }
 
-  if (!isSupabaseConfigured) {
+  if (!isApiConfigured) {
     return (
       <div>
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Verkefni</h1>
         <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-6">
           <h2 className="font-medium text-amber-800">Gagnagrunnur ekki tengdur</h2>
           <p className="mt-1 text-sm text-amber-700">
-            Settu upp Supabase til að vista verkefni. Sjá <code className="rounded bg-amber-100 px-1">.env.example</code> til að búa til <code className="rounded bg-amber-100 px-1">.env</code> skrá með tengingu.
+            Settu upp PostgreSQL og Express þjón til að vista verkefni. Sjá <code className="rounded bg-amber-100 px-1">server/</code> möppu.
           </p>
           <ol className="mt-3 list-inside list-decimal space-y-1 text-sm text-amber-700">
-            <li>Búðu til verkefni á <strong>supabase.com</strong></li>
-            <li>Keyrðu SQL úr <code className="rounded bg-amber-100 px-1">supabase/schema.sql</code> í SQL Editor</li>
-            <li>Afritaðu URL og anon key í <code className="rounded bg-amber-100 px-1">.env</code></li>
-            <li>Endurræstu dev server</li>
+            <li>Settu upp PostgreSQL gagnagrunn</li>
+            <li>Keyrðu <code className="rounded bg-amber-100 px-1">server/schema.sql</code> á gagnagrunninn</li>
+            <li>Afritaðu <code className="rounded bg-amber-100 px-1">server/.env.example</code> → <code className="rounded bg-amber-100 px-1">server/.env</code></li>
+            <li>Keyrðu <code className="rounded bg-amber-100 px-1">cd server && npm install && npm run dev</code></li>
           </ol>
         </div>
       </div>

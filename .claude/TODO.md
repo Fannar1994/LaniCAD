@@ -31,7 +31,6 @@
 - [ ] 3D viewer component (Three.js + R3F)
 - [ ] PDF export for each calculator
 - [ ] Excel export for each calculator
-- [ ] Project save/load (localStorage → Supabase)
-- [ ] Supabase Auth migration
+- [ ] Project save/load (PostgreSQL via Express API)
 - [ ] DXF/DWG import
 - [ ] Product catalog management in Settings
