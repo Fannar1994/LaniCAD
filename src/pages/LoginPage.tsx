@@ -20,12 +20,12 @@ export function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-brand-accent font-condensed text-2xl font-bold text-brand-dark">
-            BL
+            LC
           </div>
           <h1 className="font-condensed text-2xl font-bold text-brand-dark">
             LániCAD
           </h1>
-          <p className="mt-1 text-sm text-gray-500">BYKO Leiga — Innskráning</p>
+          <p className="mt-1 text-sm text-gray-500">Innskráning</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
@@ -71,7 +71,7 @@ export function LoginPage() {
         </form>
 
         <p className="mt-4 text-center text-xs text-gray-400">
-          Sjálfgefinn aðgangur: admin@byko.is / admin123
+          Sjálfgefinn aðgangur: admin@lanicad.is / admin123
         </p>
       </div>
     </div>

@@ -19,7 +19,7 @@ export function Dashboard() {
           Velkomin, {user?.name}
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          BYKO Leiga — LániCAD
+          LániCAD
         </p>
       </div>
 

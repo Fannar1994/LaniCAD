@@ -44,11 +44,11 @@ export function Sidebar({ open }: SidebarProps) {
       {/* Logo */}
       <div className="flex h-14 items-center gap-3 border-b border-gray-200 px-4">
         <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-accent font-condensed font-bold text-brand-dark">
-          BL
+          LC
         </div>
         {open && (
           <span className="font-condensed text-lg font-bold text-brand-dark">
-            BYKO Leiga
+            LániCAD
           </span>
         )}
       </div>

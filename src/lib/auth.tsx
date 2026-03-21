@@ -16,7 +16,7 @@ const SESSION_KEY = 'lanicad_session'
 // Default admin user (created on first run)
 const DEFAULT_ADMIN: UserProfile & { password: string } = {
   id: '1',
-  email: 'admin@byko.is',
+  email: 'admin@lanicad.is',
   name: 'Kerfisstjóri',
   role: 'admin',
   password: 'admin123', // User should change this in settings

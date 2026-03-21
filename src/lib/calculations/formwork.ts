@@ -1,4 +1,4 @@
-// Formwork calculation logic — ported from motareiknivel-byko-v11.html
+// Formwork calculation logic — ported from original HTML calculator
 import {
   HM01, HM02, HM21, KM01, KM21, LM02, LM22, LM81, LM51, LM71, AH21,
   type FormworkPanel, type FormworkAccessory, type FormworkProp, type FormworkBeam,

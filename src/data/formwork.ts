@@ -1,4 +1,4 @@
-// Formwork product data — ported from motareiknivel-byko-v11.html
+// Formwork product data — ported from original HTML calculator
 
 export interface FormworkPanel {
   id: string
