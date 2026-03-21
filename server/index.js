@@ -194,7 +194,7 @@ app.delete('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
 
 // Update product (admin)
 app.put('/api/products/:id', authenticate, requireAdmin, async (req, res) => {
-  const { description, rates, sale_price, weight, active } = req.body
+  const { description, rates, sale_price, weight, active, category, rental_no, sale_no } = req.body
   try {
     const sets = []
     const vals = []
@@ -204,6 +204,9 @@ app.put('/api/products/:id', authenticate, requireAdmin, async (req, res) => {
     if (sale_price !== undefined) { sets.push(`sale_price = $${i++}`); vals.push(sale_price) }
     if (weight !== undefined) { sets.push(`weight = $${i++}`); vals.push(weight) }
     if (active !== undefined) { sets.push(`active = $${i++}`); vals.push(active) }
+    if (category !== undefined) { sets.push(`category = $${i++}`); vals.push(category) }
+    if (rental_no !== undefined) { sets.push(`rental_no = $${i++}`); vals.push(rental_no) }
+    if (sale_no !== undefined) { sets.push(`sale_no = $${i++}`); vals.push(sale_no) }
     if (sets.length === 0) return res.status(400).json({ error: 'Ekkert til að uppfæra' })
     vals.push(req.params.id)
     const { rows } = await pool.query(

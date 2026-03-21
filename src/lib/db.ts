@@ -130,7 +130,7 @@ export async function upsertProduct(product: Omit<DbProduct, 'id' | 'created_at'
   })
 }
 
-export async function updateProduct(id: string, updates: Partial<Pick<DbProduct, 'description' | 'rates' | 'sale_price' | 'weight' | 'active'>>): Promise<DbProduct> {
+export async function updateProduct(id: string, updates: Partial<Pick<DbProduct, 'description' | 'rates' | 'sale_price' | 'weight' | 'active' | 'category' | 'rental_no' | 'sale_no'>>): Promise<DbProduct> {
   return apiFetch<DbProduct>(`/products/${encodeURIComponent(id)}`, {
     method: 'PUT',
     body: JSON.stringify(updates),
