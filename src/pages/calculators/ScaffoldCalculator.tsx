@@ -80,8 +80,8 @@ export function ScaffoldCalculator() {
   const totalWeight = lineItems.reduce((s, l) => s + l.weight, 0)
 
   const getExportData = useCallback(() => ({
-    title: 'Vinnupallareiknivél',
-    calculatorType: 'Vinnupallar',
+    title: 'Villalta Kerfispallar',
+    calculatorType: 'Villalta Kerfispallar',
     client,
     startDate: startDate || undefined,
     endDate: endDate || undefined,
@@ -99,8 +99,8 @@ export function ScaffoldCalculator() {
 
   const handleSave = useCallback(async () => {
     const name = client.name
-      ? `Vinnupallar — ${client.name}`
-      : `Vinnupallar — ${new Date().toLocaleDateString('is-IS')}`
+      ? `Villalta — ${client.name}`
+      : `Villalta — ${new Date().toLocaleDateString('is-IS')}`
     const sharedLines: SharedLineItem[] = lineItems.map(l => ({
       rentalNo: l.itemNo,
       description: l.name,
@@ -145,7 +145,7 @@ export function ScaffoldCalculator() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-condensed text-2xl font-bold text-brand-dark">Vinnupalla&shy;reiknivél</h1>
+        <h1 className="font-condensed text-2xl font-bold text-brand-dark">Villalta Kerfispallar</h1>
         <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={handleSaveTemplate} savingTemplate={savingTemplate} />
       </div>
 

@@ -11,6 +11,10 @@ import {
   PenTool,
   FileText,
   Layers,
+  Building2,
+  Grid3X3,
+  Frame,
+  Triangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n'
@@ -26,9 +30,16 @@ const navItems = [
   { to: '/templates', icon: Layers, tKey: 'nav.templates' },
 ] as const
 
+const scaffoldingItems = [
+  { to: '/calculator/scaffolding/villalta', icon: Columns3, label: 'Villalta' },
+  { to: '/calculator/scaffolding/layher-speedy', icon: Building2, label: 'Layher Speedy' },
+  { to: '/calculator/scaffolding/id15', icon: Grid3X3, label: 'ID 15' },
+  { to: '/calculator/scaffolding/st60', icon: Frame, label: 'ST60' },
+  { to: '/calculator/scaffolding/topec', icon: Triangle, label: 'Topec' },
+] as const
+
 const calculatorItems = [
   { to: '/calculator/fence', icon: Fence, tKey: 'nav.fence' },
-  { to: '/calculator/scaffolding', icon: Columns3, tKey: 'nav.scaffolding' },
   { to: '/calculator/formwork', icon: Box, tKey: 'nav.formwork' },
   { to: '/calculator/rolling', icon: ArrowUpDown, tKey: 'nav.rolling' },
   { to: '/calculator/ceiling', icon: Ruler, tKey: 'nav.ceiling' },
@@ -65,11 +76,24 @@ export function Sidebar({ open }: SidebarProps) {
       </div>
 
       {/* Main nav */}
-      <nav className="flex-1 space-y-1 p-2">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-2">
         {navItems.map(item => (
           <SidebarLink key={item.to} to={item.to} icon={item.icon} label={t(item.tKey)} open={open} />
         ))}
 
+        {/* Scaffolding section */}
+        {open && (
+          <div className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            Kerfispallar
+          </div>
+        )}
+        {!open && <div className="my-3 border-t border-gray-200" />}
+
+        {scaffoldingItems.map(item => (
+          <SidebarLink key={item.to} to={item.to} icon={item.icon} label={item.label} open={open} />
+        ))}
+
+        {/* Other calculators section */}
         {open && (
           <div className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
             {t('nav.calculators')}
