@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
+import { ChatPanel } from '@/components/chat/ChatPanel'
 
 export function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -15,6 +16,7 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+      <ChatPanel />
     </div>
   )
 }

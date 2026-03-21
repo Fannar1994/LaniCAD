@@ -179,3 +179,18 @@ export async function changeOwnPassword(currentPassword: string, newPassword: st
     body: JSON.stringify({ currentPassword, newPassword }),
   })
 }
+
+// ── AI Chat ──
+
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+export async function sendChatMessage(messages: ChatMessage[]): Promise<string> {
+  const data = await apiFetch<{ reply: string }>('/chat', {
+    method: 'POST',
+    body: JSON.stringify({ messages }),
+  })
+  return data.reply
+}

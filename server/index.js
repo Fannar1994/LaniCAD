@@ -4,10 +4,14 @@ const cors = require('cors')
 const { Pool } = require('pg')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const Anthropic = require('@anthropic-ai/sdk')
 
 const app = express()
 const PORT = process.env.PORT || 3001
 const JWT_SECRET = process.env.JWT_SECRET || 'change-this-to-a-random-secret'
+
+// ── Claude AI ──
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 // ── Database ──
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
@@ -410,6 +414,134 @@ app.post('/api/products', authenticate, async (req, res) => {
   } catch (err) {
     console.error('Upsert product error:', err)
     res.status(500).json({ error: 'Villa við að vista vöru' })
+  }
+})
+
+// ══════════════════════════════════════════
+// AI Chat (Claude Sonnet 4)
+// ══════════════════════════════════════════
+
+const SYSTEM_PROMPT = `Þú ert LániCAD AI aðstoðarmaður — sérfræðingur í tækjaleigu og sölu á byggingartækjum hjá BYKO Leiga á Íslandi.
+
+## Þú getur hjálpað með:
+- Val á réttum tækjum (girðingar, vinnupallar, steypumót, hjólapallar, loftastoðir)
+- Leiguverðútreikningum og tilboðum
+- Tæknilegar upplýsingar og leiðbeiningar
+- Ráðgjöf um hvaða búnað viðskiptavinur þarfnast
+
+## Gjaldmiðill: ISK — notaðu punkt sem þúsundaskil og kommu sem aukastafi: t.d. 1.234.567 kr
+
+## Vöruflokkar og verð:
+
+### 1. GIRÐINGAR (Mobile Fences) — Lágmarksleigu: 10 dagar
+Leiguverð er í 12 tímabilum (30 dagar hvert), lækkandi:
+- Girðing 3500×2000mm (1.7kg/m): [120, 60, 30, 15, 15, ...] kr/dag, sala: 18.500 kr
+- Girðing 3500×2000mm (1.1kg/m): [100, 50, 25, 13, 13, ...] kr/dag, sala: 13.500 kr
+- Girðing 3500×1200mm (1.1kg/m): [80, 40, 20, 10, 10, ...] kr/dag, sala: 10.500 kr
+- Biðröðgirðing 2500mm: [90, 45, 23, 12, 12, ...] kr/dag, sala: 12.000 kr
+- Plastgirðing 2100mm: [50, 25, 13, 7, 7, ...] kr/dag, sala: 5.500 kr
+- Steinn (steinsteypa): [30, 15, 8, 4, ...] kr/dag, sala: 4.500 kr
+- Steinn (PVC): [20, 10, 5, 3, ...] kr/dag, sala: 3.000 kr
+- Klemmur: [5, 3, 2, 1, ...] kr/dag, sala: 900 kr
+- Gönguhliðar: [100, 50, 25, 13, ...] kr/dag, sala: 18.000 kr
+- Hjól f/hliðar: [30, 15, 8, 4, ...] kr/dag, sala: 5.000 kr
+Formúla: 12 tímabil af 30 dögum með lækkandi verði.
+
+### 2. VINNUPALLAR (Facade Scaffolding) — Layher Allround kerfi
+Leiguverð á dag × fjöldi daga × magn:
+- Rammar 2,0m: 19 kr/dag, 18,6 kg, sala: 23.895 kr
+- Rammar 0,7m: 15 kr/dag, 7,52 kg, sala: 12.867 kr
+- Gólfborð 1,8m: 12 kr/dag, 13,9 kg, sala: 15.995 kr
+- Stigapallar 1,8m: 50 kr/dag, 17 kg, sala: 40.531 kr
+- Stigar 2,0m: 17 kr/dag, 8 kg, sala: 12.026 kr
+- Tvöföld handrið: 15 kr/dag, 8,8 kg, sala: 14.097 kr
+- Veggfestingar 50cm: 3 kr/dag, sala: 3.695 kr
+- Veggfestingar 100cm: 6 kr/dag, sala: 4.688 kr
+- Klemmur: 3 kr/dag, sala: 1.695 kr
+Gólfborð eru 1,8m á lengd. Veggfestingar á ca. 15 m² svæði.
+
+### 3. STEYPUMÓT (Concrete Formwork) — 4 undirkerfi
+Leiguverð: dagar < 7 → dagverð × dagar × magn; annars vikuverð × ceil(dagar/7) × magn
+
+**Rasto kerfi (veggir):** Flekar 30-240cm × 300cm, dagverð 70-373 kr
+**Takko kerfi (undirstöður):** Flekar 30-90cm × 120cm, dagverð 33-50 kr
+**Manto kerfi (veggir/súlur):** Flekar 45-240cm × 60-330cm, dagverð 47-405 kr, horn, útvíkkanir
+**Alufort (plötur):** Loftslagsmót 37,5-75cm, dagverð 117-282 kr
+
+Almennt viðmið: ~170 vörur, hornaflekar, Mótafleki-panellar, klemmur, bindingar, krana krókar, boltaplötur.
+
+### 4. HJÓLAPALLAR (Mobile Scaffolding) — 3 tegundir
+- Mjór pallur (0,75m breidd): 2,5-10,5m hæð
+- Breiður pallur (1,35m breidd): 2,5-10,5m hæð
+- Quickly pallur: ein hæð
+
+Verð eftir hæð (mjór/breiður):
+- 2,5m: 4.717/5.443 kr á sólarhring
+- 4,5m: 7.576/8.303 kr á sólarhring
+- 6,5m: 10.571/11.298 kr á sólarhring
+- 8,5m: 13.565/14.292 kr á sólarhring
+- 10,5m: 16.647/17.374 kr á sólarhring
+
+Formúla: 1 dagur = sólarhring. 2-6 dagar = sólarhring + aukadag × (dagar-1). 7+ = vika × heilar vikur + sólarhring × aukadagar.
+
+### 5. LOFTASTOÐIR (Ceiling Props) — EN 1065 flokkar A-E
+Leiguverð: dagar < 7 → dagverð × dagar × magn; annars vikuverð × ceil(dagar/7) × magn
+- Villalta 070/120M (A): 0,7-1,2m, 16 kr/dag, 60 kr/viku, sala: 5.422 kr
+- Villalta 100/180M (A): 1,0-1,8m, 18 kr/dag, 67 kr/viku, sala: 6.595 kr
+- Villalta 200/350M (B-CD): 2,0-3,5m, 30 kr/dag, 112 kr/viku, sala: 13.895 kr
+- Villalta 250/400M (CE): 2,5-4,0m, 35 kr/dag, 130 kr/viku, sala: 17.595 kr
+- Villalta 301/500M (D-E): 3,01-5,0m, 50 kr/dag, 186 kr/viku, sala: 26.995 kr
+- Villalta 301/550M (E): 3,01-5,5m, 70 kr/dag, 260 kr/viku, sala: 40.795 kr
+
+HT-20 mótabitar: 2,45m-5,90m, 50-140 kr/dag, 186-520 kr/viku.
+Aukahlutir: þrífótur, framlenging, rekkur, gafflar.
+
+## Reglur:
+- Svaraðu ALLTAF á íslensku
+- Vertu nákvæmur með verð og tölur
+- Ef þú ert ekki viss um verð, segðu frá og ráðleggðu viðskiptavin að hafa samband
+- Ekki þykjast vita um vörur sem eru ekki í listanum
+- Vertu vingjarnlegur og faglegur`
+
+app.post('/api/chat', authenticate, async (req, res) => {
+  const { messages } = req.body
+  if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: 'Vantar skilaboð' })
+  }
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(503).json({ error: 'AI þjónusta er ekki stillt' })
+  }
+
+  // Sanitize messages: only allow role user/assistant and text content
+  const sanitized = messages
+    .filter(m => ['user', 'assistant'].includes(m.role) && typeof m.content === 'string')
+    .slice(-20) // limit conversation history
+    .map(m => ({ role: m.role, content: m.content.slice(0, 4000) }))
+
+  if (sanitized.length === 0) {
+    return res.status(400).json({ error: 'Engin gild skilaboð' })
+  }
+
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1024,
+      system: SYSTEM_PROMPT,
+      messages: sanitized,
+    })
+
+    const text = response.content
+      .filter(block => block.type === 'text')
+      .map(block => block.text)
+      .join('')
+
+    res.json({ reply: text })
+  } catch (err) {
+    console.error('Claude API error:', err.message)
+    if (err.status === 401) {
+      return res.status(503).json({ error: 'Ógildur API lykill' })
+    }
+    res.status(500).json({ error: 'Villa í AI þjónustu' })
   }
 })
 
