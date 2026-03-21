@@ -72,7 +72,7 @@ export function ScaffoldCalculator() {
               + Bæta við hlið
             </button>
           </div>
-          {facades.map((f, i) => (
+          {facades.map((f) => (
             <div key={f.id} className="rounded-lg border border-gray-200 bg-white p-4">
               <div className="mb-3 flex items-center justify-between">
                 <input

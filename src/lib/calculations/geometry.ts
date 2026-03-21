@@ -26,7 +26,7 @@ export function calculateLevelsFromHeight(targetHeight: number): {
     { type: '100cm', actual: 0.69 },
   ]
 
-  let best = { levels2m: 1, levels07m: 0, legType: '50cm' as const, actualHeight: 0, diff: Infinity }
+  let best: { levels2m: number; levels07m: number; legType: '50cm' | '100cm'; actualHeight: number; diff: number } = { levels2m: 1, levels07m: 0, legType: '50cm', actualHeight: 0, diff: Infinity }
 
   for (const leg of legOptions) {
     for (let l2 = 0; l2 <= 15; l2++) {

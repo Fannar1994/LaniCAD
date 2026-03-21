@@ -6,18 +6,17 @@ LániCAD is a general-purpose 2D/3D CAD system for construction equipment rental
 
 ## Tech Stack
 
-Layer	Technology	Purpose
-Frontend	Vite 6 + React 19 + TypeScript + Tailwind CSS + shadcn/ui	Same stack you know from Villi Pípari
-2D Drawing Engine	cad-viewer (MIT) + Maker.js (MIT)	DXF/DWG import + 2D production drawing generation
-3D Engine	Three.js + React Three Fiber	3D scaffolding/formwork visualization
-CAD Kernel	bitbybit-occt (MIT, OpenCascade WASM)	Parametric geometry operations, STEP export
-PDF Read	PDF.js + OpenAI Vision API (GPT-4o)	Read architecture PDFs, AI validates and suggests setups
-PDF Write	jsPDF / html2pdf.js	Export professional PDF documents
-Calculators	Your existing formulas, modernized into React components	Fence, scaffolding, concrete form calculators
-Backend	Express + TypeScript	API proxy, AI integration, authentication
-Database	Azure Cosmos DB or PostgreSQL	Projects, templates, users
-Auth	JWT + bcrypt (not SHA-256)	High-security authentication
-Hosting	Azure Static Web Apps + Azure App Service	Same deployment pattern
+| Layer | Technology | Purpose |
+|---|---|---|
+| Frontend | Vite 6 + React 19 + TypeScript + Tailwind CSS + shadcn/ui | SPA with component library |
+| 2D Drawing Engine | Maker.js (MIT) | 2D production drawing generation (SVG) |
+| 3D Engine | Three.js + React Three Fiber | 3D scaffolding/formwork visualization |
+| PDF Read | PDF.js + Tesseract.js | Client-side PDF reading and OCR (no paid APIs) |
+| PDF Write | jsPDF | Export professional PDF documents |
+| Calculators | Existing formulas, modernized into React components | Fence, scaffolding, concrete form calculators |
+| Database | Supabase (PostgreSQL) — free tier | Projects, templates, users (client SDK, no backend) |
+| Auth | localStorage-based (future: Supabase Auth + RLS) | AuthProvider with useAuth() hook |
+| Hosting | GitHub Pages (auto-deploy via GitHub Actions) | Static SPA hosting |
 
 ## Repository
 
