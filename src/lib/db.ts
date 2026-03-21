@@ -1,17 +1,18 @@
 import type { Project, CalculatorType, ClientInfo, LineItem } from '@/types'
+import { getApiUrl, isApiReady } from '@/lib/api-config'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
-
-/** True when the API URL is configured (always true for local dev) */
-export const isApiConfigured = Boolean(API_URL)
+/** True when the API URL is configured */
+export const isApiConfigured = isApiReady()
 
 function getToken(): string | null {
   return localStorage.getItem('lanicad_token')
 }
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const apiUrl = getApiUrl()
+  if (!apiUrl) throw new Error('API URL er ekki stillt. Farðu í Stillingar → Almennt.')
   const token = getToken()
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${apiUrl}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',

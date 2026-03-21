@@ -10,8 +10,9 @@ import { formatKr } from '@/lib/format'
 import {
   UserPlus, Trash2, Key, Save, Plus, Settings, Package, Users, Shield,
   ArrowUpDown, ArrowUp, ArrowDown, Search, Download, Upload, Edit2, X, Check,
-  ChevronDown, ChevronRight,
+  ChevronDown, ChevronRight, Globe, RotateCcw,
 } from 'lucide-react'
+import { getApiUrl, setApiUrl, clearApiUrl, hasCustomApiUrl } from '@/lib/api-config'
 import * as XLSX from 'xlsx'
 
 type Tab = 'general' | 'products' | 'users'
@@ -78,6 +79,43 @@ function GeneralSettings() {
   const [confirmPw, setConfirmPw] = useState('')
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [saving, setSaving] = useState(false)
+
+  // API URL config
+  const [apiUrlInput, setApiUrlInput] = useState(getApiUrl())
+  const [apiMsg, setApiMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [testing, setTesting] = useState(false)
+  const isCustom = hasCustomApiUrl()
+
+  const handleTestAndSave = async () => {
+    const url = apiUrlInput.trim().replace(/\/+$/, '')
+    if (!url) {
+      setApiMsg({ ok: false, text: 'Sláðu inn API slóð' })
+      return
+    }
+    setTesting(true)
+    setApiMsg(null)
+    try {
+      const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(8000) })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      if (data.status === 'ok') {
+        setApiUrl(url)
+        setApiMsg({ ok: true, text: `Tenging virkar! DB: ${data.db}` })
+      } else {
+        setApiMsg({ ok: false, text: 'API svaraði en staða er ekki "ok"' })
+      }
+    } catch {
+      setApiMsg({ ok: false, text: 'Ekki tókst að tengjast. Athugaðu slóðina og reyndu aftur.' })
+    } finally {
+      setTesting(false)
+    }
+  }
+
+  const handleResetApi = () => {
+    clearApiUrl()
+    setApiUrlInput(getApiUrl())
+    setApiMsg({ ok: true, text: 'Endurstillt á sjálfgildi' })
+  }
 
   const handlePasswordChange = async () => {
     if (newPw !== confirmPw) {
@@ -165,6 +203,48 @@ function GeneralSettings() {
           >
             <Key className="h-4 w-4" />
             {saving ? 'Vista...' : 'Uppfæra lykilorð'}
+          </button>
+        </div>
+      </div>
+
+      {/* API Server URL */}
+      <div className="rounded-lg border border-gray-200 bg-white p-5">
+        <h2 className="font-condensed text-lg font-semibold text-brand-dark flex items-center gap-2">
+          <Globe className="h-5 w-5" />
+          API þjónn
+        </h2>
+        <p className="mt-1 text-xs text-gray-500">
+          Slóð á bakenda þjón (Cloudflare Tunnel eða localhost). Breytist í hvert skipti sem þjónninn endurræsist.
+        </p>
+        <div className="mt-3 space-y-3">
+          <div className="flex gap-2">
+            <input
+              type="url"
+              placeholder="https://xxxxx.trycloudflare.com/api"
+              value={apiUrlInput}
+              onChange={e => setApiUrlInput(e.target.value)}
+              className="block flex-1 rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+            />
+            {isCustom && (
+              <button
+                onClick={handleResetApi}
+                title="Endurstilla"
+                className="rounded-md border border-gray-300 px-2 text-gray-500 hover:bg-gray-50"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          {apiMsg && (
+            <p className={`text-sm ${apiMsg.ok ? 'text-green-600' : 'text-red-600'}`}>{apiMsg.text}</p>
+          )}
+          <button
+            onClick={handleTestAndSave}
+            disabled={testing || !apiUrlInput.trim()}
+            className="flex items-center gap-2 rounded-md bg-brand-dark px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
+          >
+            <Globe className="h-4 w-4" />
+            {testing ? 'Prófa...' : 'Prófa og vista'}
           </button>
         </div>
       </div>

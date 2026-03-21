@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { UserProfile } from '@/types'
+import { getApiUrl } from '@/lib/api-config'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 const TOKEN_KEY = 'lanicad_token'
 
 interface AuthContextType {
@@ -21,7 +21,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Restore session from stored token
   useEffect(() => {
     if (!token) return
-    fetch(`${API_URL}/auth/me`, {
+    const apiUrl = getApiUrl()
+    if (!apiUrl) return
+    fetch(`${apiUrl}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => (r.ok ? r.json() : Promise.reject()))
@@ -36,7 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      const apiUrl = getApiUrl()
+      if (!apiUrl) return false
+      const res = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
