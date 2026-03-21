@@ -1,4 +1,4 @@
-import { Undo2, Redo2, ZoomIn, ZoomOut, Maximize, Grid3X3, Crosshair, Download, FileImage, FileText } from 'lucide-react'
+import { Undo2, Redo2, ZoomIn, ZoomOut, Maximize, Grid3X3, Crosshair, Download, FileImage, FileText, Upload } from 'lucide-react'
 import type { CadStateReturn } from '@/hooks/useCadState'
 
 interface CadToolbarProps {
@@ -6,9 +6,11 @@ interface CadToolbarProps {
   onExportSvg: () => void
   onExportDxf: () => void
   onExportPdf: () => void
+  onImportDxf: () => void
+  onImportPdf: () => void
 }
 
-export function CadToolbar({ cad, onExportSvg, onExportDxf, onExportPdf }: CadToolbarProps) {
+export function CadToolbar({ cad, onExportSvg, onExportDxf, onExportPdf, onImportDxf, onImportPdf }: CadToolbarProps) {
   const zoomIn = () => cad.setViewport(v => ({ x: v.x + v.w * 0.1, y: v.y + v.h * 0.1, w: v.w * 0.8, h: v.h * 0.8 }))
   const zoomOut = () => cad.setViewport(v => ({ x: v.x - v.w * 0.125, y: v.y - v.h * 0.125, w: v.w * 1.25, h: v.h * 1.25 }))
   const zoomFit = () => cad.setViewport(v => ({ ...v, x: -100, y: -600, w: 1000, h: 700 }))
@@ -31,6 +33,11 @@ export function CadToolbar({ cad, onExportSvg, onExportDxf, onExportPdf }: CadTo
         <ToolbarToggle icon={<Crosshair size={16} />} label="Snap" active={cad.grid.snap} onClick={() => cad.setGrid(g => ({ ...g, snap: !g.snap }))} />
       </div>
       <div className="flex-1" />
+      <div className="flex items-center gap-0.5 mr-3">
+        <ToolbarBtn icon={<Upload size={16} />} label="Flytja inn DXF" onClick={onImportDxf} />
+        <ToolbarBtn icon={<Upload size={16} />} label="Flytja inn PDF" onClick={onImportPdf} />
+      </div>
+      <div className="w-px h-5 bg-gray-500 mx-1" />
       <div className="flex items-center gap-0.5">
         <ToolbarBtn icon={<FileImage size={16} />} label="Flytja út SVG" onClick={onExportSvg} />
         <ToolbarBtn icon={<FileText size={16} />} label="Flytja út DXF" onClick={onExportDxf} />

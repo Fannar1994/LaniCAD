@@ -98,6 +98,17 @@ export function useCadState() {
     ))
   }, [layers, setObjects])
 
+  /** Bulk import objects + merge any new layers */
+  const importObjects = useCallback((newObjects: CadObject[], newLayers: CadLayer[]) => {
+    // Merge layers that don't already exist
+    setLayers(prev => {
+      const existingIds = new Set(prev.map(l => l.id))
+      const toAdd = newLayers.filter(l => !existingIds.has(l.id))
+      return toAdd.length > 0 ? [...prev, ...toAdd] : prev
+    })
+    setObjects(prev => [...prev, ...newObjects])
+  }, [setObjects])
+
   return {
     objects, setObjects,
     layers, setLayers,
@@ -111,6 +122,7 @@ export function useCadState() {
     undo, redo, canUndo, canRedo,
     toggleLayerVisibility, toggleLayerLock, addLayer,
     updateObjectStyle, updateObjectLayer,
+    importObjects,
   }
 }
 

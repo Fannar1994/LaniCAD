@@ -13,6 +13,7 @@ import {
   Layers,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n'
 
 interface SidebarProps {
   open: boolean
@@ -20,29 +21,30 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Yfirlit' },
-  { to: '/projects', icon: FolderOpen, label: 'Verkefni' },
-  { to: '/templates', icon: Layers, label: 'Sniðmát' },
-]
+  { to: '/', icon: LayoutDashboard, tKey: 'nav.dashboard' },
+  { to: '/projects', icon: FolderOpen, tKey: 'nav.projects' },
+  { to: '/templates', icon: Layers, tKey: 'nav.templates' },
+] as const
 
 const calculatorItems = [
-  { to: '/calculator/fence', icon: Fence, label: 'Girðingar' },
-  { to: '/calculator/scaffolding', icon: Columns3, label: 'Vinnupallar' },
-  { to: '/calculator/formwork', icon: Box, label: 'Steypumót' },
-  { to: '/calculator/rolling', icon: ArrowUpDown, label: 'Hjólapallar' },
-  { to: '/calculator/ceiling', icon: Ruler, label: 'Loftastoðir' },
-]
+  { to: '/calculator/fence', icon: Fence, tKey: 'nav.fence' },
+  { to: '/calculator/scaffolding', icon: Columns3, tKey: 'nav.scaffolding' },
+  { to: '/calculator/formwork', icon: Box, tKey: 'nav.formwork' },
+  { to: '/calculator/rolling', icon: ArrowUpDown, tKey: 'nav.rolling' },
+  { to: '/calculator/ceiling', icon: Ruler, tKey: 'nav.ceiling' },
+] as const
 
 const drawingItems = [
-  { to: '/drawing', icon: PenTool, label: 'Teikning' },
-  { to: '/schematics', icon: FileText, label: 'Teikningar' },
-]
+  { to: '/drawing', icon: PenTool, tKey: 'nav.drawing' },
+  { to: '/schematics', icon: FileText, tKey: 'nav.schematics' },
+] as const
 
 const bottomItems = [
-  { to: '/settings', icon: Settings, label: 'Stillingar' },
-]
+  { to: '/settings', icon: Settings, tKey: 'nav.settings' },
+] as const
 
 export function Sidebar({ open }: SidebarProps) {
+  const { t } = useTranslation()
   return (
     <aside
       className={cn(
@@ -65,36 +67,36 @@ export function Sidebar({ open }: SidebarProps) {
       {/* Main nav */}
       <nav className="flex-1 space-y-1 p-2">
         {navItems.map(item => (
-          <SidebarLink key={item.to} {...item} open={open} />
+          <SidebarLink key={item.to} to={item.to} icon={item.icon} label={t(item.tKey)} open={open} />
         ))}
 
         {open && (
           <div className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Reiknivélar
+            {t('nav.calculators')}
           </div>
         )}
         {!open && <div className="my-3 border-t border-gray-200" />}
 
         {calculatorItems.map(item => (
-          <SidebarLink key={item.to} {...item} open={open} />
+          <SidebarLink key={item.to} to={item.to} icon={item.icon} label={t(item.tKey)} open={open} />
         ))}
 
         {open && (
           <div className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Teikningar
+            {t('nav.drawings')}
           </div>
         )}
         {!open && <div className="my-3 border-t border-gray-200" />}
 
         {drawingItems.map(item => (
-          <SidebarLink key={item.to} {...item} open={open} />
+          <SidebarLink key={item.to} to={item.to} icon={item.icon} label={t(item.tKey)} open={open} />
         ))}
       </nav>
 
       {/* Bottom nav */}
       <div className="border-t border-gray-200 p-2">
         {bottomItems.map(item => (
-          <SidebarLink key={item.to} {...item} open={open} />
+          <SidebarLink key={item.to} to={item.to} icon={item.icon} label={t(item.tKey)} open={open} />
         ))}
       </div>
     </aside>

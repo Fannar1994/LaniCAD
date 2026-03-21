@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import { useCadState } from '@/hooks/useCadState'
 import { CadCanvas } from '@/components/cad/CadCanvas'
 import { CadToolbar } from '@/components/cad/CadToolbar'
@@ -6,6 +6,7 @@ import { CadSideTools } from '@/components/cad/CadSideTools'
 import { LayerPanel } from '@/components/cad/LayerPanel'
 import { PropertiesPanel } from '@/components/cad/PropertiesPanel'
 import { CommandBar } from '@/components/cad/CommandBar'
+import { PdfImportDialog } from '@/components/cad/PdfImportDialog'
 import { Viewer3D } from '@/components/viewer/Viewer3D'
 import { createFenceDrawing } from '@/components/viewer/drawings/FenceDrawing2D'
 import { createScaffoldDrawing } from '@/components/viewer/drawings/ScaffoldDrawing2D'
@@ -18,7 +19,9 @@ import { RollingScaffoldModel3D } from '@/components/viewer/models/RollingScaffo
 import { FormworkModel3D } from '@/components/viewer/models/FormworkModel3D'
 import { CeilingPropsModel3D } from '@/components/viewer/models/CeilingPropsModel3D'
 import { exportDxf } from '@/lib/cad/export-dxf'
+import { importDxf } from '@/lib/cad/import-dxf'
 import type { Point2D } from '@/types/cad'
+import { cadId } from '@/types/cad'
 
 type EquipmentType = 'fence' | 'scaffold' | 'rolling' | 'formwork' | 'ceiling'
 type ViewMode = 'cad' | '3d'
@@ -37,6 +40,8 @@ export function DrawingPage() {
   const [cursorPos, setCursorPos] = useState<Point2D>({ x: 0, y: 0 })
   const [status, setStatus] = useState('')
   const [equipmentType, setEquipmentType] = useState<EquipmentType>('scaffold')
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false)
+  const dxfInputRef = useRef<HTMLInputElement>(null)
 
   // Fence params
   const [fencePanels, setFencePanels] = useState(6)
@@ -119,6 +124,34 @@ export function DrawingPage() {
     }
   }, [equipmentType, fencePanels, fencePanelWidth, scaffoldLength, scaffoldLevels2m, rollingHeight, formworkLength, formworkHeight, ceilingRoomWidth, ceilingPropHeight])
 
+  // Import handlers
+  const handleImportDxf = useCallback(() => { dxfInputRef.current?.click() }, [])
+  const handleDxfFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const content = reader.result as string
+      const { objects, layers } = importDxf(content)
+      cad.importObjects(objects, layers)
+      setStatus(`DXF innflutt: ${objects.length} hlutir`)
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }, [cad])
+  const handleImportPdf = useCallback(() => { setPdfDialogOpen(true) }, [])
+  const handlePdfImported = useCallback((result: { svgContent: string; width: number; height: number; ocrText: string }) => {
+    // Add the PDF page as a rect with SVG background on the equipment layer
+    cad.importObjects([{
+      id: cadId(),
+      layerId: 'equipment',
+      style: { stroke: '#999', strokeWidth: 0.5, fill: 'none', opacity: 0.6 },
+      locked: false,
+      geometry: { type: 'rect', origin: { x: 0, y: 0 }, width: result.width, height: result.height, rotation: 0 },
+    }], [])
+    setStatus(`PDF innflutt (${Math.round(result.width)}×${Math.round(result.height)})${result.ocrText ? ' + OCR texti' : ''}`)
+  }, [cad])
+
   // Export handlers
   const handleExportSvg = useCallback(() => {
     const blob = new Blob([svgContent], { type: 'image/svg+xml' })
@@ -134,8 +167,12 @@ export function DrawingPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
+      {/* Hidden DXF file input */}
+      <input ref={dxfInputRef} type="file" accept=".dxf" onChange={handleDxfFileChange} className="hidden" />
+      {/* PDF import dialog */}
+      <PdfImportDialog open={pdfDialogOpen} onClose={() => setPdfDialogOpen(false)} onImport={handlePdfImported} />
       {/* Top toolbar */}
-      <CadToolbar cad={cad} onExportSvg={handleExportSvg} onExportDxf={handleExportDxf} onExportPdf={handleExportPdf} />
+      <CadToolbar cad={cad} onExportSvg={handleExportSvg} onExportDxf={handleExportDxf} onExportPdf={handleExportPdf} onImportDxf={handleImportDxf} onImportPdf={handleImportPdf} />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left: Drawing tools */}

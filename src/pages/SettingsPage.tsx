@@ -10,9 +10,11 @@ import { formatKr } from '@/lib/format'
 import {
   UserPlus, Trash2, Key, Save, Plus, Settings, Package, Users, Shield,
   ArrowUpDown, ArrowUp, ArrowDown, Search, Download, Upload, Edit2, X, Check,
-  ChevronDown, ChevronRight, Globe, RotateCcw,
+  ChevronDown, ChevronRight, Globe, RotateCcw, RefreshCw,
 } from 'lucide-react'
 import { getApiUrl, setApiUrl, clearApiUrl, hasCustomApiUrl } from '@/lib/api-config'
+import { syncCatalogToDb, getLocalProductCount } from '@/lib/catalog-sync'
+import { useTranslation, type Locale } from '@/lib/i18n'
 import * as XLSX from 'xlsx'
 
 type Tab = 'general' | 'products' | 'users'
@@ -247,6 +249,94 @@ function GeneralSettings() {
             {testing ? 'Prófa...' : 'Prófa og vista'}
           </button>
         </div>
+      </div>
+
+      {/* Language selector */}
+      <LanguageSelector />
+
+      {/* Product catalog sync */}
+      <CatalogSyncSection />
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════
+// Language Selector
+// ══════════════════════════════════════════════════════
+
+function LanguageSelector() {
+  const { locale, setLocale } = useTranslation()
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-5">
+      <h2 className="font-condensed text-lg font-semibold text-brand-dark flex items-center gap-2">
+        <Globe className="h-5 w-5" />
+        Tungumál / Language
+      </h2>
+      <p className="mt-1 text-xs text-gray-500">
+        Veldu tungumál viðmótsins / Choose interface language
+      </p>
+      <select
+        value={locale}
+        onChange={e => setLocale(e.target.value as Locale)}
+        className="mt-3 block w-full max-w-xs rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+      >
+        <option value="is">🇮🇸 Íslenska</option>
+        <option value="en">🇬🇧 English</option>
+      </select>
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════
+// Catalog Sync Section
+// ══════════════════════════════════════════════════════
+
+function CatalogSyncSection() {
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const localCount = getLocalProductCount()
+
+  const handleSync = async () => {
+    setSyncing(true)
+    setSyncMsg(null)
+    try {
+      const result = await syncCatalogToDb()
+      const parts: string[] = []
+      if (result.uploaded > 0) parts.push(`${result.uploaded} nýjar vörur hlaðnar upp`)
+      if (result.skipped > 0) parts.push(`${result.skipped} þegar til`)
+      if (result.errors.length > 0) parts.push(`${result.errors.length} villur`)
+      setSyncMsg({
+        ok: result.errors.length === 0,
+        text: parts.join(', ') || 'Engar breytingar',
+      })
+    } catch (err) {
+      setSyncMsg({ ok: false, text: err instanceof Error ? err.message : 'Villa við samstillingu' })
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-5">
+      <h2 className="font-condensed text-lg font-semibold text-brand-dark flex items-center gap-2">
+        <RefreshCw className="h-5 w-5" />
+        Samstilling vörulista
+      </h2>
+      <p className="mt-1 text-xs text-gray-500">
+        Hlaða {localCount} staðbundnum vörum úr reiknivélum í gagnagrunninn.
+      </p>
+      <div className="mt-3 space-y-3">
+        {syncMsg && (
+          <p className={`text-sm ${syncMsg.ok ? 'text-green-600' : 'text-red-600'}`}>{syncMsg.text}</p>
+        )}
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          className="flex items-center gap-2 rounded-md bg-brand-dark px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
+        >
+          <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+          {syncing ? 'Samstilli...' : 'Samstilla við gagnagrunn'}
+        </button>
       </div>
     </div>
   )
