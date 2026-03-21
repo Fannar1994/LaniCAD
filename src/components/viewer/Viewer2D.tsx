@@ -6,13 +6,14 @@ interface Viewer2DProps {
 }
 
 /**
- * Renders a Maker.js SVG string with pan/zoom support via CSS
+ * Renders a Maker.js SVG string with responsive sizing
  */
 export function Viewer2D({ svgContent, className = '' }: Viewer2DProps) {
   const processedSvg = useMemo(() => {
-    // Inject viewBox-based responsive sizing if not present
+    if (!svgContent) return ''
+    // Ensure the SVG fills the container responsively
     return svgContent
-      .replace(/<svg /, '<svg style="width:100%;height:100%;max-height:600px" ')
+      .replace(/<svg /, '<svg style="width:100%;height:auto;max-height:700px;display:block;margin:0 auto" ')
   }, [svgContent])
 
   if (!svgContent) {
@@ -25,7 +26,7 @@ export function Viewer2D({ svgContent, className = '' }: Viewer2DProps) {
 
   return (
     <div
-      className={`overflow-auto bg-white border rounded-lg p-4 ${className}`}
+      className={`overflow-auto bg-white border rounded-lg p-6 min-h-[400px] ${className}`}
       dangerouslySetInnerHTML={{ __html: processedSvg }}
     />
   )
