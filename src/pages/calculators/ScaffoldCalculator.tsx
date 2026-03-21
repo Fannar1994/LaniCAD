@@ -1,8 +1,14 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { SCAFFOLD_ITEMS, BOARD_LENGTH_M } from '@/data/scaffolding'
 import { calculateLevelsFromHeight, calculateFacadeMaterials } from '@/lib/calculations/geometry'
 import { calcScaffoldingRental } from '@/lib/calculations/rental'
 import { formatKr } from '@/lib/format'
+import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
+import { exportPdf } from '@/lib/export-pdf'
+import { exportExcel } from '@/lib/export-excel'
+import type { ClientInfo } from '@/types'
+
+const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
 interface Facade {
   id: number
@@ -17,6 +23,9 @@ export function ScaffoldCalculator() {
   const [facades, setFacades] = useState<Facade[]>([
     { id: 1, name: 'Hlið 1', length: 20, height: 8, endcaps: 2 }
   ])
+  const [client, setClient] = useState<ClientInfo>(emptyClient)
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
 
   const addFacade = () => {
     const id = Math.max(0, ...facades.map(f => f.id)) + 1
@@ -59,9 +68,36 @@ export function ScaffoldCalculator() {
   const totalRental = lineItems.reduce((s, l) => s + l.rentalCost, 0)
   const totalWeight = lineItems.reduce((s, l) => s + l.weight, 0)
 
+  const getExportData = useCallback(() => ({
+    title: 'Vinnupallareiknivél',
+    calculatorType: 'Vinnupallar',
+    client,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+    rentalDays,
+    summaryRows: [
+      ['Hliðar', `${facades.length}`],
+      ['Leigudagar', `${rentalDays}`],
+      ['Heildarþyngd', `${Math.round(totalWeight)} kg`],
+    ] as [string, string][],
+    tableHeaders: ['Vörunúmer', 'Lýsing', 'Magn', 'Þyngd (kg)', 'Leiga'],
+    tableRows: lineItems.map(l => [l.itemNo, l.name, l.qty, Math.round(l.weight), formatKr(l.rentalCost)]),
+    totalLabel: 'Samtals:',
+    totalValue: formatKr(totalRental),
+  }), [client, startDate, endDate, rentalDays, facades.length, totalWeight, lineItems, totalRental])
+
   return (
     <div className="space-y-6">
-      <h1 className="font-condensed text-2xl font-bold text-brand-dark">Vinnupalla&shy;reiknivél</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-condensed text-2xl font-bold text-brand-dark">Vinnupalla&shy;reiknivél</h1>
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} />
+      </div>
+
+      {/* Client info + Date range */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ClientInfoPanel client={client} onChange={setClient} />
+        <DateRangePicker startDate={startDate} endDate={endDate} rentalDays={rentalDays} onStartDateChange={setStartDate} onEndDateChange={setEndDate} onRentalDaysChange={setRentalDays} />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Facades input */}
@@ -119,14 +155,11 @@ export function ScaffoldCalculator() {
             </div>
           ))}
 
-          {/* Rental days */}
+          {/* Rental days note */}
           <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <label className="block text-sm font-medium text-gray-700">Leigudagar</label>
-            <input
-              type="number" min={1} value={rentalDays}
-              onChange={e => setRentalDays(Math.max(1, Number(e.target.value)))}
-              className="mt-1 block w-48 rounded-md border-gray-300 text-sm focus:border-brand-accent focus:ring-brand-accent"
-            />
+            <div className="text-sm text-gray-500">
+              Leigudagar: <span className="font-medium text-brand-dark">{rentalDays}</span> (stillt í leigutímabili hér að ofan)
+            </div>
           </div>
         </div>
 

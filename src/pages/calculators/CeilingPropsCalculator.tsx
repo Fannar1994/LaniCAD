@@ -1,7 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { LOFTASTODIR, MOTABITAR, AUKAHLUTIR, CLASS_INFO } from '@/data/ceiling-props'
 import { calcStandardRental } from '@/lib/calculations/rental'
 import { formatKr } from '@/lib/format'
+import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
+import { exportPdf } from '@/lib/export-pdf'
+import { exportExcel } from '@/lib/export-excel'
+import type { ClientInfo } from '@/types'
+
+const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
 interface LineItem {
   id: string
@@ -16,9 +22,10 @@ export function CeilingPropsCalculator() {
   const [propQty, setPropQty] = useState(10)
   const [selectedBeamIdx, setSelectedBeamIdx] = useState(0)
   const [beamQty, setBeamQty] = useState(4)
-
-  // Accessories with quantity state
   const [accessoryQtys, setAccessoryQtys] = useState<number[]>(AUKAHLUTIR.map(() => 0))
+  const [client, setClient] = useState<ClientInfo>(emptyClient)
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
 
   const selectedProp = LOFTASTODIR[selectedPropIdx]
   const selectedBeam = MOTABITAR[selectedBeamIdx]
@@ -65,9 +72,39 @@ export function CeilingPropsCalculator() {
 
   const classInfo = CLASS_INFO[selectedProp.classKey]
 
+  const getExportData = useCallback(() => ({
+    title: 'Loftastoðir og mótabitar',
+    calculatorType: 'Loftastoðir',
+    client,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+    rentalDays,
+    summaryRows: [
+      ['Stoð', selectedProp.name],
+      ['Flokkur', selectedProp.classLabel],
+      ['Hæðarbil', `${selectedProp.minHeight}–${selectedProp.maxHeight} m`],
+      ['Fjöldi stoða', `${propQty}`],
+      ['Bitar', `${selectedBeam.name} × ${beamQty}`],
+      ['Leigudagar', `${rentalDays}`],
+    ] as [string, string][],
+    tableHeaders: ['Vörunúmer', 'Lýsing', 'Magn', 'Leiga'],
+    tableRows: lines.map(l => [l.id, l.desc, l.qty, formatKr(l.rentalCost)]),
+    totalLabel: 'Samtals:',
+    totalValue: formatKr(totalRental),
+  }), [client, startDate, endDate, rentalDays, selectedProp, propQty, selectedBeam, beamQty, lines, totalRental])
+
   return (
     <div className="space-y-6">
-      <h1 className="font-condensed text-2xl font-bold text-brand-dark">Loftastoðir og mótabitar</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-condensed text-2xl font-bold text-brand-dark">Loftastoðir og mótabitar</h1>
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} />
+      </div>
+
+      {/* Client info + Date range */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ClientInfoPanel client={client} onChange={setClient} />
+        <DateRangePicker startDate={startDate} endDate={endDate} rentalDays={rentalDays} onStartDateChange={setStartDate} onEndDateChange={setEndDate} onRentalDaysChange={setRentalDays} />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Input section */}
@@ -95,27 +132,15 @@ export function CeilingPropsCalculator() {
             </div>
           )}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Fjöldi stoða</label>
-              <input
-                type="number"
-                min={0}
-                value={propQty}
-                onChange={e => setPropQty(Math.max(0, Number(e.target.value)))}
-                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Leigudagar</label>
-              <input
-                type="number"
-                min={1}
-                value={rentalDays}
-                onChange={e => setRentalDays(Math.max(1, Number(e.target.value)))}
-                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Fjöldi stoða</label>
+            <input
+              type="number"
+              min={0}
+              value={propQty}
+              onChange={e => setPropQty(Math.max(0, Number(e.target.value)))}
+              className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+            />
           </div>
 
           <hr className="border-gray-200" />

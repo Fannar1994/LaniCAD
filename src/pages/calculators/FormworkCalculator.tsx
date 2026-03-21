@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { FORMWORK_SYSTEMS, MANTO_HEIGHTS, TIE_BAR_OPTIONS } from '@/data/formwork'
 import {
   calculateModeA,
@@ -9,6 +9,12 @@ import {
   type BoQItem,
 } from '@/lib/calculations/formwork'
 import { formatKr } from '@/lib/format'
+import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
+import { exportPdf } from '@/lib/export-pdf'
+import { exportExcel } from '@/lib/export-excel'
+import type { ClientInfo } from '@/types'
+
+const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
 type SystemKey = 'manto' | 'rasto' | 'alufort'
 
@@ -16,6 +22,9 @@ export function FormworkCalculator() {
   const [system, setSystem] = useState<SystemKey>('manto')
   const [rentalDays, setRentalDays] = useState(14)
   const [discount, setDiscount] = useState(0)
+  const [client, setClient] = useState<ClientInfo>(emptyClient)
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
 
   // Mode A (Rasto/Takko)
   const [aWallLength, setAWallLength] = useState(12)
@@ -67,9 +76,37 @@ export function FormworkCalculator() {
     return groups
   }, [result.boq])
 
+  const getExportData = useCallback(() => ({
+    title: 'Steypumótareiknivél',
+    calculatorType: 'Steypumót',
+    client,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+    rentalDays,
+    summaryRows: [
+      ['Kerfi', result.modeLabel],
+      ['Leigudagar', `${rentalDays}`],
+      ['Efnisliðir', `${result.boq.length}`],
+      ...(discount > 0 ? [['Afsláttur', `${discount}%`] as [string, string]] : []),
+    ] as [string, string][],
+    tableHeaders: ['Vörunúmer', 'Lýsing', 'Flokkur', 'Magn', 'Leiga'],
+    tableRows: result.boq.map(item => [item.id, item.desc, item.cat, item.qty, formatKr(calcFormworkItemCost(item, rentalDays))]),
+    totalLabel: 'Samtals:',
+    totalValue: formatKr(totalCost),
+  }), [client, startDate, endDate, rentalDays, discount, result, totalCost])
+
   return (
     <div className="space-y-6">
-      <h1 className="font-condensed text-2xl font-bold text-brand-dark">Steypumótareiknivél</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-condensed text-2xl font-bold text-brand-dark">Steypumótareiknivél</h1>
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} />
+      </div>
+
+      {/* Client info + Date range */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ClientInfoPanel client={client} onChange={setClient} />
+        <DateRangePicker startDate={startDate} endDate={endDate} rentalDays={rentalDays} onStartDateChange={setStartDate} onEndDateChange={setEndDate} onRentalDaysChange={setRentalDays} />
+      </div>
 
       {/* System tabs */}
       <div className="flex gap-2">
@@ -92,29 +129,17 @@ export function FormworkCalculator() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Input section */}
         <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-5">
-          {/* Rental period — shared */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Leigudagar</label>
-              <input
-                type="number"
-                min={1}
-                value={rentalDays}
-                onChange={e => setRentalDays(Math.max(1, Number(e.target.value)))}
-                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Afsláttur (%)</label>
-              <input
-                type="number"
-                min={0}
-                max={100}
-                value={discount}
-                onChange={e => setDiscount(Math.max(0, Math.min(100, Number(e.target.value))))}
-                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-              />
-            </div>
+          {/* Discount */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Afsláttur (%)</label>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={discount}
+              onChange={e => setDiscount(Math.max(0, Math.min(100, Number(e.target.value))))}
+              className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+            />
           </div>
 
           <hr className="border-gray-200" />

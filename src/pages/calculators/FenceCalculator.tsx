@@ -1,8 +1,14 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { FENCE_PRODUCTS, FENCE_TYPES, MIN_RENTAL_DAYS, type FenceProductData } from '@/data/fence'
 import { calcFenceRental } from '@/lib/calculations/rental'
 import { calcFenceGeometry } from '@/lib/calculations/geometry'
 import { formatKr } from '@/lib/format'
+import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
+import { exportPdf } from '@/lib/export-pdf'
+import { exportExcel } from '@/lib/export-excel'
+import type { ClientInfo } from '@/types'
+
+const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
 interface LineItem {
   product: FenceProductData
@@ -18,6 +24,9 @@ export function FenceCalculator() {
   const [includeWheels, setIncludeWheels] = useState(false)
   const [includeLock, setIncludeLock] = useState(false)
   const [stoneType, setStoneType] = useState<'concrete' | 'pvc'>('concrete')
+  const [client, setClient] = useState<ClientInfo>(emptyClient)
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
 
   const fenceType = FENCE_TYPES.find(t => t.key === selectedType)!
   const fenceProduct = FENCE_PRODUCTS[fenceType.productKey]
@@ -92,9 +101,41 @@ export function FenceCalculator() {
 
   const totalRental = lines.reduce((sum, l) => sum + l.rentalCost, 0)
 
+  const getExportData = useCallback(() => {
+    const fenceType = FENCE_TYPES.find(t => t.key === selectedType)!
+    return {
+      title: 'Girðingareiknivél',
+      calculatorType: 'Girðingar',
+      client,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+      rentalDays: effectiveDays,
+      summaryRows: [
+        ['Tegund', fenceType.label],
+        ['Heildarlengd', `${totalLength} m`],
+        ['Fjöldi grindar', `${geometry.panels}`],
+        ['Fjöldi steina', `${geometry.stones}`],
+        ['Leigudagar', `${effectiveDays}`],
+      ] as [string, string][],
+      tableHeaders: ['Leiguvörunr.', 'Lýsing', 'Magn', 'Leiga'],
+      tableRows: lines.map(l => [l.product.rentalNo, l.product.description, l.qty, formatKr(l.rentalCost)]),
+      totalLabel: 'Samtals:',
+      totalValue: formatKr(totalRental),
+    }
+  }, [selectedType, client, startDate, endDate, effectiveDays, totalLength, geometry, lines, totalRental])
+
   return (
     <div className="space-y-6">
-      <h1 className="font-condensed text-2xl font-bold text-brand-dark">Girðingareiknivél</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-condensed text-2xl font-bold text-brand-dark">Girðingareiknivél</h1>
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} />
+      </div>
+
+      {/* Client info + Date range */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ClientInfoPanel client={client} onChange={setClient} />
+        <DateRangePicker startDate={startDate} endDate={endDate} rentalDays={rentalDays} onStartDateChange={setStartDate} onEndDateChange={setEndDate} onRentalDaysChange={setRentalDays} />
+      </div>
 
       {/* Input section */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -116,36 +157,22 @@ export function FenceCalculator() {
             ))}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Heildarlengd (m)
-              </label>
-              <input
-                type="number"
-                min={1}
-                value={totalLength}
-                onChange={e => setTotalLength(Math.max(1, Number(e.target.value)))}
-                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Leigudagar
-              </label>
-              <input
-                type="number"
-                min={1}
-                value={rentalDays}
-                onChange={e => setRentalDays(Math.max(1, Number(e.target.value)))}
-                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-              />
-              {rentalDays < MIN_RENTAL_DAYS && (
-                <p className="mt-1 text-xs text-amber-600">
-                  Lágmark {MIN_RENTAL_DAYS} dagar — reiknað sem {MIN_RENTAL_DAYS} dagar
-                </p>
-              )}
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Heildarlengd (m)
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={totalLength}
+              onChange={e => setTotalLength(Math.max(1, Number(e.target.value)))}
+              className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+            />
+            {rentalDays < MIN_RENTAL_DAYS && (
+              <p className="mt-1 text-xs text-amber-600">
+                Lágmark {MIN_RENTAL_DAYS} dagar — reiknað sem {MIN_RENTAL_DAYS} dagar
+              </p>
+            )}
           </div>
 
           <div>

@@ -1,16 +1,25 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import {
   NARROW_PRICING, WIDE_PRICING, QUICKLY_PRICING, SUPPORT_LEGS_PRICING,
   NARROW_COMPONENTS, ROLLING_TYPES, HEIGHT_OPTIONS
 } from '@/data/rolling-scaffold'
 import { calcRollingRental } from '@/lib/calculations/rental'
 import { formatKr } from '@/lib/format'
+import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
+import { exportPdf } from '@/lib/export-pdf'
+import { exportExcel } from '@/lib/export-excel'
+import type { ClientInfo } from '@/types'
+
+const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
 export function RollingScaffoldCalculator() {
   const [scaffoldType, setScaffoldType] = useState<'narrow' | 'wide' | 'quickly'>('narrow')
   const [height, setHeight] = useState('4.5')
   const [rentalDays, setRentalDays] = useState(7)
   const [includeSupportLegs, setIncludeSupportLegs] = useState(false)
+  const [client, setClient] = useState<ClientInfo>(emptyClient)
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
 
   const isQuickly = scaffoldType === 'quickly'
 
@@ -37,9 +46,46 @@ export function RollingScaffoldCalculator() {
     })).filter(c => c.qty > 0)
   }, [scaffoldType, height, isQuickly])
 
+  const typeLabel = ROLLING_TYPES.find(t => t.key === scaffoldType)?.label ?? scaffoldType
+
+  const getExportData = useCallback(() => ({
+    title: 'Hjólapallareiknivél',
+    calculatorType: 'Hjólapallar',
+    client,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+    rentalDays,
+    summaryRows: [
+      ['Tegund', typeLabel],
+      ...(!isQuickly ? [['Hæð', `${height} m`] as [string, string]] : []),
+      ['Leigudagar', `${rentalDays}`],
+      ['Stoðfætur', includeSupportLegs ? 'Já' : 'Nei'],
+    ] as [string, string][],
+    tableHeaders: ['Lýsing', 'Upphæð'],
+    tableRows: [
+      ['Leigukostnaður', formatKr(rentalCost)],
+      ...(pricing ? [
+        ['24 klst verð', formatKr(pricing['24h'])],
+        ['Aukadagur', formatKr(pricing.extra)],
+        ['Vikuverð', formatKr(pricing.week)],
+      ] : []),
+    ] as (string | number)[][],
+    totalLabel: 'Samtals:',
+    totalValue: formatKr(rentalCost),
+  }), [client, startDate, endDate, rentalDays, typeLabel, isQuickly, height, includeSupportLegs, rentalCost, pricing])
+
   return (
     <div className="space-y-6">
-      <h1 className="font-condensed text-2xl font-bold text-brand-dark">Hjólapalla&shy;reiknivél</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-condensed text-2xl font-bold text-brand-dark">Hjólapalla&shy;reiknivél</h1>
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} />
+      </div>
+
+      {/* Client info + Date range */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ClientInfoPanel client={client} onChange={setClient} />
+        <DateRangePicker startDate={startDate} endDate={endDate} rentalDays={rentalDays} onStartDateChange={setStartDate} onEndDateChange={setEndDate} onRentalDaysChange={setRentalDays} />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Inputs */}
@@ -75,15 +121,6 @@ export function RollingScaffoldCalculator() {
               </select>
             </div>
           )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Leigudagar</label>
-            <input
-              type="number" min={1} value={rentalDays}
-              onChange={e => setRentalDays(Math.max(1, Number(e.target.value)))}
-              className="mt-1 block w-full rounded-md border-gray-300 text-sm focus:border-brand-accent focus:ring-brand-accent"
-            />
-          </div>
 
           <label className="flex items-center gap-2 text-sm">
             <input
