@@ -16,11 +16,28 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change-this-to-a-random-secret'
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:4173')
   .split(',').map(s => s.trim())
 
-// ── Claude AI ──
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+// ── Claude AI (lazy — only created when first needed) ──
+let _anthropic = null
+function getAnthropic() {
+  if (!_anthropic) {
+    _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  }
+  return _anthropic
+}
 
 // ── Database ──
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  // Reconnect settings to survive transient DB outages
+  connectionTimeoutMillis: 5000,
+  idleTimeoutMillis: 30000,
+  max: 10,
+})
+
+// CRITICAL: Without this handler, any idle-client disconnect crashes the process
+pool.on('error', (err) => {
+  console.error('PostgreSQL pool idle client error (not crashing):', err.message)
+})
 
 // ── Security Middleware ──
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
@@ -652,7 +669,7 @@ app.post('/api/chat', async (req, res) => {
   }
 
   try {
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
@@ -907,8 +924,19 @@ app.post('/api/tunnel', authenticate, requireAdmin, (req, res) => {
   }
 })
 
+// ── Global error handlers (prevent silent crashes) ──
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason)
+})
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err)
+  // Give time to log, then exit (let process manager restart)
+  setTimeout(() => process.exit(1), 1000)
+})
+
 // ── Start ──
-app.listen(PORT, '0.0.0.0', async () => {
+const server = app.listen(PORT, '0.0.0.0', async () => {
   console.log(`LániCAD API running on http://localhost:${PORT}`)
   console.log(`Allowed origins: ${ALLOWED_ORIGINS.join(', ')}`)
 
@@ -922,3 +950,29 @@ app.listen(PORT, '0.0.0.0', async () => {
     console.error('Queue startup processing failed:', err.message)
   }
 })
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\nPort ${PORT} is already in use.`)
+    console.error('Another server instance may be running.')
+    console.error(`  Fix: Stop the other process or set PORT=<other> in .env\n`)
+    process.exit(1)
+  } else {
+    console.error('Server error:', err)
+  }
+})
+
+// Graceful shutdown
+function shutdown(signal) {
+  console.log(`\n${signal} received — shutting down gracefully...`)
+  server.close(() => {
+    pool.end().then(() => {
+      console.log('Database pool closed.')
+      process.exit(0)
+    })
+  })
+  // Force-kill after 5s if graceful shutdown hangs
+  setTimeout(() => process.exit(1), 5000)
+}
+process.on('SIGINT', () => shutdown('SIGINT'))
+process.on('SIGTERM', () => shutdown('SIGTERM'))
