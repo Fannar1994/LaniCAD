@@ -42,8 +42,8 @@ export function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           {!apiReady && (
-            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
-              API þjónn er ekki stilltur. Stilltu API URL í vafra localStorage eða keyrðu Express þjóninn á localhost:3001.
+            <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
+              API þjónn er ekki tengdur — skráðu þig inn með sjálfgefnum aðgangi hér að neðan.
             </div>
           )}
           <div>
