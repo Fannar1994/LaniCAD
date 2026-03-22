@@ -8,16 +8,17 @@ interface ScaffoldModel3DProps {
   legType: '50cm' | '100cm'
 }
 
-const TUBE_R = 0.024       // 48 mm standard tube
+const TUBE_R = 0.024       // 48.3mm OD Layher standard tube
 const THIN_R = 0.016       // thinner braces / rails
-const BAY_L = 1.8          // Layher Allround bay length
-const BAY_W = 0.73         // standard bay depth (0.73m)
+const BAY_L = 1.8          // Bay length (matches BOARD_LENGTH_M from data)
+const BAY_W = 0.73         // standard bay depth
 const BOARD_T = 0.04       // deck board thickness
 const TUBE_COLOR = '#777'
 const BOARD_COLOR = '#f5c800'
 const BASE_COLOR = '#555'
 const RAIL_COLOR = '#cc0000'
 const BRACE_COLOR = '#aaa'
+const ROSETTE_COLOR = '#555'
 
 function Tube({ start, end, radius = TUBE_R, color = TUBE_COLOR }: {
   start: [number, number, number]
@@ -57,19 +58,46 @@ function Board({ position, width = BAY_L, depth = BAY_W }: {
   )
 }
 
+/** Rosette node on a Layher Allround standard — the 8-hole connection disc */
+function Rosette({ position }: { position: [number, number, number] }) {
+  return (
+    <mesh position={position} rotation={[Math.PI / 2, 0, 0]}>
+      <cylinderGeometry args={[0.06, 0.06, 0.012, 8]} />
+      <meshStandardMaterial color={ROSETTE_COLOR} metalness={0.6} roughness={0.4} />
+    </mesh>
+  )
+}
+
+/** Wall tie anchor — triangle bracket clamped to standard, going into wall */
+function WallTie({ position, wallZ }: { position: [number, number, number]; wallZ: number }) {
+  return (
+    <group>
+      {/* Tie tube from scaffold to wall */}
+      <Tube start={position} end={[position[0], position[1], wallZ]} radius={0.012} color="#666" />
+      {/* Wall plate */}
+      <mesh position={[position[0], position[1], wallZ]}>
+        <boxGeometry args={[0.1, 0.1, 0.02]} />
+        <meshStandardMaterial color="#777" metalness={0.5} />
+      </mesh>
+    </group>
+  )
+}
+
 export function ScaffoldModel3D({ length, levels2m, levels07m, legType }: ScaffoldModel3DProps) {
   const groupRef = useRef<THREE.Group>(null)
   const bays = Math.ceil(length / BAY_L)
   const legH = legType === '50cm' ? 0.34 : 0.69
+  const totalLevels = levels2m + levels07m
   const totalH = levels2m * 2 + levels07m * 0.7 + legH + 2.0
   const offsetX = -(bays * BAY_L) / 2
   const offsetZ = -BAY_W / 2
+  const wallZ = offsetZ + BAY_W + 0.15 // wall face behind scaffold
 
   const elements: ReactNode[] = []
   let k = 0
   const key = () => `e${k++}`
 
-  /* ── STANDARDS (4 uprights per bay junction) ── */
+  /* ── STANDARDS (verticals at each bay junction, front + back) ── */
   for (let b = 0; b <= bays; b++) {
     const x = offsetX + b * BAY_L
     for (const z of [offsetZ, offsetZ + BAY_W]) {
@@ -77,21 +105,41 @@ export function ScaffoldModel3D({ length, levels2m, levels07m, legType }: Scaffo
         <Tube key={key()} start={[x, 0, z]} end={[x, totalH, z]} />
       )
     }
-    // Base plates
+
+    /* Base plates with adjustable jack */
     for (const z of [offsetZ, offsetZ + BAY_W]) {
+      // Base plate
       elements.push(
         <mesh key={key()} position={[x, -0.02, z]}>
           <boxGeometry args={[0.15, 0.04, 0.15]} />
           <meshStandardMaterial color={BASE_COLOR} metalness={0.5} />
         </mesh>
       )
+      // Jack screw thread
+      elements.push(
+        <Tube key={key()} start={[x, -0.02, z]} end={[x, legH * 0.3, z]} radius={0.015} color="#666" />
+      )
+    }
+
+    /* Rosette connection nodes every 0.5m on standards */
+    const rosetteSpacing = 0.5
+    for (const z of [offsetZ, offsetZ + BAY_W]) {
+      const numRosettes = Math.floor(totalH / rosetteSpacing)
+      for (let r = 1; r <= numRosettes; r++) {
+        const ry = r * rosetteSpacing
+        if (ry < legH || ry > totalH) continue
+        elements.push(<Rosette key={key()} position={[x, ry, z]} />)
+      }
     }
   }
 
   /* ── LEVELS: ledgers + transversals + decks ── */
   let y = legH
-  const addLevel = (height: number, _idx: number) => {
+  const levelYPositions: number[] = []
+
+  const addLevel = (height: number) => {
     y += height
+    levelYPositions.push(y)
 
     for (let b = 0; b < bays; b++) {
       const x1 = offsetX + b * BAY_L
@@ -124,12 +172,12 @@ export function ScaffoldModel3D({ length, levels2m, levels07m, legType }: Scaffo
     )
   }
 
-  for (let l = 0; l < levels2m; l++) addLevel(2, l)
-  for (let l = 0; l < levels07m; l++) addLevel(0.7, levels2m + l)
+  for (let l = 0; l < levels2m; l++) addLevel(2)
+  for (let l = 0; l < levels07m; l++) addLevel(0.7)
 
-  /* ── DIAGONAL BRACES (front face, X pattern, alternating) ── */
+  /* ── DIAGONAL BRACES (front face, X pattern per bay) ── */
   let braceY = legH
-  for (let l = 0; l < Math.min(levels2m + levels07m, 4); l++) {
+  for (let l = 0; l < Math.min(totalLevels, 6); l++) {
     const h = l < levels2m ? 2 : 0.7
     const yBot = braceY
     const yTop = braceY + h
@@ -146,34 +194,68 @@ export function ScaffoldModel3D({ length, levels2m, levels07m, legType }: Scaffo
     braceY += h
   }
 
-  /* ── GUARDRAILS (all 4 sides at top) ── */
+  /* ── GUARDRAILS (all 4 sides at top level) ── */
   const topRailY = totalH
   const midRailY = totalH - 0.5
-  const toeY = y + 0.15  // just above last deck
+  const toeY = y + 0.07  // toeboard just above last deck
 
   for (let b = 0; b < bays; b++) {
     const x1 = offsetX + b * BAY_L
     const x2 = offsetX + (b + 1) * BAY_L
 
-    // Front face rails
+    // Front face — top, mid, toeboard
     elements.push(<Tube key={key()} start={[x1, topRailY, offsetZ]} end={[x2, topRailY, offsetZ]} radius={THIN_R} color={RAIL_COLOR} />)
     elements.push(<Tube key={key()} start={[x1, midRailY, offsetZ]} end={[x2, midRailY, offsetZ]} radius={THIN_R} color={RAIL_COLOR} />)
+    elements.push(
+      <mesh key={key()} position={[(x1 + x2) / 2, toeY, offsetZ]}>
+        <boxGeometry args={[BAY_L, 0.15, 0.025]} />
+        <meshStandardMaterial color={BOARD_COLOR} />
+      </mesh>
+    )
 
-    // Back face rails
+    // Back face — top, mid, toeboard
     elements.push(<Tube key={key()} start={[x1, topRailY, offsetZ + BAY_W]} end={[x2, topRailY, offsetZ + BAY_W]} radius={THIN_R} color={RAIL_COLOR} />)
     elements.push(<Tube key={key()} start={[x1, midRailY, offsetZ + BAY_W]} end={[x2, midRailY, offsetZ + BAY_W]} radius={THIN_R} color={RAIL_COLOR} />)
-
-    // Toeboard front
-    elements.push(<Tube key={key()} start={[x1, toeY, offsetZ]} end={[x2, toeY, offsetZ]} radius={THIN_R} color={BOARD_COLOR} />)
+    elements.push(
+      <mesh key={key()} position={[(x1 + x2) / 2, toeY, offsetZ + BAY_W]}>
+        <boxGeometry args={[BAY_L, 0.15, 0.025]} />
+        <meshStandardMaterial color={BOARD_COLOR} />
+      </mesh>
+    )
   }
 
-  // End rails (left & right sides)
+  // End guardrails (left & right sides) — top, mid, toeboard
   const xLeft = offsetX
   const xRight = offsetX + bays * BAY_L
   for (const x of [xLeft, xRight]) {
     elements.push(<Tube key={key()} start={[x, topRailY, offsetZ]} end={[x, topRailY, offsetZ + BAY_W]} radius={THIN_R} color={RAIL_COLOR} />)
     elements.push(<Tube key={key()} start={[x, midRailY, offsetZ]} end={[x, midRailY, offsetZ + BAY_W]} radius={THIN_R} color={RAIL_COLOR} />)
+    elements.push(
+      <mesh key={key()} position={[x, toeY, offsetZ + BAY_W / 2]}>
+        <boxGeometry args={[0.025, 0.15, BAY_W]} />
+        <meshStandardMaterial color={BOARD_COLOR} />
+      </mesh>
+    )
   }
+
+  /* ── WALL TIES (every other bay, every other level on back face) ── */
+  for (let l = 0; l < levelYPositions.length; l += 2) {
+    for (let b = (l / 2) % 2; b <= bays; b += 2) {
+      const x = offsetX + b * BAY_L
+      const tieY = levelYPositions[l]
+      elements.push(
+        <WallTie key={key()} position={[x, tieY, offsetZ + BAY_W]} wallZ={wallZ} />
+      )
+    }
+  }
+
+  /* ── WALL SURFACE (faint behind scaffold) ── */
+  elements.push(
+    <mesh key={key()} position={[0, totalH / 2, wallZ + 0.01]}>
+      <planeGeometry args={[bays * BAY_L + 1, totalH + 0.5]} />
+      <meshStandardMaterial color="#d0c8b8" transparent opacity={0.15} side={THREE.DoubleSide} />
+    </mesh>
+  )
 
   /* ── GROUND PLANE ── */
   const gpW = bays * BAY_L + 4
@@ -182,7 +264,7 @@ export function ScaffoldModel3D({ length, levels2m, levels07m, legType }: Scaffo
   return (
     <group ref={groupRef}>
       {elements}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
         <planeGeometry args={[gpW, gpD]} />
         <meshStandardMaterial color="#e0e0e0" side={THREE.DoubleSide} />
       </mesh>
