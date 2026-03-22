@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useRef } from 'react'
 import { useCadState } from '@/hooks/useCadState'
+import { useScene3D } from '@/hooks/useScene3D'
 import { CadCanvas } from '@/components/cad/CadCanvas'
 import { CadToolbar } from '@/components/cad/CadToolbar'
 import { CadSideTools } from '@/components/cad/CadSideTools'
@@ -7,6 +8,9 @@ import { LayerPanel } from '@/components/cad/LayerPanel'
 import { PropertiesPanel } from '@/components/cad/PropertiesPanel'
 import { CommandBar } from '@/components/cad/CommandBar'
 import { PdfImportDialog } from '@/components/cad/PdfImportDialog'
+import { Scene3DCanvas } from '@/components/cad/Scene3DCanvas'
+import { Scene3DToolbar } from '@/components/cad/Scene3DToolbar'
+import { Scene3DObjectList } from '@/components/cad/Scene3DObjectList'
 import { Viewer3D } from '@/components/viewer/Viewer3D'
 import { createFenceDrawing } from '@/components/viewer/drawings/FenceDrawing2D'
 import { createScaffoldDrawing } from '@/components/viewer/drawings/ScaffoldDrawing2D'
@@ -24,7 +28,7 @@ import type { Point2D } from '@/types/cad'
 import { cadId } from '@/types/cad'
 
 type EquipmentType = 'fence' | 'scaffold' | 'rolling' | 'formwork' | 'ceiling'
-type ViewMode = 'cad' | '3d'
+type ViewMode = 'cad' | '3d' | '3d-scene'
 
 const equipmentOptions: { value: EquipmentType; label: string }[] = [
   { value: 'fence', label: 'Girðingar' },
@@ -36,6 +40,7 @@ const equipmentOptions: { value: EquipmentType; label: string }[] = [
 
 export function DrawingPage() {
   const cad = useCadState()
+  const scene3d = useScene3D()
   const [viewMode, setViewMode] = useState<ViewMode>('cad')
   const [cursorPos, setCursorPos] = useState<Point2D>({ x: 0, y: 0 })
   const [status, setStatus] = useState('')
@@ -171,12 +176,12 @@ export function DrawingPage() {
       <input ref={dxfInputRef} type="file" accept=".dxf" onChange={handleDxfFileChange} className="hidden" title="Flytja inn DXF skrá" />
       {/* PDF import dialog */}
       <PdfImportDialog open={pdfDialogOpen} onClose={() => setPdfDialogOpen(false)} onImport={handlePdfImported} />
-      {/* Top toolbar */}
-      <CadToolbar cad={cad} onExportSvg={handleExportSvg} onExportDxf={handleExportDxf} onExportPdf={handleExportPdf} onImportDxf={handleImportDxf} onImportPdf={handleImportPdf} />
+      {/* Top toolbar (CAD mode only) */}
+      {viewMode === 'cad' && <CadToolbar cad={cad} onExportSvg={handleExportSvg} onExportDxf={handleExportDxf} onExportPdf={handleExportPdf} onImportDxf={handleImportDxf} onImportPdf={handleImportPdf} />}
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: Drawing tools */}
-        <CadSideTools cad={cad} />
+        {/* Left: Drawing tools (only in CAD mode) */}
+        {viewMode === 'cad' && <CadSideTools cad={cad} />}
 
         {/* Center: Canvas area */}
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -184,32 +189,60 @@ export function DrawingPage() {
           <div className="flex items-center gap-1 px-3 py-1 bg-gray-100 border-b">
             <button onClick={() => setViewMode('cad')}
               className={`px-3 py-1 text-xs font-medium rounded transition-colors ${viewMode === 'cad' ? 'bg-[#404042] text-white' : 'bg-white text-gray-600 hover:bg-gray-200'}`}>
-              CAD Teikning
+              2D Teikning
+            </button>
+            <button onClick={() => setViewMode('3d-scene')}
+              className={`px-3 py-1 text-xs font-medium rounded transition-colors ${viewMode === '3d-scene' ? 'bg-[#404042] text-white' : 'bg-white text-gray-600 hover:bg-gray-200'}`}>
+              3D Verksvæði
             </button>
             <button onClick={() => setViewMode('3d')}
               className={`px-3 py-1 text-xs font-medium rounded transition-colors ${viewMode === '3d' ? 'bg-[#404042] text-white' : 'bg-white text-gray-600 hover:bg-gray-200'}`}>
-              3D Sýning
+              3D Forskoðun
             </button>
           </div>
+
+          {/* 3D Scene toolbar (only in 3d-scene mode) */}
+          {viewMode === '3d-scene' && <Scene3DToolbar scene={scene3d} />}
 
           {/* Canvas or 3D */}
           {viewMode === 'cad' ? (
             <CadCanvas cad={cad} equipmentSvg={svgContent} onCursorChange={setCursorPos} onStatusChange={setStatus} />
+          ) : viewMode === '3d-scene' ? (
+            <div className="flex-1 overflow-hidden">
+              <Scene3DCanvas scene={scene3d} />
+            </div>
           ) : (
             <div className="flex-1 overflow-hidden">
               <Viewer3D cameraPosition={cameraPosition} className="!h-full">{model3D}</Viewer3D>
             </div>
           )}
 
-          {/* Command bar */}
-          <CommandBar cad={cad} cursorPos={cursorPos} status={status} />
+          {/* Command bar (CAD mode only) */}
+          {viewMode === 'cad' && <CommandBar cad={cad} cursorPos={cursorPos} status={status} />}
         </div>
 
         {/* Right panel */}
         <div className="w-64 border-l bg-white overflow-y-auto">
-          {/* Equipment type selector */}
-          <div className="px-3 py-3 space-y-3">
-            <h3 className="text-xs font-bold text-gray-600 uppercase tracking-wider">Búnaður</h3>
+          {viewMode === '3d-scene' ? (
+            <>
+              {/* 3D Scene object list */}
+              <Scene3DObjectList scene={scene3d} />
+              <div className="border-t" />
+              {/* Equipment params for placing */}
+              <div className="px-3 py-3 space-y-3">
+                <h3 className="text-xs font-bold text-gray-600 uppercase tracking-wider">Búnaður til að setja</h3>
+                <select value={scene3d.placeKind} onChange={e => scene3d.setPlaceKind(e.target.value as EquipmentType)}
+                  title="Veldu tegund búnaðar"
+                  className="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-brand-accent focus:ring-1 focus:ring-brand-accent">
+                  {equipmentOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Equipment type selector */}
+              <div className="px-3 py-3 space-y-3">
+                <h3 className="text-xs font-bold text-gray-600 uppercase tracking-wider">Búnaður</h3>
             <select value={equipmentType} onChange={e => setEquipmentType(e.target.value as EquipmentType)}
               title="Veldu tegund búnaðar"
               className="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-brand-accent focus:ring-1 focus:ring-brand-accent">
@@ -261,6 +294,8 @@ export function DrawingPage() {
 
           {/* Properties */}
           <PropertiesPanel cad={cad} />
+            </>
+          )}
         </div>
       </div>
     </div>
