@@ -65,7 +65,7 @@ export function LayerPanel({ cad }: { cad: CadStateReturn }) {
                 cad.activeLayerId === layer.id ? 'bg-blue-50' : 'hover:bg-gray-50'
               }`}
             >
-              <div className="w-3 h-3 rounded-full border" style={{ backgroundColor: layer.color }} />
+              <div className="w-3 h-3 rounded-full border" style={{ backgroundColor: layer.color }} title={layer.name} />
 
               {isEditing ? (
                 <input

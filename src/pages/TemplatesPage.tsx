@@ -198,7 +198,7 @@ export function TemplatesPage() {
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between">
               <h2 className="font-condensed text-lg font-bold text-brand-dark">Breyta sniðmáti</h2>
-              <button onClick={() => setEditing(null)} className="rounded p-1 text-gray-400 hover:bg-gray-100">
+              <button onClick={() => setEditing(null)} className="rounded p-1 text-gray-400 hover:bg-gray-100" title="Loka">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -209,6 +209,7 @@ export function TemplatesPage() {
                   type="text"
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
+                  placeholder="Heiti sniðmáts"
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                 />
               </div>
@@ -218,6 +219,7 @@ export function TemplatesPage() {
                   value={editDesc}
                   onChange={e => setEditDesc(e.target.value)}
                   rows={3}
+                  placeholder="Lýsing á sniðmáti"
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                 />
               </div>

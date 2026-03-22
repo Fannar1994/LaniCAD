@@ -1,0 +1,5 @@
+# Exclude legacy reference HTML files from accessibility linting
+# These are original calculators being ported to React
+exclude:
+  - Reiknivelar-main
+  - Steypumót

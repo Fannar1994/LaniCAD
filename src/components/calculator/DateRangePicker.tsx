@@ -49,6 +49,7 @@ export function DateRangePicker({
             type="date"
             value={startDate}
             onChange={e => handleStartChange(e.target.value)}
+            title="Upphafsdagur"
             className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
           />
         </div>
@@ -58,6 +59,7 @@ export function DateRangePicker({
             type="date"
             value={endDate}
             onChange={e => handleEndChange(e.target.value)}
+            title="Lokadagur"
             className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
           />
         </div>
@@ -68,6 +70,7 @@ export function DateRangePicker({
             min={1}
             value={rentalDays}
             onChange={e => handleDaysChange(Math.max(1, Number(e.target.value)))}
+            title="Leigudagar"
             className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
           />
         </div>

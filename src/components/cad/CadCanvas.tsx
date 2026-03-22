@@ -394,14 +394,14 @@ export function CadCanvas({ cad, equipmentSvg, onCursorChange, onStatusChange }:
   }, [cad.grid, vp, pixelScale])
 
   const crossSize = 15 * pixelScale
-  const cursorStyle = useMemo(() => {
-    if (phase?.tool === 'panning') return 'grabbing'
-    if (spaceHeld || cad.activeTool === 'pan') return 'grab'
-    return 'crosshair'
+  const cursorClass = useMemo(() => {
+    if (phase?.tool === 'panning') return 'cursor-grabbing'
+    if (spaceHeld || cad.activeTool === 'pan') return 'cursor-grab'
+    return 'cursor-crosshair'
   }, [spaceHeld, cad.activeTool, phase])
 
   return (
-    <div ref={containerRef} className="flex-1 bg-gray-100 overflow-hidden relative" style={{ cursor: cursorStyle }}>
+    <div ref={containerRef} className={`flex-1 bg-gray-100 overflow-hidden relative ${cursorClass}`}>
       <svg
         ref={svgRef}
         viewBox={`${vp.x} ${vp.y} ${vp.w} ${vp.h}`}
@@ -484,8 +484,7 @@ export function CadCanvas({ cad, equipmentSvg, onCursorChange, onStatusChange }:
                 }
                 if (e.key === 'Escape') { setTextInput(''); setPhase(null) }
               }}
-              className="w-full px-1 border border-blue-500 bg-white text-sm"
-              style={{ fontSize: '12px' }}
+              className="w-full px-1 border border-blue-500 bg-white text-xs"
               placeholder="Texti..."
             />
           </foreignObject>
