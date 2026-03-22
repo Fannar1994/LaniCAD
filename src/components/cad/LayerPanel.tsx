@@ -1,11 +1,16 @@
-import { Eye, EyeOff, Lock, Unlock, Plus } from 'lucide-react'
+import { Eye, EyeOff, Lock, Unlock, Plus, Trash2, Pencil } from 'lucide-react'
 import type { CadStateReturn } from '@/hooks/useCadState'
 import { useState } from 'react'
+import { DEFAULT_LAYERS } from '@/types/cad'
+
+const defaultLayerIds = DEFAULT_LAYERS.map(l => l.id)
 
 export function LayerPanel({ cad }: { cad: CadStateReturn }) {
   const [showAdd, setShowAdd] = useState(false)
   const [newName, setNewName] = useState('')
   const [newColor, setNewColor] = useState('#ff6600')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
 
   const handleAdd = () => {
     if (newName.trim()) {
@@ -13,6 +18,18 @@ export function LayerPanel({ cad }: { cad: CadStateReturn }) {
       setNewName('')
       setShowAdd(false)
     }
+  }
+
+  const startRename = (layerId: string, currentName: string) => {
+    setEditingId(layerId)
+    setEditName(currentName)
+  }
+
+  const commitRename = () => {
+    if (editingId && editName.trim()) {
+      cad.renameLayer(editingId, editName.trim())
+    }
+    setEditingId(null)
   }
 
   return (
@@ -36,26 +53,64 @@ export function LayerPanel({ cad }: { cad: CadStateReturn }) {
       )}
 
       <div className="divide-y">
-        {cad.layers.map(layer => (
-          <div
-            key={layer.id}
-            onClick={() => cad.setActiveLayerId(layer.id)}
-            className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer text-xs ${
-              cad.activeLayerId === layer.id ? 'bg-blue-50' : 'hover:bg-gray-50'
-            }`}
-          >
-            <div className="w-3 h-3 rounded-full border" style={{ backgroundColor: layer.color }} />
-            <span className="flex-1 truncate">{layer.name}</span>
-            <button onClick={e => { e.stopPropagation(); cad.toggleLayerVisibility(layer.id) }}
-              className="text-gray-400 hover:text-gray-600">
-              {layer.visible ? <Eye size={12} /> : <EyeOff size={12} />}
-            </button>
-            <button onClick={e => { e.stopPropagation(); cad.toggleLayerLock(layer.id) }}
-              className="text-gray-400 hover:text-gray-600">
-              {layer.locked ? <Lock size={12} /> : <Unlock size={12} />}
-            </button>
-          </div>
-        ))}
+        {cad.layers.map(layer => {
+          const isDefault = defaultLayerIds.includes(layer.id)
+          const isEditing = editingId === layer.id
+
+          return (
+            <div
+              key={layer.id}
+              onClick={() => cad.setActiveLayerId(layer.id)}
+              className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer text-xs ${
+                cad.activeLayerId === layer.id ? 'bg-blue-50' : 'hover:bg-gray-50'
+              }`}
+            >
+              <div className="w-3 h-3 rounded-full border" style={{ backgroundColor: layer.color }} />
+
+              {isEditing ? (
+                <input
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  onBlur={commitRename}
+                  onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setEditingId(null) }}
+                  className="flex-1 text-xs px-1 py-0 border rounded"
+                  autoFocus
+                  onClick={e => e.stopPropagation()}
+                />
+              ) : (
+                <span
+                  className="flex-1 truncate"
+                  onDoubleClick={e => { e.stopPropagation(); startRename(layer.id, layer.name) }}
+                >
+                  {layer.name}
+                </span>
+              )}
+
+              {!isDefault && !isEditing && (
+                <button onClick={e => { e.stopPropagation(); startRename(layer.id, layer.name) }}
+                  className="text-gray-400 hover:text-blue-500" title="Endurnefna">
+                  <Pencil size={11} />
+                </button>
+              )}
+
+              <button onClick={e => { e.stopPropagation(); cad.toggleLayerVisibility(layer.id) }}
+                className="text-gray-400 hover:text-gray-600">
+                {layer.visible ? <Eye size={12} /> : <EyeOff size={12} />}
+              </button>
+              <button onClick={e => { e.stopPropagation(); cad.toggleLayerLock(layer.id) }}
+                className="text-gray-400 hover:text-gray-600">
+                {layer.locked ? <Lock size={12} /> : <Unlock size={12} />}
+              </button>
+
+              {!isDefault && (
+                <button onClick={e => { e.stopPropagation(); cad.deleteLayer(layer.id) }}
+                  className="text-gray-400 hover:text-red-500" title="Eyða lagi">
+                  <Trash2 size={11} />
+                </button>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
-import { MousePointer2, Hand, Minus, Square, Circle, RotateCcw, PenLine, Type, Ruler, Maximize2 } from 'lucide-react'
+import { MousePointer2, Hand, Minus, Square, Circle, RotateCcw, PenLine, Type, Ruler, Maximize2, Hexagon, Spline, Diameter } from 'lucide-react'
 import type { CadStateReturn } from '@/hooks/useCadState'
 import type { CadToolType } from '@/types/cad'
 
@@ -8,11 +8,14 @@ const tools: { id: CadToolType; icon: React.ReactNode; label: string; shortcut: 
   { id: 'line', icon: <Minus size={18} />, label: 'Lína', shortcut: 'L' },
   { id: 'rect', icon: <Square size={18} />, label: 'Rétthyrningur', shortcut: 'R' },
   { id: 'circle', icon: <Circle size={18} />, label: 'Hringur', shortcut: 'C' },
+  { id: 'ellipse', icon: <Diameter size={18} />, label: 'Sporbaugur', shortcut: 'E' },
+  { id: 'polygon', icon: <Hexagon size={18} />, label: 'Marghyrningur', shortcut: 'N' },
   { id: 'arc', icon: <RotateCcw size={18} />, label: 'Bogi', shortcut: 'A' },
   { id: 'polyline', icon: <PenLine size={18} />, label: 'Marglína', shortcut: 'W' },
   { id: 'text', icon: <Type size={18} />, label: 'Texti', shortcut: 'T' },
   { id: 'dimension', icon: <Ruler size={18} />, label: 'Mál', shortcut: 'D' },
   { id: 'measure', icon: <Maximize2 size={18} />, label: 'Mæla', shortcut: 'M' },
+  { id: 'offset', icon: <Spline size={18} />, label: 'Offset', shortcut: 'O' },
 ]
 
 export function CadSideTools({ cad }: { cad: CadStateReturn }) {

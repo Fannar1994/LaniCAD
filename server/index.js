@@ -612,7 +612,7 @@ Aukahlutir: þrífótur, framlenging, rekkur, gafflar.
 - Ekki þykjast vita um vörur sem eru ekki í listanum
 - Vertu vingjarnlegur og faglegur`
 
-app.post('/api/chat', authenticate, async (req, res) => {
+app.post('/api/chat', async (req, res) => {
   const { messages } = req.body
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'Vantar skilaboð' })

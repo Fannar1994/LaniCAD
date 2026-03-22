@@ -11,11 +11,14 @@ export type CadToolType =
   | 'line'
   | 'rect'
   | 'circle'
+  | 'ellipse'
+  | 'polygon'
   | 'arc'
   | 'polyline'
   | 'text'
   | 'dimension'
   | 'measure'
+  | 'offset'
 
 // ── Geometry (discriminated union) ──
 
@@ -26,10 +29,13 @@ export interface ArcGeometry { type: 'arc'; center: Point2D; radius: number; sta
 export interface PolylineGeometry { type: 'polyline'; points: Point2D[]; closed: boolean }
 export interface TextGeometry { type: 'text'; position: Point2D; content: string; fontSize: number; rotation: number }
 export interface DimensionGeometry { type: 'dimension'; start: Point2D; end: Point2D; offset: number }
+export interface EllipseGeometry { type: 'ellipse'; center: Point2D; rx: number; ry: number; rotation: number }
+export interface PolygonGeometry { type: 'polygon'; center: Point2D; radius: number; sides: number; rotation: number }
 
 export type CadGeometry =
   | LineGeometry | RectGeometry | CircleGeometry | ArcGeometry
   | PolylineGeometry | TextGeometry | DimensionGeometry
+  | EllipseGeometry | PolygonGeometry
 
 // ── Style, Object, Layer ──
 
@@ -80,10 +86,13 @@ export type DrawingPhase =
   | { tool: 'line'; start: Point2D }
   | { tool: 'rect'; start: Point2D }
   | { tool: 'circle'; center: Point2D }
+  | { tool: 'ellipse'; center: Point2D; rx?: number }
+  | { tool: 'polygon'; center: Point2D; sides: number }
   | { tool: 'arc'; center: Point2D; radius?: number; startAngle?: number }
   | { tool: 'polyline'; points: Point2D[] }
   | { tool: 'dimension'; start: Point2D; end?: Point2D }
   | { tool: 'measure'; start: Point2D }
+  | { tool: 'offset'; sourceId?: string }
   | { tool: 'select-box'; start: Point2D }
   | { tool: 'moving'; startWorld: Point2D }
   | { tool: 'panning'; startScreenX: number; startScreenY: number; startVp: Viewport }
@@ -93,7 +102,7 @@ export type DrawingPhase =
 
 export interface SnapResult {
   point: Point2D
-  type: 'grid' | 'endpoint' | 'midpoint' | 'center' | 'none'
+  type: 'grid' | 'endpoint' | 'midpoint' | 'center' | 'intersection' | 'nearest' | 'none'
 }
 
 // ── Defaults ──
@@ -158,6 +167,16 @@ export function getBoundingBox(obj: CadObject): { minX: number; minY: number; ma
       const pad = Math.abs(geo.offset) + 20
       return { minX: Math.min(geo.start.x, geo.end.x) - pad, minY: Math.min(geo.start.y, geo.end.y) - pad, maxX: Math.max(geo.start.x, geo.end.x) + pad, maxY: Math.max(geo.start.y, geo.end.y) + pad }
     }
+    case 'ellipse': {
+      const r = Math.max(geo.rx, geo.ry)
+      return { minX: geo.center.x - r, minY: geo.center.y - r, maxX: geo.center.x + r, maxY: geo.center.y + r }
+    }
+    case 'polygon': {
+      const pts = polygonVertices(geo.center, geo.radius, geo.sides, geo.rotation)
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+      for (const p of pts) { if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y; if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y }
+      return { minX, minY, maxX, maxY }
+    }
   }
 }
 
@@ -177,5 +196,112 @@ export function moveGeometry(geo: CadGeometry, dx: number, dy: number): CadGeome
       return { ...geo, position: { x: geo.position.x + dx, y: geo.position.y + dy } }
     case 'dimension':
       return { ...geo, start: { x: geo.start.x + dx, y: geo.start.y + dy }, end: { x: geo.end.x + dx, y: geo.end.y + dy } }
+    case 'ellipse':
+      return { ...geo, center: { x: geo.center.x + dx, y: geo.center.y + dy } }
+    case 'polygon':
+      return { ...geo, center: { x: geo.center.x + dx, y: geo.center.y + dy } }
+  }
+}
+
+/** Get vertices of a regular polygon */
+export function polygonVertices(center: Point2D, radius: number, sides: number, rotation: number): Point2D[] {
+  const pts: Point2D[] = []
+  const rotRad = rotation * Math.PI / 180
+  for (let i = 0; i < sides; i++) {
+    const angle = rotRad + (2 * Math.PI * i) / sides - Math.PI / 2
+    pts.push({ x: center.x + radius * Math.cos(angle), y: center.y + radius * Math.sin(angle) })
+  }
+  return pts
+}
+
+/** Rotate geometry around a pivot point by angle in degrees */
+export function rotateGeometry(geo: CadGeometry, pivot: Point2D, angleDeg: number): CadGeometry {
+  const rad = angleDeg * Math.PI / 180
+  const rotPt = (p: Point2D): Point2D => {
+    const dx = p.x - pivot.x, dy = p.y - pivot.y
+    return { x: pivot.x + dx * Math.cos(rad) - dy * Math.sin(rad), y: pivot.y + dx * Math.sin(rad) + dy * Math.cos(rad) }
+  }
+  switch (geo.type) {
+    case 'line': return { ...geo, start: rotPt(geo.start), end: rotPt(geo.end) }
+    case 'rect': {
+      const c = { x: geo.origin.x + geo.width / 2, y: geo.origin.y + geo.height / 2 }
+      const nc = rotPt(c)
+      return { ...geo, origin: { x: nc.x - geo.width / 2, y: nc.y - geo.height / 2 }, rotation: (geo.rotation || 0) + angleDeg }
+    }
+    case 'circle': return { ...geo, center: rotPt(geo.center) }
+    case 'ellipse': return { ...geo, center: rotPt(geo.center), rotation: (geo.rotation || 0) + angleDeg }
+    case 'arc': return { ...geo, center: rotPt(geo.center), startAngle: geo.startAngle + angleDeg, endAngle: geo.endAngle + angleDeg }
+    case 'polyline': return { ...geo, points: geo.points.map(rotPt) }
+    case 'polygon': return { ...geo, center: rotPt(geo.center), rotation: (geo.rotation || 0) + angleDeg }
+    case 'text': return { ...geo, position: rotPt(geo.position), rotation: (geo.rotation || 0) + angleDeg }
+    case 'dimension': return { ...geo, start: rotPt(geo.start), end: rotPt(geo.end) }
+  }
+}
+
+/** Scale geometry around a pivot point */
+export function scaleGeometry(geo: CadGeometry, pivot: Point2D, factor: number): CadGeometry {
+  const scalePt = (p: Point2D): Point2D => ({
+    x: pivot.x + (p.x - pivot.x) * factor,
+    y: pivot.y + (p.y - pivot.y) * factor,
+  })
+  switch (geo.type) {
+    case 'line': return { ...geo, start: scalePt(geo.start), end: scalePt(geo.end) }
+    case 'rect': return { ...geo, origin: scalePt(geo.origin), width: geo.width * factor, height: geo.height * factor }
+    case 'circle': return { ...geo, center: scalePt(geo.center), radius: geo.radius * factor }
+    case 'ellipse': return { ...geo, center: scalePt(geo.center), rx: geo.rx * factor, ry: geo.ry * factor }
+    case 'arc': return { ...geo, center: scalePt(geo.center), radius: geo.radius * factor }
+    case 'polyline': return { ...geo, points: geo.points.map(scalePt) }
+    case 'polygon': return { ...geo, center: scalePt(geo.center), radius: geo.radius * factor }
+    case 'text': return { ...geo, position: scalePt(geo.position), fontSize: geo.fontSize * factor }
+    case 'dimension': return { ...geo, start: scalePt(geo.start), end: scalePt(geo.end), offset: geo.offset * factor }
+  }
+}
+
+/** Mirror geometry across an axis through a point */
+export function mirrorGeometry(geo: CadGeometry, axis: 'x' | 'y', pivot: Point2D): CadGeometry {
+  const mirrorPt = (p: Point2D): Point2D =>
+    axis === 'x' ? { x: p.x, y: 2 * pivot.y - p.y } : { x: 2 * pivot.x - p.x, y: p.y }
+  switch (geo.type) {
+    case 'line': return { ...geo, start: mirrorPt(geo.start), end: mirrorPt(geo.end) }
+    case 'rect': {
+      const np = mirrorPt({ x: geo.origin.x + (axis === 'y' ? geo.width : 0), y: geo.origin.y + (axis === 'x' ? geo.height : 0) })
+      return { ...geo, origin: np }
+    }
+    case 'circle': return { ...geo, center: mirrorPt(geo.center) }
+    case 'ellipse': return { ...geo, center: mirrorPt(geo.center) }
+    case 'arc': {
+      const nc = mirrorPt(geo.center)
+      const flipAngle = (a: number) => axis === 'x' ? -a : (180 - a)
+      return { ...geo, center: nc, startAngle: flipAngle(geo.endAngle), endAngle: flipAngle(geo.startAngle) }
+    }
+    case 'polyline': return { ...geo, points: geo.points.map(mirrorPt) }
+    case 'polygon': return { ...geo, center: mirrorPt(geo.center) }
+    case 'text': return { ...geo, position: mirrorPt(geo.position) }
+    case 'dimension': return { ...geo, start: mirrorPt(geo.start), end: mirrorPt(geo.end), offset: axis === 'x' ? -geo.offset : geo.offset }
+  }
+}
+
+/** Create an offset copy of geometry */
+export function offsetGeometry(geo: CadGeometry, distance: number): CadGeometry | null {
+  switch (geo.type) {
+    case 'line': {
+      const dx = geo.end.x - geo.start.x, dy = geo.end.y - geo.start.y
+      const len = Math.sqrt(dx * dx + dy * dy)
+      if (len < 0.001) return null
+      const nx = -dy / len * distance, ny = dx / len * distance
+      return { ...geo, start: { x: geo.start.x + nx, y: geo.start.y + ny }, end: { x: geo.end.x + nx, y: geo.end.y + ny } }
+    }
+    case 'rect':
+      return { ...geo, origin: { x: geo.origin.x - distance, y: geo.origin.y - distance }, width: geo.width + 2 * distance, height: geo.height + 2 * distance }
+    case 'circle':
+      return { ...geo, radius: Math.max(0.1, geo.radius + distance) }
+    case 'ellipse':
+      return { ...geo, rx: Math.max(0.1, geo.rx + distance), ry: Math.max(0.1, geo.ry + distance) }
+    case 'arc':
+      return { ...geo, radius: Math.max(0.1, geo.radius + distance) }
+    case 'polygon':
+      return { ...geo, radius: Math.max(0.1, geo.radius + distance) }
+    default:
+      return null
   }
 }

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { MessageCircle, X, Send, Bot, User } from 'lucide-react'
+import { MessageCircle, X, Send, Bot, User, Loader2 } from 'lucide-react'
 import { getLocalReply, type ChatMessage } from '@/lib/chat-engine'
+import { sendChatMessage } from '@/lib/db'
 import { cn } from '@/lib/utils'
 
 export function ChatPanel() {
@@ -23,17 +24,28 @@ export function ChatPanel() {
     }
   }, [open])
 
-  function handleSend() {
+  const [loading, setLoading] = useState(false)
+
+  async function handleSend() {
     const text = input.trim()
-    if (!text) return
+    if (!text || loading) return
 
     const userMsg: ChatMessage = { role: 'user', content: text }
     const updated = [...messages, userMsg]
     setMessages(updated)
     setInput('')
+    setLoading(true)
 
-    const reply = getLocalReply(updated)
-    setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+    try {
+      const reply = await sendChatMessage(updated)
+      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+    } catch {
+      // Server unavailable — fall back to local engine
+      const reply = getLocalReply(updated)
+      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+    } finally {
+      setLoading(false)
+    }
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -124,7 +136,17 @@ export function ChatPanel() {
               </div>
             ))}
 
-
+            {loading && (
+              <div className="flex gap-2">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-accent text-brand-dark">
+                  <Bot className="h-3.5 w-3.5" />
+                </div>
+                <div className="flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-500">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Hugsa...</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Input */}
@@ -141,7 +163,7 @@ export function ChatPanel() {
               />
               <button
                 onClick={handleSend}
-                disabled={!input.trim()}
+                disabled={!input.trim() || loading}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-dark text-brand-accent transition-colors hover:bg-brand-dark/90 disabled:opacity-40"
                 aria-label="Senda"
               >

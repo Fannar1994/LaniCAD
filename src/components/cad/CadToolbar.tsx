@@ -1,4 +1,4 @@
-import { Undo2, Redo2, ZoomIn, ZoomOut, Maximize, Grid3X3, Crosshair, Download, FileImage, FileText, Upload } from 'lucide-react'
+import { Undo2, Redo2, ZoomIn, ZoomOut, Maximize, Grid3X3, Crosshair, Download, FileImage, FileText, Upload, Copy, ClipboardPaste, RotateCw, FlipHorizontal2, FlipVertical2, Scaling } from 'lucide-react'
 import type { CadStateReturn } from '@/hooks/useCadState'
 
 interface CadToolbarProps {
@@ -14,12 +14,25 @@ export function CadToolbar({ cad, onExportSvg, onExportDxf, onExportPdf, onImpor
   const zoomIn = () => cad.setViewport(v => ({ x: v.x + v.w * 0.1, y: v.y + v.h * 0.1, w: v.w * 0.8, h: v.h * 0.8 }))
   const zoomOut = () => cad.setViewport(v => ({ x: v.x - v.w * 0.125, y: v.y - v.h * 0.125, w: v.w * 1.25, h: v.h * 1.25 }))
   const zoomFit = () => cad.setViewport(v => ({ ...v, x: -100, y: -600, w: 1000, h: 700 }))
+  const hasSel = cad.selectedIds.length > 0
 
   return (
     <div className="flex items-center gap-1 px-3 py-1.5 bg-[#404042] text-white border-b">
       <div className="flex items-center gap-0.5 mr-3">
         <ToolbarBtn icon={<Undo2 size={16} />} label="Afturkalla (Ctrl+Z)" onClick={cad.undo} disabled={!cad.canUndo} />
         <ToolbarBtn icon={<Redo2 size={16} />} label="Endurgera (Ctrl+Y)" onClick={cad.redo} disabled={!cad.canRedo} />
+      </div>
+      <div className="w-px h-5 bg-gray-500 mx-1" />
+      <div className="flex items-center gap-0.5 mr-3">
+        <ToolbarBtn icon={<Copy size={16} />} label="Afrita (Ctrl+C)" onClick={cad.copySelected} disabled={!hasSel} />
+        <ToolbarBtn icon={<ClipboardPaste size={16} />} label="Líma (Ctrl+V)" onClick={cad.pasteClipboard} disabled={cad.clipboard.length === 0} />
+      </div>
+      <div className="w-px h-5 bg-gray-500 mx-1" />
+      <div className="flex items-center gap-0.5 mr-3">
+        <ToolbarBtn icon={<RotateCw size={16} />} label="Snúa 90° (Ctrl+R)" onClick={() => cad.rotateSelected(90)} disabled={!hasSel} />
+        <ToolbarBtn icon={<Scaling size={16} />} label="Stækka 1.5x" onClick={() => cad.scaleSelected(1.5)} disabled={!hasSel} />
+        <ToolbarBtn icon={<FlipHorizontal2 size={16} />} label="Speglun X" onClick={() => cad.mirrorSelected('y')} disabled={!hasSel} />
+        <ToolbarBtn icon={<FlipVertical2 size={16} />} label="Speglun Y" onClick={() => cad.mirrorSelected('x')} disabled={!hasSel} />
       </div>
       <div className="w-px h-5 bg-gray-500 mx-1" />
       <div className="flex items-center gap-0.5 mr-3">

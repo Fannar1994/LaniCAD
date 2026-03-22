@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
 import type { CadStateReturn } from '@/hooks/useCadState'
 import type { Point2D, DrawingPhase, CadObject, CadToolType, CadStyle, DimensionGeometry } from '@/types/cad'
-import { dist, distToSegment, getBoundingBox } from '@/types/cad'
+import { dist, distToSegment, getBoundingBox, polygonVertices } from '@/types/cad'
 import { findSnap } from '@/lib/cad/snap'
 
 interface CadCanvasProps {
@@ -236,6 +236,53 @@ export function CadCanvas({ cad, equipmentSvg, onCursorChange, onStatusChange }:
           setPhase(null)
         }
         break
+      case 'ellipse':
+        if (!phase || phase.tool !== 'ellipse') {
+          setPhase({ tool: 'ellipse', center: world })
+          onStatusChange?.('Smelltu til að setja X-radíus')
+        } else if (phase.rx == null) {
+          const rx = Math.abs(world.x - phase.center.x)
+          setPhase({ ...phase, rx })
+          onStatusChange?.('Smelltu til að setja Y-radíus')
+        } else {
+          const ry = Math.abs(world.y - phase.center.y)
+          cad.addObject({ type: 'ellipse', center: phase.center, rx: phase.rx, ry, rotation: 0 })
+          setPhase(null)
+          onStatusChange?.('Sporbaugur búinn til')
+        }
+        break
+      case 'polygon':
+        if (!phase || phase.tool !== 'polygon') {
+          setPhase({ tool: 'polygon', center: world, sides: 6 })
+          onStatusChange?.('Smelltu til að setja radíus (upp/niður til að breyta hliðum)')
+        } else {
+          const r = dist(phase.center, world)
+          const rot = Math.atan2(world.y - phase.center.y, world.x - phase.center.x) * 180 / Math.PI + 90
+          cad.addObject({ type: 'polygon', center: phase.center, radius: r, sides: phase.sides, rotation: rot })
+          setPhase(null)
+          onStatusChange?.(`Marghyrningur (${phase.sides} hliðar) búinn til`)
+        }
+        break
+      case 'offset': {
+        const hit = hitTest(world)
+        if (hit) {
+          cad.setSelectedIds([hit.id])
+          onStatusChange?.('Smelltu til að setja offset-fjarlægð')
+          setPhase({ tool: 'offset', sourceId: hit.id })
+        } else if (phase?.tool === 'offset' && phase.sourceId) {
+          const source = cad.objects.find(o => o.id === phase.sourceId)
+          if (source) {
+            const bb = getBoundingBox(source)
+            const cx = (bb.minX + bb.maxX) / 2, cy = (bb.minY + bb.maxY) / 2
+            const d = dist({ x: cx, y: cy }, world) - dist({ x: cx, y: cy }, { x: bb.maxX, y: cy })
+            cad.setSelectedIds([phase.sourceId])
+            cad.offsetSelected(d > 0 ? Math.abs(d) : -Math.abs(d))
+          }
+          setPhase(null)
+          onStatusChange?.('Offset búið til')
+        }
+        break
+      }
     }
   }, [cad, phase, spaceHeld, getSnappedPos, hitTest, onStatusChange])
 
@@ -296,10 +343,22 @@ export function CadCanvas({ cad, equipmentSvg, onCursorChange, onStatusChange }:
       if (e.key === 'Delete' || e.key === 'Backspace') c.deleteSelected()
       if (e.ctrlKey && e.key === 'z') { e.preventDefault(); c.undo() }
       if (e.ctrlKey && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); c.redo() }
-      if (e.ctrlKey && e.key === 'a') { e.preventDefault(); c.setSelectedIds(c.objects.filter(o => { const l = c.layers.find(la => la.id === o.layerId); return l?.visible && !l?.locked }).map(o => o.id)) }
+      if (e.ctrlKey && e.key === 'c') { e.preventDefault(); c.copySelected() }
+      if (e.ctrlKey && e.key === 'v') { e.preventDefault(); c.pasteClipboard() }
+      if (e.ctrlKey && e.key === 'd') { e.preventDefault(); c.duplicateSelected() }
+      if (e.ctrlKey && e.key === 'r') { e.preventDefault(); c.rotateSelected(90) }
+      if (e.ctrlKey && e.key === 'a') { e.preventDefault(); c.selectAll() }
+      // Polygon sides adjustment
+      if (p?.tool === 'polygon' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+        e.preventDefault()
+        const delta = e.key === 'ArrowUp' ? 1 : -1
+        const newSides = Math.max(3, Math.min(24, p.sides + delta))
+        setPhase({ ...p, sides: newSides })
+        onStatusRef.current?.(`Marghyrningur: ${newSides} hliðar`)
+      }
       if (e.key.toLowerCase() === 'g' && !e.ctrlKey) c.setGrid((g: typeof c.grid) => ({ ...g, enabled: !g.enabled }))
       if (!e.ctrlKey && !e.altKey && !p) {
-        const shortcuts: Record<string, CadToolType> = { v: 'select', p: 'pan', l: 'line', r: 'rect', c: 'circle', a: 'arc', w: 'polyline', t: 'text', d: 'dimension', m: 'measure' }
+        const shortcuts: Record<string, CadToolType> = { v: 'select', p: 'pan', l: 'line', r: 'rect', c: 'circle', e: 'ellipse', n: 'polygon', a: 'arc', w: 'polyline', t: 'text', d: 'dimension', m: 'measure', o: 'offset' }
         const key = e.key.toLowerCase()
         if (key in shortcuts) c.setActiveTool(shortcuts[key])
       }
@@ -465,6 +524,17 @@ function CadObjectSvg({ object, selected, pixelScale }: { object: CadObject; sel
       )
     case 'dimension':
       return <DimensionSvg geo={geo} style={style} pixelScale={pixelScale} />
+    case 'ellipse':
+      return (
+        <ellipse cx={geo.center.x} cy={geo.center.y} rx={geo.rx} ry={geo.ry}
+          transform={geo.rotation ? `rotate(${geo.rotation} ${geo.center.x} ${geo.center.y})` : undefined}
+          {...common} />
+      )
+    case 'polygon': {
+      const pts = polygonVertices(geo.center, geo.radius, geo.sides, geo.rotation)
+      const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z'
+      return <path d={d} {...common} />
+    }
   }
 }
 
@@ -537,6 +607,29 @@ function DrawingPreview({ phase, cursor, pixelScale }: { phase: DrawingPhase; cu
           </text>
         </g>
       )
+    case 'ellipse': {
+      if (phase.rx == null) {
+        const rx = Math.abs(cursor.x - phase.center.x)
+        return <ellipse cx={phase.center.x} cy={phase.center.y} rx={rx} ry={rx} {...ps} />
+      }
+      const ry = Math.abs(cursor.y - phase.center.y)
+      return <ellipse cx={phase.center.x} cy={phase.center.y} rx={phase.rx} ry={ry} {...ps} />
+    }
+    case 'polygon': {
+      const r = dist(phase.center, cursor)
+      const rot = Math.atan2(cursor.y - phase.center.y, cursor.x - phase.center.x) * 180 / Math.PI + 90
+      const pts = polygonVertices(phase.center, r, phase.sides, rot)
+      const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z'
+      return (
+        <g pointerEvents="none">
+          <path d={d} {...ps} />
+          <text x={phase.center.x} y={phase.center.y - r - 5 * pixelScale}
+            fontSize={9 * pixelScale} fill="#2563eb" textAnchor="middle" fontFamily="Barlow, sans-serif">
+            {phase.sides} hliðar
+          </text>
+        </g>
+      )
+    }
     default:
       return null
   }
@@ -600,6 +693,20 @@ function hitTestObject(obj: CadObject, pt: Point2D, threshold: number): boolean 
       if (ln < 0.1) return false
       const nx = -ddy / ln, ny = ddx / ln
       return distToSegment(pt, { x: s.x + nx * off, y: s.y + ny * off }, { x: e.x + nx * off, y: e.y + ny * off }) < threshold
+    }
+    case 'ellipse': {
+      // Approximate ellipse hit by checking normalized distance
+      const dx = pt.x - geo.center.x, dy = pt.y - geo.center.y
+      const norm = (dx * dx) / (geo.rx * geo.rx) + (dy * dy) / (geo.ry * geo.ry)
+      return Math.abs(Math.sqrt(norm) - 1) < threshold / Math.min(geo.rx, geo.ry)
+    }
+    case 'polygon': {
+      const pts = polygonVertices(geo.center, geo.radius, geo.sides, geo.rotation)
+      for (let i = 0; i < pts.length; i++) {
+        const a = pts[i], b = pts[(i + 1) % pts.length]
+        if (distToSegment(pt, a, b) < threshold) return true
+      }
+      return false
     }
   }
 }

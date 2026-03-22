@@ -46,6 +46,20 @@ export function PropertiesPanel({ cad }: { cad: CadStateReturn }) {
         )}
         {geo.type === 'polyline' && <Row label="Punktar" value={String(geo.points.length)} />}
         {geo.type === 'text' && <Row label="Texti" value={geo.content} />}
+        {geo.type === 'ellipse' && (
+          <>
+            <Row label="Miðja" value={`${geo.center.x.toFixed(1)}, ${geo.center.y.toFixed(1)}`} />
+            <Row label="Rx" value={geo.rx.toFixed(1)} />
+            <Row label="Ry" value={geo.ry.toFixed(1)} />
+          </>
+        )}
+        {geo.type === 'polygon' && (
+          <>
+            <Row label="Miðja" value={`${geo.center.x.toFixed(1)}, ${geo.center.y.toFixed(1)}`} />
+            <Row label="Radíus" value={geo.radius.toFixed(1)} />
+            <Row label="Hliðar" value={String(geo.sides)} />
+          </>
+        )}
       </div>
 
       {/* Layer assignment */}
@@ -90,6 +104,7 @@ function typeLabel(type: string): string {
   const m: Record<string, string> = {
     line: 'Lína', rect: 'Rétthyrningur', circle: 'Hringur',
     arc: 'Bogi', polyline: 'Marglína', text: 'Texti', dimension: 'Mál',
+    ellipse: 'Sporbaugur', polygon: 'Marghyrningur',
   }
   return m[type] || type
 }
