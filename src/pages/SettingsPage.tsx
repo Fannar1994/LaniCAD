@@ -279,6 +279,7 @@ function LanguageSelector() {
         value={locale}
         onChange={e => setLocale(e.target.value as Locale)}
         className="mt-3 block w-full max-w-xs rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+        title="Tungumál"
       >
         <option value="is">🇮🇸 Íslenska</option>
         <option value="en">🇬🇧 English</option>
@@ -413,6 +414,7 @@ function EditableCell({
         if (e.key === 'Escape') setEditing(false)
       }}
       className={`w-full rounded border border-brand-accent bg-white px-2 py-1 text-sm ${align === 'right' ? 'text-right' : 'text-left'} focus:outline-none focus:ring-1 focus:ring-brand-accent`}
+      title="Breyta gildi"
     />
   )
 }
@@ -748,6 +750,7 @@ function ProductSettings() {
           value={filterType}
           onChange={e => setFilterType(e.target.value as CalculatorType | '')}
           className="rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+          title="Sía eftir tegund"
         >
           <option value="">Allar tegundir</option>
           {Object.entries(CALCULATOR_LABELS).map(([k, v]) => (
@@ -765,7 +768,7 @@ function ProductSettings() {
             className="w-56 rounded-md border-gray-300 pl-8 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
           />
           {searchText && (
-            <button onClick={() => setSearchText('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button onClick={() => setSearchText('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" title="Hreinsa leit">
               <X className="h-3.5 w-3.5" />
             </button>
           )}
@@ -801,7 +804,7 @@ function ProductSettings() {
                 title="Flytja inn úr Excel">
                 <Upload className="h-3.5 w-3.5" /> Innflutningur
               </button>
-              <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelImport} className="hidden" />
+              <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelImport} className="hidden" title="Flytja inn Excel" />
             </>
           )}
 
@@ -826,7 +829,7 @@ function ProductSettings() {
           <h3 className="mb-3 font-condensed font-semibold text-brand-dark">Ný vara</h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <select value={newCalcType} onChange={e => setNewCalcType(e.target.value as CalculatorType)}
-              className="rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent">
+              className="rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Tegund reiknivélar">
               {Object.entries(CALCULATOR_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
             <input type="text" placeholder="Leiguvörunúmer *" value={newRentalNo} onChange={e => setNewRentalNo(e.target.value)}
@@ -872,7 +875,7 @@ function ProductSettings() {
                   {isAdmin && (
                     <th className="w-8 px-2 py-2">
                       <input type="checkbox" checked={selected.size === displayProducts.length && displayProducts.length > 0}
-                        onChange={toggleSelectAll} className="rounded border-gray-300" />
+                        onChange={toggleSelectAll} className="rounded border-gray-300" title="Velja allt" />
                     </th>
                   )}
                   <th className="cursor-pointer px-3 py-2 text-left font-medium text-gray-600 hover:text-brand-dark" onClick={() => handleSort('rental_no')}>
@@ -966,7 +969,7 @@ function ProductRow({
       <tr className={`${p.active ? '' : 'opacity-50'} ${isSelected ? 'bg-brand-accent/5' : 'hover:bg-gray-50'}`}>
         {isAdmin && (
           <td className="w-8 px-2 py-1">
-            <input type="checkbox" checked={isSelected} onChange={onToggleSelect} className="rounded border-gray-300" />
+            <input type="checkbox" checked={isSelected} onChange={onToggleSelect} className="rounded border-gray-300" title="Velja vöru" />
           </td>
         )}
         <td className="px-1 py-1">
@@ -1096,6 +1099,7 @@ function RatesEditor({
                     value={v}
                     onChange={e => onUpdate(k, Number(e.target.value) || 0)}
                     className="w-20 rounded border-gray-200 text-right text-xs focus:border-brand-accent focus:ring-brand-accent"
+                    title={k}
                   />
                   <button onClick={() => onDeleteRate(k)} className="text-gray-300 hover:text-red-500" title="Eyða">
                     <X className="h-3 w-3" />
@@ -1247,7 +1251,7 @@ function UserManagement() {
             <input type="password" placeholder="Lykilorð * (a.m.k. 6 stafir)" value={newPassword} onChange={e => setNewPassword(e.target.value)}
               className="rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
             <select value={newRole} onChange={e => setNewRole(e.target.value as 'admin' | 'user')}
-              className="rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent">
+              className="rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Hlutverk">
               <option value="user">Notandi</option>
               <option value="admin">Stjórnandi</option>
             </select>
@@ -1285,9 +1289,9 @@ function UserManagement() {
                       <div className="flex items-center gap-1">
                         <input type="text" value={tempName} onChange={e => setTempName(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') handleNameUpdate(u.id); if (e.key === 'Escape') setEditingName(null) }}
-                          className="w-40 rounded border-gray-300 text-sm focus:border-brand-accent focus:ring-brand-accent" autoFocus />
-                        <button onClick={() => handleNameUpdate(u.id)} className="rounded p-1 text-green-600 hover:bg-green-50"><Check className="h-3.5 w-3.5" /></button>
-                        <button onClick={() => setEditingName(null)} className="rounded p-1 text-gray-400 hover:bg-gray-100"><X className="h-3.5 w-3.5" /></button>
+                          className="w-40 rounded border-gray-300 text-sm focus:border-brand-accent focus:ring-brand-accent" autoFocus title="Nafn notanda" />
+                        <button onClick={() => handleNameUpdate(u.id)} className="rounded p-1 text-green-600 hover:bg-green-50" title="Staðfesta"><Check className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => setEditingName(null)} className="rounded p-1 text-gray-400 hover:bg-gray-100" title="Hætta við"><X className="h-3.5 w-3.5" /></button>
                       </div>
                     ) : (
                       <button onClick={() => { setEditingName(u.id); setTempName(u.name) }}
@@ -1304,6 +1308,7 @@ function UserManagement() {
                       onChange={e => handleRoleChange(u.id, e.target.value as 'admin' | 'user')}
                       disabled={u.id === currentUser?.id}
                       className="rounded border-gray-200 bg-transparent text-xs font-medium disabled:opacity-50"
+                      title="Breyta hlutverki"
                     >
                       <option value="user">Notandi</option>
                       <option value="admin">Stjórnandi</option>

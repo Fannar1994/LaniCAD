@@ -10,6 +10,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
       <button
         onClick={onMenuToggle}
         className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-brand-dark"
+        title="Valmynd"
       >
         <Menu className="h-5 w-5" />
       </button>

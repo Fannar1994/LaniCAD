@@ -225,6 +225,7 @@ export function FenceCalculator() {
               value={totalLength}
               onChange={e => setTotalLength(Math.max(1, Number(e.target.value)))}
               className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+              title="Heildarlengd"
             />
             {rentalDays < MIN_RENTAL_DAYS && (
               <p className="mt-1 text-xs text-amber-600">

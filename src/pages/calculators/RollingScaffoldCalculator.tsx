@@ -176,6 +176,7 @@ export function RollingScaffoldCalculator() {
                 value={height}
                 onChange={e => setHeight(e.target.value)}
                 className="mt-1 block w-full rounded-md border-gray-300 text-sm focus:border-brand-accent focus:ring-brand-accent"
+                title="Hæð"
               >
                 {HEIGHT_OPTIONS.map(h => (
                   <option key={h} value={h}>{h} m</option>

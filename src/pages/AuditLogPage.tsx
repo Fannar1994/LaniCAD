@@ -89,6 +89,7 @@ export function AuditLogPage() {
           value={filterAction}
           onChange={e => { setFilterAction(e.target.value); setOffset(0) }}
           className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+          title="Sía eftir aðgerð"
         >
           <option value="">{locale === 'en' ? 'All actions' : 'Allar aðgerðir'}</option>
           {Object.entries(ACTION_LABELS).map(([key, l]) => (
@@ -99,6 +100,7 @@ export function AuditLogPage() {
           value={filterEntity}
           onChange={e => { setFilterEntity(e.target.value); setOffset(0) }}
           className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+          title="Sía eftir tegund"
         >
           <option value="">{locale === 'en' ? 'All types' : 'Allar tegundir'}</option>
           {Object.entries(ENTITY_LABELS).map(([key, l]) => (

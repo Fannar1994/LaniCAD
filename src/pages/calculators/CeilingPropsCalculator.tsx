@@ -177,6 +177,7 @@ export function CeilingPropsCalculator() {
               value={selectedPropIdx}
               onChange={e => setSelectedPropIdx(Number(e.target.value))}
               className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+              title="Veldu stoð"
             >
               {LOFTASTODIR.map((p, i) => (
                 <option key={p.id} value={i}>
@@ -200,6 +201,7 @@ export function CeilingPropsCalculator() {
               value={propQty}
               onChange={e => setPropQty(Math.max(0, Number(e.target.value)))}
               className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+              title="Fjöldi stoða"
             />
           </div>
 
@@ -212,6 +214,7 @@ export function CeilingPropsCalculator() {
               value={selectedBeamIdx}
               onChange={e => setSelectedBeamIdx(Number(e.target.value))}
               className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+              title="Veldu bita"
             >
               {MOTABITAR.map((b, i) => (
                 <option key={b.id} value={i}>
@@ -229,6 +232,7 @@ export function CeilingPropsCalculator() {
               value={beamQty}
               onChange={e => setBeamQty(Math.max(0, Number(e.target.value)))}
               className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+              title="Fjöldi bita"
             />
           </div>
 
@@ -248,6 +252,7 @@ export function CeilingPropsCalculator() {
                     setAccessoryQtys(next)
                   }}
                   className="w-20 rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+                  title={acc.name}
                 />
               </div>
             ))}

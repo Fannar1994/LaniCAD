@@ -172,6 +172,7 @@ export function ScaffoldCalculator() {
                   value={f.name}
                   onChange={e => updateFacade(f.id, 'name', e.target.value)}
                   className="border-0 bg-transparent font-condensed text-base font-semibold text-brand-dark focus:ring-0"
+                  title="Nafn hliðar"
                 />
                 {facades.length > 1 && (
                   <button onClick={() => removeFacade(f.id)} className="text-xs text-red-400 hover:text-red-600">
@@ -186,6 +187,7 @@ export function ScaffoldCalculator() {
                     type="number" min={1} value={f.length}
                     onChange={e => updateFacade(f.id, 'length', Math.max(1, Number(e.target.value)))}
                     className="mt-1 block w-full rounded-md border-gray-300 text-sm focus:border-brand-accent focus:ring-brand-accent"
+                    title="Lengd"
                   />
                 </div>
                 <div>
@@ -194,6 +196,7 @@ export function ScaffoldCalculator() {
                     type="number" min={2} step={0.5} value={f.height}
                     onChange={e => updateFacade(f.id, 'height', Math.max(2, Number(e.target.value)))}
                     className="mt-1 block w-full rounded-md border-gray-300 text-sm focus:border-brand-accent focus:ring-brand-accent"
+                    title="Hæð"
                   />
                 </div>
                 <div>
@@ -202,6 +205,7 @@ export function ScaffoldCalculator() {
                     type="number" min={0} max={2} value={f.endcaps}
                     onChange={e => updateFacade(f.id, 'endcaps', Math.max(0, Math.min(2, Number(e.target.value))))}
                     className="mt-1 block w-full rounded-md border-gray-300 text-sm focus:border-brand-accent focus:ring-brand-accent"
+                    title="Endalokur"
                   />
                 </div>
               </div>

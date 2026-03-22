@@ -209,6 +209,7 @@ export function FormworkCalculator() {
               value={discount}
               onChange={e => setDiscount(Math.max(0, Math.min(100, Number(e.target.value))))}
               className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+              title="Afsláttur"
             />
           </div>
 
@@ -235,12 +236,13 @@ export function FormworkCalculator() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Vegglengd (m)</label>
                   <input type="number" min={0.3} step={0.1} value={aWallLength} onChange={e => setAWallLength(Math.max(0.3, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Vegglengd" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Mótateinar</label>
                   <select value={aTieBar} onChange={e => setATieBar(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent">
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+                    title="Mótateinar">
                     {TIE_BAR_OPTIONS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                   </select>
                 </div>
@@ -249,17 +251,17 @@ export function FormworkCalculator() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Innhorn</label>
                   <input type="number" min={0} value={aInsideCorners} onChange={e => setAInsideCorners(Math.max(0, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Innhorn" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Úthorn</label>
                   <input type="number" min={0} value={aOutsideCorners} onChange={e => setAOutsideCorners(Math.max(0, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Úthorn" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Opnir endar</label>
                   <input type="number" min={0} value={aOpenEnds} onChange={e => setAOpenEnds(Math.max(0, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Opnir endar" />
                 </div>
               </div>
             </>
@@ -273,12 +275,13 @@ export function FormworkCalculator() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Vegglengd (m)</label>
                   <input type="number" min={0.3} step={0.1} value={bWallLength} onChange={e => setBWallLength(Math.max(0.3, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Vegglengd" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Vegghæð</label>
                   <select value={bHeight} onChange={e => setBHeight(Number(e.target.value))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent">
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+                    title="Vegghæð">
                     {MANTO_HEIGHTS.map(h => <option key={h.value} value={h.value}>{h.label}</option>)}
                   </select>
                 </div>
@@ -286,7 +289,8 @@ export function FormworkCalculator() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Mótateinar</label>
                 <select value={bTieBar} onChange={e => setBTieBar(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent">
+                  className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+                  title="Mótateinar">
                   {TIE_BAR_OPTIONS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                 </select>
               </div>
@@ -294,17 +298,17 @@ export function FormworkCalculator() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Innhorn</label>
                   <input type="number" min={0} value={bInsideCorners} onChange={e => setBInsideCorners(Math.max(0, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Innhorn" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Úthorn</label>
                   <input type="number" min={0} value={bOutsideCorners} onChange={e => setBOutsideCorners(Math.max(0, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Úthorn" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Opnir endar</label>
                   <input type="number" min={0} value={bOpenEnds} onChange={e => setBOpenEnds(Math.max(0, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Opnir endar" />
                 </div>
               </div>
             </>
@@ -318,36 +322,36 @@ export function FormworkCalculator() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Loftlengd (m)</label>
                   <input type="number" min={0.5} step={0.1} value={cSlabLength} onChange={e => setCSlabLength(Math.max(0.5, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Loftlengd" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Loftbreidd (m)</label>
                   <input type="number" min={0.5} step={0.1} value={cSlabWidth} onChange={e => setCSlabWidth(Math.max(0.5, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Loftbreidd" />
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Lofthæð (m)</label>
                   <input type="number" min={0.5} step={0.1} value={cSlabHeight} onChange={e => setCSlabHeight(Math.max(0.5, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Lofthæð" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Steypuþykkt (m)</label>
                   <input type="number" min={0.05} step={0.01} value={cConcreteThickness} onChange={e => setCConcreteThickness(Math.max(0.05, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Steypuþykkt" />
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Stoðabil lengd (m)</label>
                   <input type="number" min={0.5} step={0.1} value={cSpacingL} onChange={e => setCSpacingL(Math.max(0.5, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Stoðabil lengd" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Stoðabil breidd (m)</label>
                   <input type="number" min={0.5} step={0.1} value={cSpacingW} onChange={e => setCSpacingW(Math.max(0.5, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Stoðabil breidd" />
                 </div>
               </div>
               <label className="flex items-center gap-2 text-sm">

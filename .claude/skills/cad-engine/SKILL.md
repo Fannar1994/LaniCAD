@@ -2,11 +2,6 @@
 name: cad-engine
 description: 2D drawing (Maker.js + SVG) and 3D visualization (Three.js + React Three Fiber) patterns for LániCAD construction equipment rendering.
 argument-hint: Which engine? (2d | 3d | maker | threejs | svg)
-allowed-tools:
-  - read_file
-  - replace_string_in_file
-  - create_file
-  - grep_search
 ---
 
 # CAD Engine Skill
