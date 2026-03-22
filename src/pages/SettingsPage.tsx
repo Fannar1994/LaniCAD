@@ -450,6 +450,7 @@ function ProductSettings() {
   const [newCategory, setNewCategory] = useState('')
   const [newSalePrice, setNewSalePrice] = useState(0)
   const [newWeight, setNewWeight] = useState(0)
+  const [newImageUrl, setNewImageUrl] = useState('')
 
   const loadProducts = useCallback(async () => {
     setLoading(true)
@@ -571,6 +572,7 @@ function ProductSettings() {
         rates: {},
         sale_price: newSalePrice,
         weight: newWeight,
+        image_url: newImageUrl,
         active: true,
       })
       setShowAdd(false)
@@ -580,6 +582,7 @@ function ProductSettings() {
       setNewCategory('')
       setNewSalePrice(0)
       setNewWeight(0)
+      setNewImageUrl('')
       setSuccessMsg('Vara bætt við!')
       loadProducts()
     } catch (err) {
@@ -661,6 +664,7 @@ function ProductSettings() {
       'Flokkur': p.category,
       'Söluverð': p.sale_price,
       'Þyngd (kg)': p.weight,
+      'Mynd URL': p.image_url || '',
       'Virk': p.active ? 'Já' : 'Nei',
       'Verð (JSON)': JSON.stringify(p.rates),
     }))
@@ -711,6 +715,7 @@ function ProductSettings() {
             rates,
             sale_price: Number(row['Söluverð'] || row['sale_price'] || 0),
             weight: Number(row['Þyngd (kg)'] || row['weight'] || 0),
+            image_url: String(row['Mynd URL'] || row['image_url'] || ''),
             active: (row['Virk'] || row['active'] || 'Já') !== 'Nei',
           })
           imported++
@@ -836,6 +841,8 @@ function ProductSettings() {
               className="rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
             <input type="number" placeholder="Þyngd (kg)" min={0} step={0.1} value={newWeight} onChange={e => setNewWeight(Number(e.target.value))}
               className="rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" />
+            <input type="url" placeholder="Mynd URL (valfrjálst)" value={newImageUrl} onChange={e => setNewImageUrl(e.target.value)}
+              className="rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent sm:col-span-2" />
           </div>
           <div className="mt-3 flex gap-2">
             <button onClick={handleAddProduct} disabled={!newRentalNo || !newDesc}
@@ -871,6 +878,7 @@ function ProductSettings() {
                   <th className="cursor-pointer px-3 py-2 text-left font-medium text-gray-600 hover:text-brand-dark" onClick={() => handleSort('rental_no')}>
                     Vörunúmer <SortIcon col="rental_no" />
                   </th>
+                  <th className="px-3 py-2 text-center font-medium text-gray-600">Mynd</th>
                   <th className="cursor-pointer px-3 py-2 text-left font-medium text-gray-600 hover:text-brand-dark" onClick={() => handleSort('description')}>
                     Lýsing <SortIcon col="description" />
                   </th>
@@ -964,6 +972,38 @@ function ProductRow({
         <td className="px-1 py-1">
           <EditableCell value={p.rental_no} onChange={v => onCellUpdate('rental_no', v)} editable={isAdmin} mono />
         </td>
+        <td className="px-2 py-1 text-center">
+          {p.image_url ? (
+            <div className="group relative mx-auto w-8">
+              <img src={p.image_url} alt={p.description} className="h-8 w-8 rounded object-cover" />
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    const url = prompt('Mynd URL:', p.image_url)
+                    if (url !== null) onCellUpdate('image_url', url)
+                  }}
+                  className="absolute -right-1 -top-1 hidden rounded-full bg-white p-0.5 shadow group-hover:block"
+                  title="Breyta mynd"
+                >
+                  <Edit2 className="h-2.5 w-2.5 text-gray-400" />
+                </button>
+              )}
+            </div>
+          ) : isAdmin ? (
+            <button
+              onClick={() => {
+                const url = prompt('Mynd URL:')
+                if (url) onCellUpdate('image_url', url)
+              }}
+              className="text-xs text-gray-300 hover:text-brand-accent"
+              title="Bæta við mynd"
+            >
+              + mynd
+            </button>
+          ) : (
+            <span className="text-xs text-gray-300">—</span>
+          )}
+        </td>
         <td className="max-w-xs px-1 py-1">
           <EditableCell value={p.description} onChange={v => onCellUpdate('description', v)} editable={isAdmin} />
         </td>
@@ -1006,7 +1046,7 @@ function ProductRow({
       {/* Rates expansion row */}
       {ratesExpanded && (
         <tr>
-          <td colSpan={isAdmin ? 10 : 9} className="bg-gray-50 px-6 py-3">
+          <td colSpan={isAdmin ? 11 : 10} className="bg-gray-50 px-6 py-3">
             <RatesEditor
               rates={p.rates || {}}
               editable={isAdmin}

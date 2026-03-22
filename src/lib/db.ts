@@ -114,6 +114,7 @@ export interface DbProduct {
   rates: Record<string, number>
   sale_price: number
   weight: number
+  image_url: string
   active: boolean
   created_at: string
   updated_at: string
@@ -131,7 +132,7 @@ export async function upsertProduct(product: Omit<DbProduct, 'id' | 'created_at'
   })
 }
 
-export async function updateProduct(id: string, updates: Partial<Pick<DbProduct, 'description' | 'rates' | 'sale_price' | 'weight' | 'active' | 'category' | 'rental_no' | 'sale_no'>>): Promise<DbProduct> {
+export async function updateProduct(id: string, updates: Partial<Pick<DbProduct, 'description' | 'rates' | 'sale_price' | 'weight' | 'active' | 'category' | 'rental_no' | 'sale_no' | 'image_url'>>): Promise<DbProduct> {
   return apiFetch<DbProduct>(`/products/${encodeURIComponent(id)}`, {
     method: 'PUT',
     body: JSON.stringify(updates),

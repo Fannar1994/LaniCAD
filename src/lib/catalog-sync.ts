@@ -29,6 +29,7 @@ function getLocalProducts(): Omit<DbProduct, 'id' | 'created_at' | 'updated_at'>
       rates: rateMap,
       sale_price: p.salePrice,
       weight: 0,
+      image_url: '',
       active: true,
     })
   }
@@ -44,6 +45,7 @@ function getLocalProducts(): Omit<DbProduct, 'id' | 'created_at' | 'updated_at'>
       rates: { daily: s.dailyRate },
       sale_price: s.salePrice,
       weight: s.weight,
+      image_url: '',
       active: true,
     })
   }

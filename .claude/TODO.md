@@ -22,10 +22,24 @@
 - [x] 3D Schematics viewer (Three.js + React Three Fiber)
 - [x] Toast notifications (sonner)
 - [x] 108 calculation tests passing (vitest)
+- [x] 137 tests passing (vitest) — added DXF + i18n tests
 
 ## Remaining / Future
-- [ ] PDF import/OCR (PDF.js + Tesseract.js)
-- [ ] DXF/DWG import
-- [ ] Offline mode / service worker
-- [ ] Product catalog sync with PostgreSQL
-- [ ] Multi-language support (currently Icelandic only)
+- [x] PDF import/OCR (PDF.js + Tesseract.js)
+- [x] DXF/DWG import
+- [x] Offline mode / service worker (PWA)
+- [x] Product catalog sync with PostgreSQL
+- [x] Multi-language support (IS + EN)
+
+## Next — Polish & Production Readiness
+- [x] Code-split large bundle (dynamic imports for Three.js, PDF.js, Tesseract)
+- [ ] Real user testing & bug fixes
+- [x] Responsive / mobile layout improvements
+- [ ] Print-friendly PDF layouts for all calculators
+- [x] Role-based access control (restrict routes by role)
+- [x] Audit log (track user actions in PostgreSQL)
+- [x] Unit tests for new features (DXF parser, i18n, catalog sync)
+- [ ] End-to-end tests (Playwright)
+- [x] Product image uploads in Settings > Vörur
+- [ ] Multi-project comparison / reporting dashboard
+- [ ] Client portal (read-only link sharing)

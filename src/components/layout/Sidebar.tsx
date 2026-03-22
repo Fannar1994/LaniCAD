@@ -11,9 +11,11 @@ import {
   PenTool,
   FileText,
   Layers,
+  ClipboardList,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n'
+import { useAuth } from '@/lib/auth'
 
 interface SidebarProps {
   open: boolean
@@ -40,16 +42,20 @@ const drawingItems = [
 ] as const
 
 const bottomItems = [
+  { to: '/audit-log', icon: ClipboardList, tKey: 'nav.auditLog', adminOnly: true },
   { to: '/settings', icon: Settings, tKey: 'nav.settings' },
 ] as const
 
 export function Sidebar({ open }: SidebarProps) {
   const { t } = useTranslation()
+  const { isAdmin } = useAuth()
   return (
     <aside
       className={cn(
         'flex flex-col border-r border-gray-200 bg-white transition-all duration-200',
-        open ? 'w-60' : 'w-16'
+        // Mobile: fixed overlay sidebar
+        'fixed inset-y-0 left-0 z-40 lg:static lg:z-auto',
+        open ? 'w-60 translate-x-0' : '-translate-x-full w-60 lg:translate-x-0 lg:w-16'
       )}
     >
       {/* Logo */}
@@ -95,9 +101,11 @@ export function Sidebar({ open }: SidebarProps) {
 
       {/* Bottom nav */}
       <div className="border-t border-gray-200 p-2">
-        {bottomItems.map(item => (
-          <SidebarLink key={item.to} to={item.to} icon={item.icon} label={t(item.tKey)} open={open} />
-        ))}
+        {bottomItems
+          .filter(item => !('adminOnly' in item) || !item.adminOnly || isAdmin)
+          .map(item => (
+            <SidebarLink key={item.to} to={item.to} icon={item.icon} label={t(item.tKey)} open={open} />
+          ))}
       </div>
     </aside>
   )

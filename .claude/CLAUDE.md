@@ -63,7 +63,7 @@ Steypumót/           # Reference docs: Hünnebeck manuals, pricing Excel files
 | `fence` | Girðingar | Mobile fences / iðnaðargirðingar (3.5m/2.5m/2.1m), stones, clamps, gates | 14 products, 12-tier monthly rates |
 | `scaffolding` | Vinnupallar | Facade scaffolding (Layher Allround), multi-facade | 25 items, daily rates + weights |
 | `formwork` | Steypumót | Concrete formwork: Rasto-Takko, Manto, Alufort, ID-15 | ~170 items, day/week rates |
-| `rolling` | Hjólapallar | Mobile scaffolding (narrow/wide/quickly) | 9 heights, 24h/extra/week pricing |
+| `Mobile` | Hjólapallar | Mobile scaffolding (0,75/1,35/quickly) | 9 heights, 24h/extra/week pricing |
 | `ceiling` | Loftastoðir | Ceiling props (Classes A-E) + HT-20 beams | 27 items, day/week/sale prices |
 
 ## Calculation Patterns (Critical)

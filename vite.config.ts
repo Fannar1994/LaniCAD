@@ -43,6 +43,18 @@ export default defineConfig({
     }),
   ],
   base: '/LaniCAD/',
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'three-vendor': ['three', '@react-three/fiber', '@react-three/drei'],
+          'pdf-vendor': ['pdfjs-dist', 'jspdf', 'jspdf-autotable'],
+          'ocr-vendor': ['tesseract.js'],
+          'xlsx-vendor': ['xlsx'],
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

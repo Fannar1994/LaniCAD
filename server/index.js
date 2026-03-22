@@ -136,6 +136,10 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
       JWT_SECRET,
       { expiresIn: '7d' }
     )
+    // Log successful login
+    req.user = { id: user.id, email: user.email, role: user.role }
+    await logAudit(req, 'login', 'user', user.id, { email: user.email })
+
     res.json({
       token,
       user: { id: user.id, email: user.email, name: user.name, role: user.role, created_at: user.created_at },
@@ -152,6 +156,19 @@ function requireAdmin(req, res, next) {
     return res.status(403).json({ error: 'Aðeins stjórnendur hafa aðgang' })
   }
   next()
+}
+
+// ── Audit Log Helper ──
+async function logAudit(req, action, entityType, entityId, details = {}) {
+  try {
+    await pool.query(
+      `INSERT INTO audit_log (user_id, user_email, action, entity_type, entity_id, details, ip_address)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [req.user.id, req.user.email, action, entityType, entityId || null, JSON.stringify(details), req.ip]
+    )
+  } catch (err) {
+    console.error('Audit log error:', err.message)
+  }
 }
 
 // Get current user profile
@@ -219,6 +236,7 @@ app.post('/api/users', authenticate, requireAdmin, async (req, res) => {
       `INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) RETURNING id, email, name, role, created_at`,
       [email, hash, name, role || 'user']
     )
+    await logAudit(req, 'create', 'user', rows[0].id, { email, name, role })
     res.status(201).json(rows[0])
   } catch (err) {
     if (err.code === '23505') {
@@ -248,6 +266,7 @@ app.put('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
       vals
     )
     if (rows.length === 0) return res.status(404).json({ error: 'Notandi fannst ekki' })
+    await logAudit(req, 'update', 'user', req.params.id, { name, role })
     res.json(rows[0])
   } catch (err) {
     console.error('Update user error:', err)
@@ -262,6 +281,7 @@ app.delete('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     const { rowCount } = await pool.query('DELETE FROM users WHERE id = $1', [req.params.id])
     if (rowCount === 0) return res.status(404).json({ error: 'Notandi fannst ekki' })
+    await logAudit(req, 'delete', 'user', req.params.id)
     res.json({ ok: true })
   } catch (err) {
     console.error('Delete user error:', err)
@@ -271,7 +291,7 @@ app.delete('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
 
 // Update product (admin)
 app.put('/api/products/:id', authenticate, requireAdmin, async (req, res) => {
-  const { description, rates, sale_price, weight, active, category, rental_no, sale_no } = req.body
+  const { description, rates, sale_price, weight, active, category, rental_no, sale_no, image_url } = req.body
   try {
     const sets = []
     const vals = []
@@ -284,6 +304,7 @@ app.put('/api/products/:id', authenticate, requireAdmin, async (req, res) => {
     if (category !== undefined) { sets.push(`category = $${i++}`); vals.push(category) }
     if (rental_no !== undefined) { sets.push(`rental_no = $${i++}`); vals.push(rental_no) }
     if (sale_no !== undefined) { sets.push(`sale_no = $${i++}`); vals.push(sale_no) }
+    if (image_url !== undefined) { sets.push(`image_url = $${i++}`); vals.push(image_url) }
     if (sets.length === 0) return res.status(400).json({ error: 'Ekkert til að uppfæra' })
     vals.push(req.params.id)
     const { rows } = await pool.query(
@@ -291,6 +312,7 @@ app.put('/api/products/:id', authenticate, requireAdmin, async (req, res) => {
       vals
     )
     if (rows.length === 0) return res.status(404).json({ error: 'Vara fannst ekki' })
+    await logAudit(req, 'update', 'product', req.params.id, { description })
     res.json(rows[0])
   } catch (err) {
     console.error('Update product error:', err)
@@ -302,6 +324,7 @@ app.delete('/api/products/:id', authenticate, requireAdmin, async (req, res) => 
   try {
     const { rowCount } = await pool.query('DELETE FROM products WHERE id = $1', [req.params.id])
     if (rowCount === 0) return res.status(404).json({ error: 'Vara fannst ekki' })
+    await logAudit(req, 'delete', 'product', req.params.id)
     res.json({ ok: true })
   } catch (err) {
     console.error('Delete product error:', err)
@@ -351,6 +374,7 @@ app.post('/api/projects', authenticate, async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
       [req.user.id, name, type, JSON.stringify(client || {}), JSON.stringify(data || {}), JSON.stringify(line_items || [])]
     )
+    await logAudit(req, 'create', 'project', rows[0].id, { name, type })
     res.status(201).json(rows[0])
   } catch (err) {
     console.error('Create project error:', err)
@@ -375,6 +399,7 @@ app.put('/api/projects/:id', authenticate, async (req, res) => {
       vals
     )
     if (rows.length === 0) return res.status(404).json({ error: 'Verkefni fannst ekki' })
+    await logAudit(req, 'update', 'project', req.params.id, { name })
     res.json(rows[0])
   } catch (err) {
     console.error('Update project error:', err)
@@ -389,6 +414,7 @@ app.delete('/api/projects/:id', authenticate, async (req, res) => {
       [req.params.id, req.user.id]
     )
     if (rowCount === 0) return res.status(404).json({ error: 'Verkefni fannst ekki' })
+    await logAudit(req, 'delete', 'project', req.params.id)
     res.json({ ok: true })
   } catch (err) {
     console.error('Delete project error:', err)
@@ -428,6 +454,7 @@ app.post('/api/templates', authenticate, async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
       [req.user.id, type, name, description || '', JSON.stringify(config || {}), is_public || false]
     )
+    await logAudit(req, 'create', 'template', rows[0].id, { name, type })
     res.status(201).json(rows[0])
   } catch (err) {
     console.error('Create template error:', err)
@@ -442,6 +469,7 @@ app.delete('/api/templates/:id', authenticate, async (req, res) => {
       [req.params.id, req.user.id]
     )
     if (rowCount === 0) return res.status(404).json({ error: 'Sniðmát fannst ekki' })
+    await logAudit(req, 'delete', 'template', req.params.id)
     res.json({ ok: true })
   } catch (err) {
     console.error('Delete template error:', err)
@@ -471,14 +499,14 @@ app.get('/api/products', async (req, res) => {
 })
 
 app.post('/api/products', authenticate, async (req, res) => {
-  const { calculator_type, rental_no, sale_no, description, category, rates, sale_price, weight } = req.body
+  const { calculator_type, rental_no, sale_no, description, category, rates, sale_price, weight, image_url } = req.body
   if (!calculator_type || !rental_no || !description) {
     return res.status(400).json({ error: 'Vantar tegund, vörunúmer og lýsingu' })
   }
   try {
     const { rows } = await pool.query(
-      `INSERT INTO products (calculator_type, rental_no, sale_no, description, category, rates, sale_price, weight)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO products (calculator_type, rental_no, sale_no, description, category, rates, sale_price, weight, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        ON CONFLICT (rental_no) DO UPDATE SET
          calculator_type = EXCLUDED.calculator_type,
          sale_no = EXCLUDED.sale_no,
@@ -486,9 +514,10 @@ app.post('/api/products', authenticate, async (req, res) => {
          category = EXCLUDED.category,
          rates = EXCLUDED.rates,
          sale_price = EXCLUDED.sale_price,
-         weight = EXCLUDED.weight
+         weight = EXCLUDED.weight,
+         image_url = EXCLUDED.image_url
        RETURNING *`,
-      [calculator_type, rental_no, sale_no || '', description, category || '', JSON.stringify(rates || {}), sale_price || 0, weight || 0]
+      [calculator_type, rental_no, sale_no || '', description, category || '', JSON.stringify(rates || {}), sale_price || 0, weight || 0, image_url || '']
     )
     res.status(201).json(rows[0])
   } catch (err) {
@@ -622,6 +651,59 @@ app.post('/api/chat', authenticate, async (req, res) => {
       return res.status(503).json({ error: 'Ógildur API lykill' })
     }
     res.status(500).json({ error: 'Villa í AI þjónustu' })
+  }
+})
+
+// ══════════════════════════════════════════
+// Audit Log (admin only)
+// ══════════════════════════════════════════
+
+app.get('/api/audit-log', authenticate, requireAdmin, async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 50, 500)
+  const offset = Math.max(parseInt(req.query.offset) || 0, 0)
+  const action = req.query.action
+  const entityType = req.query.entity_type
+
+  try {
+    let query = 'SELECT * FROM audit_log'
+    const conditions = []
+    const vals = []
+    let i = 1
+
+    if (action) {
+      conditions.push(`action = $${i++}`)
+      vals.push(action)
+    }
+    if (entityType) {
+      conditions.push(`entity_type = $${i++}`)
+      vals.push(entityType)
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ')
+    }
+
+    query += ` ORDER BY created_at DESC LIMIT $${i++} OFFSET $${i++}`
+    vals.push(limit, offset)
+
+    const { rows } = await pool.query(query, vals)
+
+    // Get total count for pagination
+    let countQuery = 'SELECT COUNT(*) as total FROM audit_log'
+    const countVals = []
+    if (conditions.length > 0) {
+      const countConditions = []
+      let ci = 1
+      if (action) { countConditions.push(`action = $${ci++}`); countVals.push(action) }
+      if (entityType) { countConditions.push(`entity_type = $${ci++}`); countVals.push(entityType) }
+      countQuery += ' WHERE ' + countConditions.join(' AND ')
+    }
+    const { rows: countRows } = await pool.query(countQuery, countVals)
+
+    res.json({ entries: rows, total: parseInt(countRows[0].total), limit, offset })
+  } catch (err) {
+    console.error('Audit log fetch error:', err)
+    res.status(500).json({ error: 'Villa við að sækja aðgerðaskrá' })
   }
 })
 

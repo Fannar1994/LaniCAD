@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS products (
   rates JSONB NOT NULL DEFAULT '{}',
   sale_price NUMERIC(12,2) DEFAULT 0,
   weight NUMERIC(8,2) DEFAULT 0,
+  image_url TEXT DEFAULT '',
   active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -78,6 +79,26 @@ CREATE TABLE IF NOT EXISTS products (
 
 CREATE INDEX IF NOT EXISTS idx_products_calculator_type ON products(calculator_type);
 CREATE INDEX IF NOT EXISTS idx_products_rental_no ON products(rental_no);
+
+
+-- ══════════════════════════════════════════
+-- 5. AUDIT LOG (track user actions)
+-- ══════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS audit_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  user_email TEXT NOT NULL,
+  action TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT,
+  details JSONB DEFAULT '{}',
+  ip_address TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_log_user_id ON audit_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_log_action ON audit_log(action);
+CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log(created_at DESC);
 
 
 -- ══════════════════════════════════════════

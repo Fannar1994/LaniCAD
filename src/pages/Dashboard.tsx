@@ -14,10 +14,10 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 const calculatorLinks = [
-  { to: '/calculator/fence', icon: Calculator, label: 'Girðingar', desc: 'Iðnaðargirðingar' },
+  { to: '/calculator/fence', icon: Calculator, label: 'Girðingar', desc: 'Vinnustaðagirðingar og aðgangsstýringar' },
   { to: '/calculator/scaffolding', icon: Box, label: 'Vinnupallar', desc: 'Layher Allround' },
-  { to: '/calculator/formwork', icon: FileText, label: 'Steypumót', desc: 'Rasto, Manto, Alufort' },
-  { to: '/calculator/rolling', icon: Wrench, label: 'Hjólapallar', desc: 'Narrow, Wide, Quickly' },
+  { to: '/calculator/formwork', icon: FileText, label: 'Steypumót', desc: 'Rasto/Takko, Manto, Alufort' },
+  { to: '/calculator/rolling', icon: Wrench, label: 'Hjólapallar', desc: '1,35 mtr, 0,75 mtr. og quickly' },
   { to: '/calculator/ceiling', icon: Building2, label: 'Loftastoðir', desc: 'Stoðir og HT-20 bitar' },
 ]
 
@@ -59,7 +59,7 @@ export function Dashboard() {
           Velkomin, {user?.name}
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          LániCAD — Teiknibúnaður og reiknivélar fyrir byggingarbúnað
+        Reiknivélar og teikningar fyrir grófvöru
         </p>
       </div>
 
