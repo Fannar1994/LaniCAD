@@ -682,6 +682,35 @@ function ProductSettings() {
     setSuccessMsg('Excel skrá flutt út!')
   }
 
+  // ── Sub-group → calculator type mapping for Leigulager import ──
+  const SUB_GROUP_TO_CALC_TYPE: Record<string, CalculatorType> = {
+    '01-BAT-GI': 'fence',
+    '01-PAL-VP': 'scaffolding',
+    '01-PAL-HP': 'rolling',
+    '01-PAL-HP66': 'rolling',
+    '01-PAL-HP88': 'rolling',
+    '01-MÓT-KM': 'formwork',
+    '01-MÓT-HM': 'formwork',
+    '01-MÓT-AH': 'formwork',
+    '01-MÓT-SM': 'formwork',
+    '01-MÓT-LM51': 'ceiling',
+    '01-MÓT-LM71': 'ceiling',
+    '01-MÓT-LM55': 'ceiling',
+    '01-MÓT-LM02': 'formwork',
+    '01-MÓT-LM22': 'formwork',
+    '01-MÓT-LM72': 'ceiling',
+    '01-MÓT-LM81': 'formwork',
+  }
+
+  function resolveCalcType(subGroup: string): CalculatorType | null {
+    // Try exact match first (e.g. 01-MÓT-LM51), then progressively shorter prefixes
+    for (let len = subGroup.length; len >= 6; len--) {
+      const prefix = subGroup.substring(0, len)
+      if (SUB_GROUP_TO_CALC_TYPE[prefix]) return SUB_GROUP_TO_CALC_TYPE[prefix]
+    }
+    return null
+  }
+
   // ── Excel import ──
   const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -694,35 +723,74 @@ function ProductSettings() {
         const ws = wb.Sheets[wb.SheetNames[0]]
         const rows = XLSX.utils.sheet_to_json<Record<string, string | number>>(ws)
 
+        // Auto-detect Leigulager format (has "Item No." and "Sub Group" columns)
+        const isLeigulager = rows.length > 0 && ('Item No.' in rows[0] || 'Sub Group' in rows[0])
+
         let imported = 0
+        let skipped = 0
+
         for (const row of rows) {
-          const rentalNo = String(row['Vörunúmer (Leiga)'] || row['rental_no'] || '').trim()
-          const desc = String(row['Lýsing'] || row['description'] || '').trim()
-          if (!rentalNo || !desc) continue
+          if (isLeigulager) {
+            // ── Leigulager format ──
+            const itemNo = String(row['Item No.'] || '').trim()
+            const desc = String(row['Item Description'] || '').trim()
+            const subGroup = String(row['Sub Group'] || '').trim()
+            if (!itemNo || !desc) { skipped++; continue }
 
-          // Map Icelandic type labels back to keys
-          const typeLabel = String(row['Tegund'] || row['calculator_type'] || 'fence')
-          const calcType = (Object.entries(CALCULATOR_LABELS).find(([, v]) => v === typeLabel)?.[0] || typeLabel) as CalculatorType
+            // Only import construction rental items (01- prefix)
+            const calcType = resolveCalcType(subGroup)
+            if (!calcType) { skipped++; continue }
 
-          let rates: Record<string, number> = {}
-          const ratesStr = String(row['Verð (JSON)'] || row['rates'] || '{}')
-          try { rates = JSON.parse(ratesStr) } catch { /* empty */ }
+            const weekRate = Number(row['Default Week Rate'] || 0)
+            const dayRate = Number(row['Default Day Rate'] || 0)
+            const rates: Record<string, number> = {}
+            if (dayRate) rates.daily = dayRate
+            if (weekRate) rates.weekly = weekRate
 
-          await upsertProduct({
-            calculator_type: calcType,
-            rental_no: rentalNo,
-            sale_no: String(row['Vörunúmer (Sala)'] || row['sale_no'] || ''),
-            description: desc,
-            category: String(row['Flokkur'] || row['category'] || ''),
-            rates,
-            sale_price: Number(row['Söluverð'] || row['sale_price'] || 0),
-            weight: Number(row['Þyngd (kg)'] || row['weight'] || 0),
-            image_url: String(row['Mynd URL'] || row['image_url'] || ''),
-            active: (row['Virk'] || row['active'] || 'Já') !== 'Nei',
-          })
-          imported++
+            await upsertProduct({
+              calculator_type: calcType,
+              rental_no: itemNo,
+              sale_no: String(row['Item Description 2'] || ''),
+              description: desc,
+              category: subGroup,
+              rates,
+              sale_price: Number(row['Selling Price'] || 0),
+              weight: Number(row['Weight'] || 0),
+              image_url: '',
+              active: true,
+            })
+            imported++
+          } else {
+            // ── LániCAD native format ──
+            const rentalNo = String(row['Vörunúmer (Leiga)'] || row['rental_no'] || '').trim()
+            const desc = String(row['Lýsing'] || row['description'] || '').trim()
+            if (!rentalNo || !desc) { skipped++; continue }
+
+            // Map Icelandic type labels back to keys
+            const typeLabel = String(row['Tegund'] || row['calculator_type'] || 'fence')
+            const calcType = (Object.entries(CALCULATOR_LABELS).find(([, v]) => v === typeLabel)?.[0] || typeLabel) as CalculatorType
+
+            let rates: Record<string, number> = {}
+            const ratesStr = String(row['Verð (JSON)'] || row['rates'] || '{}')
+            try { rates = JSON.parse(ratesStr) } catch { /* empty */ }
+
+            await upsertProduct({
+              calculator_type: calcType,
+              rental_no: rentalNo,
+              sale_no: String(row['Vörunúmer (Sala)'] || row['sale_no'] || ''),
+              description: desc,
+              category: String(row['Flokkur'] || row['category'] || ''),
+              rates,
+              sale_price: Number(row['Söluverð'] || row['sale_price'] || 0),
+              weight: Number(row['Þyngd (kg)'] || row['weight'] || 0),
+              image_url: String(row['Mynd URL'] || row['image_url'] || ''),
+              active: (row['Virk'] || row['active'] || 'Já') !== 'Nei',
+            })
+            imported++
+          }
         }
-        setSuccessMsg(`${imported} vörur fluttar inn!`)
+        const fmt = isLeigulager ? 'Leigulager' : 'LániCAD'
+        setSuccessMsg(`${fmt}: ${imported} vörur fluttar inn, ${skipped} sleppt`)
         loadProducts()
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Villa við innflutning')
