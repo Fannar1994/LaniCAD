@@ -13,10 +13,13 @@ import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
+type PriceMode = 'standard' | 'discount'
+
 interface LineItem {
   product: FenceProductData
   qty: number
   rentalCost: number
+  saleTotal: number
 }
 
 export function FenceCalculator() {
@@ -35,6 +38,7 @@ export function FenceCalculator() {
   const [client, setClient] = useState<ClientInfo>(loadedProject?.client ?? emptyClient)
   const [startDate, setStartDate] = useState(initData.startDate as string ?? '')
   const [endDate, setEndDate] = useState(initData.endDate as string ?? '')
+  const [priceMode, setPriceMode] = useState<PriceMode>(initData.priceMode as PriceMode ?? 'standard')
   const [saving, setSaving] = useState(false)
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
@@ -51,12 +55,14 @@ export function FenceCalculator() {
 
   const lines = useMemo(() => {
     const items: LineItem[] = []
+    const getPrice = (p: FenceProductData) => priceMode === 'discount' ? p.discountPrice : p.salePrice
 
     // Mobile fence panels
     items.push({
       product: fenceProduct,
       qty: geometry.panels,
       rentalCost: calcFenceRental(effectiveDays, fenceProduct.rates, geometry.panels),
+      saleTotal: getPrice(fenceProduct) * geometry.panels,
     })
 
     // Stones
@@ -65,6 +71,7 @@ export function FenceCalculator() {
       product: stoneProduct,
       qty: geometry.stones,
       rentalCost: calcFenceRental(effectiveDays, stoneProduct.rates, geometry.stones),
+      saleTotal: getPrice(stoneProduct) * geometry.stones,
     })
 
     // Clamps
@@ -74,6 +81,7 @@ export function FenceCalculator() {
         product: clampProduct,
         qty: geometry.clamps,
         rentalCost: calcFenceRental(effectiveDays, clampProduct.rates, geometry.clamps),
+        saleTotal: getPrice(clampProduct) * geometry.clamps,
       })
     }
 
@@ -84,6 +92,7 @@ export function FenceCalculator() {
         product: gateProduct,
         qty: 1,
         rentalCost: calcFenceRental(effectiveDays, gateProduct.rates, 1),
+        saleTotal: getPrice(gateProduct) * 1,
       })
     }
 
@@ -94,6 +103,7 @@ export function FenceCalculator() {
         product: wheelProduct,
         qty: 2,
         rentalCost: calcFenceRental(effectiveDays, wheelProduct.rates, 2),
+        saleTotal: getPrice(wheelProduct) * 2,
       })
     }
 
@@ -104,13 +114,15 @@ export function FenceCalculator() {
         product: lockProduct,
         qty: 1,
         rentalCost: calcFenceRental(effectiveDays, lockProduct.rates, 1),
+        saleTotal: getPrice(lockProduct) * 1,
       })
     }
 
     return items
-  }, [fenceProduct, geometry, effectiveDays, stoneType, includeGate, includeWheels, includeLock])
+  }, [fenceProduct, geometry, effectiveDays, stoneType, includeGate, includeWheels, includeLock, priceMode])
 
   const totalRental = lines.reduce((sum, l) => sum + l.rentalCost, 0)
+  const totalSale = lines.reduce((sum, l) => sum + l.saleTotal, 0)
 
   const getExportData = useCallback(() => {
     const fenceType = FENCE_TYPES.find(t => t.key === selectedType)!
@@ -127,13 +139,14 @@ export function FenceCalculator() {
         ['Fjöldi grindar', `${geometry.panels}`],
         ['Fjöldi steina', `${geometry.stones}`],
         ['Leigudagar', `${effectiveDays}`],
+        ['Verðflokkur', priceMode === 'discount' ? 'Spariverð' : 'Grunnverð'],
       ] as [string, string][],
-      tableHeaders: ['Leiguvörunr.', 'Lýsing', 'Magn', 'Leiga'],
-      tableRows: lines.map(l => [l.product.rentalNo, l.product.description, l.qty, formatKr(l.rentalCost)]),
+      tableHeaders: ['Vörunúmer', 'Lýsing', 'Magn', priceMode === 'discount' ? 'Spariverð' : 'Grunnverð', 'Leiga'],
+      tableRows: lines.map(l => [l.product.saleNo, l.product.description, l.qty, formatKr(l.saleTotal), formatKr(l.rentalCost)]),
       totalLabel: 'Samtals:',
-      totalValue: formatKr(totalRental),
+      totalValue: `${formatKr(totalSale)} (sala) / ${formatKr(totalRental)} (leiga)`,
     }
-  }, [selectedType, client, startDate, endDate, effectiveDays, totalLength, geometry, lines, totalRental])
+  }, [selectedType, client, startDate, endDate, effectiveDays, totalLength, geometry, lines, totalRental, totalSale, priceMode])
 
   const handleSave = useCallback(async () => {
     const name = client.name
@@ -146,7 +159,7 @@ export function FenceCalculator() {
       rentalCost: l.rentalCost,
     }))
     const data: Record<string, unknown> = {
-      selectedType, totalLength, rentalDays: effectiveDays, includeGate, includeWheels, includeLock, stoneType, startDate, endDate,
+      selectedType, totalLength, rentalDays: effectiveDays, includeGate, includeWheels, includeLock, stoneType, priceMode, startDate, endDate,
     }
     try {
       setSaving(true)
@@ -163,13 +176,13 @@ export function FenceCalculator() {
     } finally {
       setSaving(false)
     }
-  }, [client, lines, selectedType, totalLength, effectiveDays, includeGate, includeWheels, includeLock, stoneType, startDate, endDate, projectId])
+  }, [client, lines, selectedType, totalLength, effectiveDays, includeGate, includeWheels, includeLock, stoneType, priceMode, startDate, endDate, projectId])
 
   const handleSaveTemplate = useCallback(async () => {
     const name = prompt('Heiti sniðmáts:', `Girðingar — ${selectedType}`)
     if (!name) return
     const config: Record<string, unknown> = {
-      selectedType, totalLength, rentalDays: effectiveDays, includeGate, includeWheels, includeLock, stoneType, startDate, endDate,
+      selectedType, totalLength, rentalDays: effectiveDays, includeGate, includeWheels, includeLock, stoneType, priceMode, startDate, endDate,
     }
     try {
       setSavingTemplate(true)
@@ -180,7 +193,7 @@ export function FenceCalculator() {
     } finally {
       setSavingTemplate(false)
     }
-  }, [selectedType, totalLength, effectiveDays, includeGate, includeWheels, includeLock, stoneType, startDate, endDate])
+  }, [selectedType, totalLength, effectiveDays, includeGate, includeWheels, includeLock, stoneType, priceMode, startDate, endDate])
 
   return (
     <div className="space-y-6">
@@ -260,6 +273,32 @@ export function FenceCalculator() {
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Söluverð</label>
+            <div className="mt-1 flex gap-4">
+              <label className="inline-flex items-center text-sm">
+                <input
+                  type="radio"
+                  value="standard"
+                  checked={priceMode === 'standard'}
+                  onChange={() => setPriceMode('standard')}
+                  className="text-brand-accent focus:ring-brand-accent"
+                />
+                <span className="ml-2">Grunnverð</span>
+              </label>
+              <label className="inline-flex items-center text-sm">
+                <input
+                  type="radio"
+                  value="discount"
+                  checked={priceMode === 'discount'}
+                  onChange={() => setPriceMode('discount')}
+                  className="text-brand-accent focus:ring-brand-accent"
+                />
+                <span className="ml-2">Spariverð</span>
+              </label>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">Aukahlutir</label>
             <label className="flex items-center gap-2 text-sm">
@@ -310,9 +349,19 @@ export function FenceCalculator() {
           </div>
 
           <div className="rounded-lg border-2 border-brand-accent bg-brand-accent/5 p-5">
-            <div className="text-sm font-medium text-gray-500">Heildarkostnaður leigu</div>
-            <div className="mt-1 font-condensed text-3xl font-bold text-brand-dark">
-              {formatKr(totalRental)}
+            <div className="flex justify-between">
+              <div>
+                <div className="text-sm font-medium text-gray-500">{priceMode === 'discount' ? 'Spariverð sala' : 'Grunnverð sala'}</div>
+                <div className="mt-1 font-condensed text-3xl font-bold text-brand-dark">
+                  {formatKr(totalSale)}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-medium text-gray-500">Heildarkostnaður leigu</div>
+                <div className="mt-1 font-condensed text-3xl font-bold text-brand-dark">
+                  {formatKr(totalRental)}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -327,18 +376,20 @@ export function FenceCalculator() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-5 py-2 text-left font-medium text-gray-600">Leiguvörunúmer</th>
+                <th className="px-5 py-2 text-left font-medium text-gray-600">Vörunúmer</th>
                 <th className="px-5 py-2 text-left font-medium text-gray-600">Lýsing</th>
                 <th className="px-5 py-2 text-right font-medium text-gray-600">Magn</th>
+                <th className="px-5 py-2 text-right font-medium text-gray-600">{priceMode === 'discount' ? 'Spariverð' : 'Grunnverð'}</th>
                 <th className="px-5 py-2 text-right font-medium text-gray-600">Leiga</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {lines.map((line, i) => (
                 <tr key={i}>
-                  <td className="px-5 py-2 font-mono text-xs text-gray-500">{line.product.rentalNo}</td>
+                  <td className="px-5 py-2 font-mono text-xs text-gray-500">{line.product.saleNo}</td>
                   <td className="px-5 py-2">{line.product.description}</td>
                   <td className="px-5 py-2 text-right">{line.qty}</td>
+                  <td className="px-5 py-2 text-right font-medium">{formatKr(line.saleTotal)}</td>
                   <td className="px-5 py-2 text-right font-medium">{formatKr(line.rentalCost)}</td>
                 </tr>
               ))}
@@ -347,6 +398,9 @@ export function FenceCalculator() {
               <tr className="border-t-2 border-brand-dark bg-gray-50">
                 <td colSpan={3} className="px-5 py-2 text-right font-condensed font-bold text-brand-dark">
                   Samtals:
+                </td>
+                <td className="px-5 py-2 text-right font-condensed font-bold text-brand-dark">
+                  {formatKr(totalSale)}
                 </td>
                 <td className="px-5 py-2 text-right font-condensed font-bold text-brand-dark">
                   {formatKr(totalRental)}
