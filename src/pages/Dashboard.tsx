@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Calculator, FolderOpen, FileText, Box, Ruler, Building2, Wrench } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '@/lib/auth'
 import { fetchProjects, isApiConfigured } from '@/lib/db'
 import type { Project } from '@/types'
 
@@ -27,7 +26,6 @@ const otherLinks = [
 ]
 
 export function Dashboard() {
-  const { user } = useAuth()
   const [projects, setProjects] = useState<Project[]>([])
   const [loadingProjects, setLoadingProjects] = useState(true)
 
@@ -56,7 +54,7 @@ export function Dashboard() {
     <div>
       <div className="mb-8">
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">
-          Velkomin, {user?.name}
+          Velkomin í LániCAD
         </h1>
         <p className="mt-1 text-sm text-gray-500">
         Reiknivélar og teikningar fyrir grófvöru

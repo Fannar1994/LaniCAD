@@ -1,13 +1,10 @@
-import { Menu, LogOut, User } from 'lucide-react'
-import { useAuth } from '@/lib/auth'
+import { Menu } from 'lucide-react'
 
 interface HeaderProps {
   onMenuToggle: () => void
 }
 
 export function Header({ onMenuToggle }: HeaderProps) {
-  const { user, logout } = useAuth()
-
   return (
     <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4">
       <button
@@ -17,27 +14,13 @@ export function Header({ onMenuToggle }: HeaderProps) {
         <Menu className="h-5 w-5" />
       </button>
 
-      <div className="flex items-center gap-4">
-        {user && (
-          <>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <User className="h-4 w-4" />
-              <span>{user.name}</span>
-              {user.role === 'admin' && (
-                <span className="rounded-full bg-brand-accent/20 px-2 py-0.5 text-xs font-medium text-brand-dark">
-                  Stjórnandi
-                </span>
-              )}
-            </div>
-            <button
-              onClick={logout}
-              className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-red-600"
-            >
-              <LogOut className="h-4 w-4" />
-              Útskrá
-            </button>
-          </>
-        )}
+      <div className="flex items-center gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-accent font-condensed font-bold text-brand-dark">
+          LC
+        </div>
+        <span className="font-condensed text-lg font-bold text-brand-dark">
+          LániCAD
+        </span>
       </div>
     </header>
   )

@@ -1,8 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuth } from '@/lib/auth'
 import { AppShell } from '@/components/layout/AppShell'
-import { LoginPage } from '@/pages/LoginPage'
 import { Dashboard } from '@/pages/Dashboard'
 
 // Lazy-loaded pages (code-split heavy chunks: Three.js, PDF.js, Tesseract, calculators)
@@ -25,39 +23,13 @@ function LazyFallback() {
   )
 }
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth()
-  if (!user) return <Navigate to="/login" replace />
-  return <>{children}</>
-}
-
-function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, isAdmin } = useAuth()
-  if (!user) return <Navigate to="/login" replace />
-  if (!isAdmin) return <Navigate to="/" replace />
-  return <>{children}</>
-}
-
 // Lazy-loaded admin pages
 const AuditLogPage = lazy(() => import('@/pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })))
 
 export function App() {
-  const { user } = useAuth()
-
   return (
     <Routes>
-      <Route
-        path="/login"
-        element={user ? <Navigate to="/" replace /> : <LoginPage />}
-      />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <AppShell />
-          </ProtectedRoute>
-        }
-      >
+      <Route path="/" element={<AppShell />}>
         <Route index element={<Dashboard />} />
         <Route path="projects" element={<Suspense fallback={<LazyFallback />}><ProjectsPage /></Suspense>} />
         <Route path="calculator/fence" element={<Suspense fallback={<LazyFallback />}><FenceCalculator /></Suspense>} />
@@ -69,7 +41,7 @@ export function App() {
         <Route path="schematics" element={<Suspense fallback={<LazyFallback />}><SchematicsPage /></Suspense>} />
         <Route path="templates" element={<Suspense fallback={<LazyFallback />}><TemplatesPage /></Suspense>} />
         <Route path="settings" element={<Suspense fallback={<LazyFallback />}><SettingsPage /></Suspense>} />
-        <Route path="audit-log" element={<AdminRoute><Suspense fallback={<LazyFallback />}><AuditLogPage /></Suspense></AdminRoute>} />
+        <Route path="audit-log" element={<Suspense fallback={<LazyFallback />}><AuditLogPage /></Suspense>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
