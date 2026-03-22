@@ -1,6 +1,7 @@
-import { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useCadState } from '@/hooks/useCadState'
 import { useScene3D } from '@/hooks/useScene3D'
+import { useChatCad } from '@/contexts/ChatCadContext'
 import { CadCanvas } from '@/components/cad/CadCanvas'
 import { CadToolbar } from '@/components/cad/CadToolbar'
 import { CadSideTools } from '@/components/cad/CadSideTools'
@@ -74,6 +75,91 @@ export function DrawingPage() {
   const [ceilingPropHeight, setCeilingPropHeight] = useState(3)
   const [ceilingBeamCount, setCeilingBeamCount] = useState(3)
   const [ceilingRoomWidth, setCeilingRoomWidth] = useState(6)
+
+  // Chat → CAD bridge: consume pending actions from AI chat
+  const { pendingAction, clearPendingAction } = useChatCad()
+  useEffect(() => {
+    if (!pendingAction) return
+    const { type, params } = pendingAction
+    const n = (key: string, fallback: number) => (typeof params[key] === 'number' ? params[key] : fallback) as number
+    const s = (key: string, fallback: string) => (typeof params[key] === 'string' ? params[key] : fallback) as string
+    clearPendingAction()
+
+    switch (type) {
+      case 'place_fence':
+        setEquipmentType('fence')
+        if (params.panels) setFencePanels(n('panels', fencePanels))
+        if (params.panelWidth) setFencePanelWidth(n('panelWidth', fencePanelWidth))
+        if (params.panelHeight) setFencePanelHeight(n('panelHeight', fencePanelHeight))
+        if (params.includeGate !== undefined) setFenceIncludeGate(!!params.includeGate)
+        setStatus('AI: Girðing sett upp')
+        break
+      case 'place_scaffold':
+        setEquipmentType('scaffold')
+        if (params.length) setScaffoldLength(n('length', scaffoldLength))
+        if (params.levels2m) setScaffoldLevels2m(n('levels2m', scaffoldLevels2m))
+        if (params.levels07m) setScaffoldLevels07m(n('levels07m', scaffoldLevels07m))
+        setStatus('AI: Vinnupallur settur upp')
+        break
+      case 'place_formwork':
+        setEquipmentType('formwork')
+        if (params.length) setFormworkLength(n('length', formworkLength))
+        if (params.height) setFormworkHeight(n('height', formworkHeight))
+        if (params.system) setFormworkSystem(s('system', formworkSystem) as 'Rasto' | 'Takko' | 'Manto')
+        setStatus('AI: Steypumót sett upp')
+        break
+      case 'place_rolling':
+        setEquipmentType('rolling')
+        if (params.height) setRollingHeight(n('height', rollingHeight))
+        if (params.width) setRollingWidth(s('width', rollingWidth) as 'narrow' | 'wide')
+        setStatus('AI: Hjólapallur settur upp')
+        break
+      case 'place_ceiling':
+        setEquipmentType('ceiling')
+        if (params.propCount) setCeilingPropCount(n('propCount', ceilingPropCount))
+        if (params.propHeight) setCeilingPropHeight(n('propHeight', ceilingPropHeight))
+        if (params.beamCount) setCeilingBeamCount(n('beamCount', ceilingBeamCount))
+        if (params.roomWidth) setCeilingRoomWidth(n('roomWidth', ceilingRoomWidth))
+        setStatus('AI: Loftastoðir settar upp')
+        break
+      case 'draw_rect':
+        cad.addObject({
+          type: 'rect',
+          origin: { x: n('x', 0), y: n('y', 0) },
+          width: n('width', 10),
+          height: n('height', 5),
+          rotation: 0,
+        })
+        setStatus('AI: Rétthyrningur teiknaður')
+        break
+      case 'draw_circle':
+        cad.addObject({
+          type: 'circle',
+          center: { x: n('cx', 0), y: n('cy', 0) },
+          radius: n('radius', 3),
+        })
+        setStatus('AI: Hringur teiknaður')
+        break
+      case 'draw_line':
+        cad.addObject({
+          type: 'line',
+          start: { x: 0, y: 0 },
+          end: { x: n('length', 10), y: 0 },
+        })
+        setStatus('AI: Lína teiknuð')
+        break
+      case 'draw_text':
+        cad.addObject({
+          type: 'text',
+          position: { x: 0, y: 0 },
+          content: s('text', 'LániCAD'),
+          fontSize: 14,
+          rotation: 0,
+        })
+        setStatus('AI: Texti bættur við')
+        break
+    }
+  }, [pendingAction, clearPendingAction, cad])
 
   const svgContent = useMemo(() => {
     switch (equipmentType) {
