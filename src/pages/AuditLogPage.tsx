@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth'
 import { getApiUrl } from '@/lib/api-config'
 import { useTranslation } from '@/lib/i18n'
-import { ChevronLeft, ChevronRight, Filter } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Filter, Download } from 'lucide-react'
+import * as XLSX from 'xlsx'
 
 interface AuditEntry {
   id: string
@@ -41,6 +42,7 @@ export function AuditLogPage() {
   const [loading, setLoading] = useState(true)
   const [filterAction, setFilterAction] = useState('')
   const [filterEntity, setFilterEntity] = useState('')
+  const [exporting, setExporting] = useState(false)
 
   const fetchLog = useCallback(async () => {
     const apiUrl = getApiUrl()
@@ -71,15 +73,104 @@ export function AuditLogPage() {
 
   const lang = (labels: { is: string; en: string }) => locale === 'en' ? labels.en : labels.is
 
+  const handleExport = async (format: 'csv' | 'xlsx') => {
+    const apiUrl = getApiUrl()
+    if (!apiUrl || !token) return
+    setExporting(true)
+    try {
+      // Fetch all entries matching current filters (up to 10000)
+      const params = new URLSearchParams({ limit: '10000', offset: '0' })
+      if (filterAction) params.set('action', filterAction)
+      if (filterEntity) params.set('entity_type', filterEntity)
+      const res = await fetch(`${apiUrl}/audit-log?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error('Export fetch failed')
+      const data = await res.json()
+      const allEntries: AuditEntry[] = data.entries
+
+      const headers = [
+        locale === 'en' ? 'Time' : 'Tími',
+        locale === 'en' ? 'User' : 'Notandi',
+        locale === 'en' ? 'Action' : 'Aðgerð',
+        locale === 'en' ? 'Type' : 'Tegund',
+        locale === 'en' ? 'Entity ID' : 'Auðkenni',
+        locale === 'en' ? 'Details' : 'Upplýsingar',
+        'IP',
+      ]
+
+      const rows = allEntries.map(entry => {
+        const actionInfo = ACTION_LABELS[entry.action] || { is: entry.action, en: entry.action }
+        const entityInfo = ENTITY_LABELS[entry.entity_type] || { is: entry.entity_type, en: entry.entity_type }
+        const detailStr = entry.details && Object.keys(entry.details).length > 0
+          ? Object.entries(entry.details)
+              .filter(([, v]) => v !== undefined && v !== null)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join('; ')
+          : ''
+        return [
+          new Date(entry.created_at).toLocaleString(locale === 'en' ? 'en-GB' : 'is-IS', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+          }),
+          entry.user_email,
+          lang(actionInfo),
+          lang(entityInfo),
+          entry.entity_id || '',
+          detailStr,
+          entry.ip_address || '',
+        ]
+      })
+
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows])
+      ws['!cols'] = [{ wch: 18 }, { wch: 25 }, { wch: 14 }, { wch: 14 }, { wch: 20 }, { wch: 40 }, { wch: 16 }]
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Audit Log')
+
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+      if (format === 'csv') {
+        XLSX.writeFile(wb, `lanicad-audit-${dateStr}.csv`, { bookType: 'csv' })
+      } else {
+        XLSX.writeFile(wb, `lanicad-audit-${dateStr}.xlsx`)
+      }
+    } catch (err) {
+      console.error('Audit export error:', err)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">
           {locale === 'en' ? 'Audit Log' : 'Aðgerðaskrá'}
         </h1>
-        <span className="text-sm text-gray-500">
-          {total} {locale === 'en' ? 'entries' : 'færslur'}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-500">
+            {total} {locale === 'en' ? 'entries' : 'færslur'}
+          </span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => handleExport('csv')}
+              disabled={exporting || entries.length === 0}
+              className="flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+              title={locale === 'en' ? 'Export CSV' : 'Flytja út CSV'}
+            >
+              <Download className="h-3.5 w-3.5" />
+              CSV
+            </button>
+            <button
+              onClick={() => handleExport('xlsx')}
+              disabled={exporting || entries.length === 0}
+              className="flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+              title={locale === 'en' ? 'Export Excel' : 'Flytja út Excel'}
+            >
+              <Download className="h-3.5 w-3.5" />
+              Excel
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}

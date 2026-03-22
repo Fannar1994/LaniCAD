@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { GlobalSearch } from '@/components/GlobalSearch'
 import { Dashboard } from '@/pages/Dashboard'
 import { LoginPage } from '@/pages/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -44,6 +45,7 @@ export function App() {
 
   return (
     <ErrorBoundary>
+    <GlobalSearch />
     <Routes>
       <Route path="/" element={<AppShell />}>
         <Route index element={<Dashboard />} />

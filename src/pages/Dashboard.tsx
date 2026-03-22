@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Calculator, FolderOpen, FileText, Box, Ruler, Building2, Wrench, TrendingUp } from 'lucide-react'
+import { Calculator, FolderOpen, FileText, Box, Ruler, Building2, Wrench, TrendingUp, Clock, DollarSign } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { fetchProjects, isApiConfigured } from '@/lib/db'
+import { formatKr } from '@/lib/format'
 import type { Project } from '@/types'
 
 const TYPE_LABELS: Record<string, string> = {
@@ -60,6 +61,32 @@ export function Dashboard() {
     [typeCounts]
   )
 
+  // Calculate total rental cost across all projects
+  const totalCost = useMemo(() => {
+    return projects.reduce((sum, p) => {
+      if (p.line_items && Array.isArray(p.line_items)) {
+        return sum + p.line_items.reduce((s, item) => s + (item.rentalCost || 0), 0)
+      }
+      return sum
+    }, 0)
+  }, [projects])
+
+  // Count clients (unique company names)
+  const uniqueClients = useMemo(() => {
+    const names = new Set<string>()
+    projects.forEach(p => {
+      if (p.client?.company) names.add(p.client.company)
+      else if (p.client?.name) names.add(p.client.name)
+    })
+    return names.size
+  }, [projects])
+
+  // This week's projects
+  const thisWeekCount = useMemo(() => {
+    const weekAgo = Date.now() - 7 * 86400000
+    return projects.filter(p => new Date(p.created_at).getTime() >= weekAgo).length
+  }, [projects])
+
   const weeklyData = useMemo(() => {
     const now = Date.now()
     const weeks: { name: string; verkefni: number }[] = []
@@ -89,17 +116,41 @@ export function Dashboard() {
       {/* Stats row */}
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="text-sm text-gray-500">Verkefni samtals</div>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <FolderOpen className="h-4 w-4" />
+            Verkefni samtals
+          </div>
           <div className="mt-1 font-condensed text-3xl font-bold text-brand-dark">
             {loadingProjects ? '...' : projects.length}
           </div>
         </div>
-        {Object.entries(typeCounts).slice(0, 3).map(([type, count]) => (
-          <div key={type} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="text-sm text-gray-500">{TYPE_LABELS[type] ?? type}</div>
-            <div className="mt-1 font-condensed text-3xl font-bold text-brand-dark">{count}</div>
+        <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <DollarSign className="h-4 w-4" />
+            Heildarkostnaður
           </div>
-        ))}
+          <div className="mt-1 font-condensed text-3xl font-bold text-brand-dark">
+            {loadingProjects ? '...' : totalCost > 0 ? formatKr(totalCost) : '—'}
+          </div>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Calculator className="h-4 w-4" />
+            Viðskiptavinir
+          </div>
+          <div className="mt-1 font-condensed text-3xl font-bold text-brand-dark">
+            {loadingProjects ? '...' : uniqueClients}
+          </div>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Clock className="h-4 w-4" />
+            Þessa viku
+          </div>
+          <div className="mt-1 font-condensed text-3xl font-bold text-brand-dark">
+            {loadingProjects ? '...' : thisWeekCount}
+          </div>
+        </div>
       </div>
 
       {/* Charts row */}

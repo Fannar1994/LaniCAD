@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Menu, LogOut, User, Settings, ChevronDown } from 'lucide-react'
+import { Menu, LogOut, User, Settings, ChevronDown, Search } from 'lucide-react'
 import { useLocation, Link } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 
@@ -67,6 +67,18 @@ export function Header({ onMenuToggle }: HeaderProps) {
         </span>
       </div>
 
+      <div className="flex items-center gap-2">
+        {/* Global search trigger */}
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))}
+          className="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-400 hover:border-gray-300 hover:text-gray-500"
+          title="Leita (Ctrl+K)"
+        >
+          <Search className="h-4 w-4" />
+          <span className="hidden sm:inline">Leita...</span>
+          <kbd className="hidden rounded border border-gray-200 px-1 py-0.5 text-xs sm:inline">⌘K</kbd>
+        </button>
+
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -104,6 +116,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
             </button>
           </div>
         )}
+      </div>
       </div>
     </header>
   )

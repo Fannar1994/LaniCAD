@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from '@/lib/auth'
 import { I18nProvider } from '@/lib/i18n'
+import { ToastProvider } from '@/lib/toast'
 import { App } from './App'
 import './index.css'
 
@@ -11,7 +12,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <BrowserRouter basename="/LaniCAD/">
       <I18nProvider>
         <AuthProvider>
-          <App />
+          <ToastProvider>
+            <App />
+          </ToastProvider>
         </AuthProvider>
       </I18nProvider>
     </BrowserRouter>
