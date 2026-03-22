@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
-import { SCAFFOLD_ITEMS, BOARD_LENGTH_M } from '@/data/scaffolding'
-import { calculateLevelsFromHeight, calculateFacadeMaterials } from '@/lib/calculations/geometry'
+import { SCAFFOLD_ITEMS } from '@/data/scaffolding'
+import { calculateLevelsFromHeight, calculateFacadeMaterials, calculateRacks, calculateAccessoryGrids } from '@/lib/calculations/geometry'
 import { calcScaffoldingRental } from '@/lib/calculations/rental'
 import { formatKr } from '@/lib/format'
 import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
@@ -57,10 +57,17 @@ export function ScaffoldCalculator() {
     facades.forEach((f, i) => {
       const levels = calculateLevelsFromHeight(f.height)
       const mats = calculateFacadeMaterials(f.length, levels.levels2m, levels.levels07m, f.endcaps, i === 0)
-      for (const [key, qty] of Object.entries(mats)) {
+      const legsTotal = mats['LEGS_TOTAL'] || 0
+      // Default: all legs as 50cm (user can adjust in future)
+      const perFacade: Record<string, number> = { ...mats, 'Lappir 50cm': legsTotal, 'Lappir 100cm': 0 }
+      delete perFacade['LEGS_TOTAL']
+      for (const [key, qty] of Object.entries(perFacade)) {
         totals[key] = (totals[key] || 0) + qty
       }
     })
+    // Add racks and accessory grids
+    calculateRacks(totals)
+    calculateAccessoryGrids(totals, facades.length > 0)
     return totals
   }, [facades])
 
@@ -210,7 +217,7 @@ export function ScaffoldCalculator() {
                 </div>
               </div>
               <div className="mt-2 text-xs text-gray-400">
-                Þök: {Math.ceil(f.length / BOARD_LENGTH_M)} stk — Borðlengd: {BOARD_LENGTH_M}m
+                Þök: {Math.ceil(f.length / 1.8)} stk — Borðlengd: 1.8m
               </div>
             </div>
           ))}

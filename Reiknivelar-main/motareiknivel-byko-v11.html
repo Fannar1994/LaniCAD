@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Steypumótareiknivél</title>
+<link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--color-border:#ddd;--color-surface:#fafafa;--color-bg:#f2f4f7;--color-muted:#666;--radius-sm:5px;--radius-md:8px;--radius-lg:10px;--byko:#404042;--byko-yellow:#f5c800}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Barlow',system-ui,Arial,sans-serif;background:var(--color-bg);margin:0;padding:20px}
+.calculator{max-width:1100px;margin:auto;background:#fff;padding:20px;border-radius:var(--radius-lg);box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.calc-header{display:flex;align-items:center;justify-content:space-between;margin:-20px -20px 0 -20px;padding:22px 28px;background:var(--byko);border-radius:var(--radius-lg) var(--radius-lg) 0 0;position:relative;overflow:hidden}
+.calc-header::before{content:'';position:absolute;top:0;left:0;width:6px;height:100%;background:var(--byko-yellow)}
+.calc-header::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+.calc-header-left{position:relative;z-index:1}
+.calc-header-eyebrow{font-family:'Barlow',sans-serif;font-size:11px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--byko-yellow);margin-bottom:4px}
+.calc-header h2{margin:0;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:700;color:#fff;letter-spacing:.5px;line-height:1}
+.calc-header-sub{font-family:'Barlow',sans-serif;font-size:12px;color:rgba(255,255,255,.45);margin-top:5px;letter-spacing:.5px}
+.calc-logo{height:110px;width:auto;object-fit:contain;position:relative;z-index:1}
+
+/* Client section */
+.client-section{padding:18px 20px;border-bottom:1px solid var(--color-border)}
+.client-section h3{font-size:14px;font-weight:600;color:var(--byko);margin-bottom:12px;letter-spacing:.5px}
+.client-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.client-grid label{font-size:12px;font-weight:500;color:#555;display:flex;flex-direction:column;gap:3px}
+.client-grid input{padding:8px 10px;border:1.5px solid #ddd;border-radius:var(--radius-sm);font-size:14px;font-family:inherit}
+.client-grid input:focus{outline:none;border-color:var(--byko)}
+
+/* Body */
+.calc-body{padding:16px 20px 12px}
+.section-label{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--color-muted);margin-bottom:10px;margin-top:18px}
+.section-label:first-child{margin-top:0}
+
+/* System tabs */
+.sys-tabs{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.sys-tab{padding:12px 8px;border:2px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;color:var(--color-muted);line-height:1.3}
+.sys-tab .tab-brand{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;display:block;opacity:.5;margin-bottom:1px}
+.sys-tab.active .tab-brand{opacity:.7}
+.sys-tab .tab-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;display:block;color:#333}
+.sys-tab .tab-sub{font-size:11px;font-weight:500;color:var(--color-muted);letter-spacing:.5px}
+.sys-tab.active{border-color:var(--byko);background:var(--byko)}
+.sys-tab.active .tab-name,.sys-tab.active .tab-sub{color:#fff}
+.sys-tab.active .tab-sub{color:var(--byko-yellow)}
+
+/* Mode panes */
+.mode-pane{display:none}
+.mode-pane.active{display:block}
+.mode-section-title{background:var(--byko);color:#fff;padding:12px 18px;border-radius:var(--radius-md);margin-bottom:14px;font-size:15px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:.5px}
+.input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.input-block{display:flex;flex-direction:column;gap:4px}
+.input-block .label{font-size:12px;font-weight:500;color:#555}
+.input-block .label small{color:#999;font-weight:400}
+.input-block input[type="number"],.input-block input[type="date"],.input-block select{padding:9px 12px;border:1.5px solid #ddd;border-radius:var(--radius-sm);font-size:14px;font-family:inherit;width:100%}
+.input-block input:focus,.input-block select:focus{outline:none;border-color:var(--byko)}
+.check-row{display:flex;align-items:center;gap:8px;padding:8px 0;margin-bottom:10px}
+.check-row label{font-size:13px;cursor:pointer}
+.check-row input[type="checkbox"]{width:18px;height:18px;accent-color:var(--byko);cursor:pointer}
+
+/* Rental / discount row */
+.rental-section{margin-top:20px;padding-top:16px;border-top:1px solid var(--color-border)}
+
+/* Buttons */
+.btn-calc{width:100%;padding:14px;background:var(--byko);color:#fff;border:none;border-radius:var(--radius-md);font-size:16px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;cursor:pointer;transition:transform .1s,box-shadow .2s;margin-top:16px}
+.btn-calc:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(64,64,66,.3)}
+.btn-calc:active{transform:translateY(0)}
+.btn-pdf{width:100%;padding:12px;background:var(--byko-yellow);color:var(--byko);border:none;border-radius:var(--radius-md);font-size:15px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;cursor:pointer;margin-top:12px;transition:transform .1s}
+.btn-pdf:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.btn-excel{width:100%;padding:12px;background:#16a34a;color:#fff;border:none;border-radius:var(--radius-md);font-size:15px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;cursor:pointer;margin-top:8px;transition:transform .1s}
+.btn-excel:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(22,163,74,.3)}
+
+/* Divider */
+.divider{height:1px;background:var(--color-border);margin:24px 0}
+
+/* Result box */
+.result-box{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:18px 20px;margin-bottom:8px}
+.result-empty{font-size:14px;color:#bbb;text-align:center;padding:10px 0}
+
+/* BoQ table */
+.boq-table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+.boq-table thead th{background:var(--byko);color:#fff;padding:10px 8px;text-align:left;font-weight:600;font-size:12px;white-space:nowrap}
+.boq-table thead th:nth-child(n+3){text-align:right}
+.boq-table tbody td{padding:7px 8px;border-bottom:1px solid #eee}
+.boq-table tbody td:nth-child(n+3){text-align:right}
+.boq-table tbody tr:hover{background:#f6f9ff}
+.boq-table tbody tr.cat-row{background:#eef3fa;font-weight:600}
+
+/* Cost summary */
+.cost-summary{background:linear-gradient(135deg,#f0f4f8,#e3edf7);border-radius:var(--radius-md);padding:20px;text-align:center;margin-top:16px}
+.cost-summary .cost-label{font-size:13px;color:var(--color-muted);margin-bottom:4px}
+.cost-summary .cost-value{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--byko);letter-spacing:.5px}
+.cost-summary .cost-meta{font-size:12px;color:#888;margin-top:4px}
+.cost-summary.discounted{background:linear-gradient(135deg,#fffbe6,#fff3cc)}
+.cost-summary.discounted .cost-value{color:#a07c00}
+
+/* Wall diagram */
+.wall-diagram{display:flex;height:50px;gap:1px;margin:8px 0;border:2px solid var(--byko);border-radius:4px;overflow:hidden}
+.wall-panel{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;background:#606062;min-width:6px}
+.wall-panel.comp{background:#f5c800;color:#333}
+.wall-panel.corner{background:#4caf50}
+
+/* Layout preview */
+.layout-preview{background:#f8f9fb;border:1px solid #e0e0e0;border-radius:var(--radius-md);padding:12px;margin:10px 0;font-size:12px;white-space:pre-wrap;font-family:'Consolas','Fira Code',monospace;line-height:1.5;color:#333}
+
+/* Tooltip */
+.tooltip-wrap{position:relative;display:inline-flex;align-items:center;gap:5px}
+.tooltip-icon{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#2563eb;color:#fff;font-size:10px;font-weight:700;cursor:pointer;margin-left:5px;flex-shrink:0}
+.tooltip-icon.dark{background:#e0e0e0;color:var(--byko)}
+.tooltip-bubble{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1e293b;color:#f8fafc;font-size:12px;font-weight:400;line-height:1.5;padding:10px 14px;border-radius:var(--radius-md);width:240px;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.25);pointer-events:none;text-transform:none;letter-spacing:0}
+.tooltip-bubble::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1e293b}
+.tooltip-wrap:hover .tooltip-bubble,.tooltip-wrap:focus-within .tooltip-bubble{display:block}
+
+
+
+/* ID-15 Tower Calculator */
+.id15-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:14px 0}
+.id15-card{border:2px solid var(--color-border);border-radius:var(--radius-md);padding:14px;cursor:pointer;transition:all .2s;background:var(--color-surface);text-align:center}
+.id15-card:hover{border-color:var(--byko);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.id15-card.selected{border-color:var(--byko);background:rgba(64,64,66,.06)}
+.id15-card-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#333;margin-bottom:4px}
+.id15-card-sub{font-size:12px;color:var(--color-muted);line-height:1.4}
+.id15-qty-row{display:flex;align-items:center;gap:12px;margin:14px 0}
+.id15-qty-btn{width:36px;height:36px;border:2px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface);font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.id15-qty-btn:hover{border-color:var(--byko);color:var(--byko)}
+.id15-qty-val{font-size:20px;font-weight:700;min-width:40px;text-align:center}
+.id15-mat-table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+.id15-mat-table th{text-align:left;padding:8px;border-bottom:2px solid var(--color-border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--color-muted)}
+.id15-mat-table th.r{text-align:right}
+.id15-mat-table td{padding:7px 8px;border-bottom:1px solid #eee;color:#333}
+.id15-mat-table td.r{text-align:right}
+.id15-order-item{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:10px;background:var(--color-surface)}
+.id15-order-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.id15-order-title{font-weight:700;font-size:14px}
+.id15-order-meta{font-size:12px;color:var(--color-muted)}
+.id15-order-detail{margin-top:10px;display:none}
+.id15-order-detail.open{display:block}
+.id15-summary-row{display:flex;justify-content:space-between;padding:6px 0;font-size:14px;border-bottom:1px solid #eee}
+.id15-summary-row.total{font-weight:700;font-size:16px;border-bottom:2px solid var(--byko);color:var(--byko)}
+.id15-section-title{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--color-muted);margin:18px 0 10px}
+.id15-hidden{display:none}
+
+@media(max-width:700px){
+  .client-grid,.input-grid{grid-template-columns:1fr}
+  .sys-tabs{grid-template-columns:1fr}
+  .sys-tab .tab-name{font-size:15px}
+}
+@media print{body{background:#fff;padding:0}.calc-header{background:#2b2b2b!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #pdf-print-block{position:static!important;left:auto!important;max-width:100%!important;width:100%!important;padding:12px 20px!important}
+  #pdf-print-block .pdf-hdr{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #pdf-print-block .pdf-hdr div[style*="background:#404042"]{background:#404042!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pdf-sum-box.accent{background:#404042!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pdf-sum-box.accent .pdf-sum-val{color:#fff!important}
+}
+
+/* ── PDF print block — off-screen but renderable for html2canvas ── */
+#pdf-print-block{position:fixed;left:-9999px;top:0;width:700px;max-width:700px;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;color:#1e293b;padding:12px 20px;pointer-events:none}
+#pdf-print-block.pdf-rendering{left:0;z-index:9999;pointer-events:auto}
+#pdf-print-block table{page-break-inside:auto}
+#pdf-print-block tr{page-break-inside:avoid}
+#pdf-print-block thead{display:table-header-group}
+
+/* PDF dialog overlay */
+.pdf-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center}
+.pdf-overlay.visible{display:flex}
+.pdf-dialog{background:#fff;border-radius:8px;padding:28px 32px;box-shadow:0 16px 48px rgba(0,0,0,.3);max-width:440px;width:92%}
+.pdf-dialog h3{margin:0 0 4px;font-size:17px;color:#111}
+.pdf-dialog .pdf-dialog-sub{font-size:13px;color:#666;margin:0 0 18px}
+.pdf-check-row{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:4px;font-size:14px;cursor:pointer;transition:background .15s}
+.pdf-check-row:hover{background:#f4f6f9}
+.pdf-check-row input[type="checkbox"]{width:16px;height:16px;accent-color:#2563eb;cursor:pointer;flex-shrink:0}
+.pdf-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.pdf-cancel-btn{padding:8px 20px;border-radius:6px;border:1px solid #ccc;background:#f4f6f9;font-weight:600;font-size:14px;cursor:pointer}
+.pdf-cancel-btn:hover{background:#e9edf3}
+.pdf-confirm-btn{padding:8px 20px;border-radius:6px;border:none;background:#404042;color:#fff;font-weight:700;font-size:14px;cursor:pointer}
+.pdf-confirm-btn:hover{background:#2a2a2c}
+.pdf-hdr{display:flex;align-items:stretch;border-radius:6px;overflow:hidden;border:1px solid #e0e0e0;margin-bottom:12px}
+.pdf-top-row{display:flex;gap:8px;margin-bottom:8px;width:100%}
+.pdf-box{border:1px solid #e0e0e0;border-radius:4px;padding:6px 10px;box-sizing:border-box}
+.pdf-box-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:5px}
+.pdf-client-grid{display:grid;grid-template-columns:auto 1fr;gap:1px 10px;font-size:12px;line-height:1.5}
+.pdf-client-grid .cl{color:#64748b;white-space:nowrap}
+.pdf-client-grid .cv{font-weight:600}
+.pdf-boq-table{width:100%;border-collapse:collapse;font-size:11px}
+.pdf-boq-table th{text-align:left;background:#f8fafc;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:#64748b;padding:6px;border-bottom:1px solid #e0e0e0;white-space:nowrap}
+.pdf-boq-table th:nth-child(n+3){text-align:right}
+.pdf-boq-table td{padding:3px 6px;border-bottom:1px solid #f1f5f9}
+.pdf-boq-table td:nth-child(n+3){text-align:right;white-space:nowrap}
+.pdf-boq-table .cat-row td{background:#eef3fa;font-weight:600;font-size:11px}
+.pdf-sum-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px;width:100%;box-sizing:border-box}
+.pdf-sum-box{border:1px solid #e0e0e0;border-radius:4px;padding:5px 8px}
+.pdf-sum-box.accent{background:#404042;border-color:#404042}
+.pdf-sum-lbl{font-size:9px;color:#64748b;margin-bottom:2px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.pdf-sum-box.accent .pdf-sum-lbl{color:rgba(255,255,255,.6)}
+.pdf-sum-val{font-size:14px;font-weight:800;color:#404042}
+.pdf-sum-box.accent .pdf-sum-val{color:#fff}
+.pdf-discount-line{font-size:12px;margin:6px 0 10px}
+.pdf-sig-section{margin-top:10px}
+.pdf-sig-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:14px}
+.pdf-sig-line{border-bottom:1px solid #334155;margin-bottom:2px}
+.pdf-sig-name{font-size:8px;color:#64748b}
+.pdf-layout-box{background:#f8f9fb;border:1px solid #e0e0e0;border-radius:4px;padding:8px 12px;margin-bottom:8px;font-size:11px;white-space:pre-wrap;font-family:'Consolas','Fira Code',monospace;line-height:1.5;color:#333}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js" integrity="sha512-MpDFIChbcXl2QgipQrt1VcPHMldRILetapBl5MPCA9Y8r7qvlwx1/Mc9hNTzY+kS5kX6PdoDq41ws1HiVNLdZA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+<div class="calculator">
+
+  <!-- HEADER -->
+  <div class="calc-header">
+    <div class="calc-header-left">
+      <h2>Steypumótareiknivél</h2>
+      <div class="calc-header-sub">Veggja-, bita- og loftamót — efnislisti og verðútreikningur</div>
+    </div>
+  </div>
+
+  <!-- CLIENT INFO -->
+  <div class="client-section">
+    <h3>Upplýsingar um viðskiptavin</h3>
+    <div class="client-grid">
+      <label>Nafn viðskiptavinar
+        <input type="text" id="clientName" placeholder="t.d. Jón Jónsson">
+      </label>
+      <label>Fyrirtæki
+        <input type="text" id="clientCompany" placeholder="t.d. Bygging ehf.">
+      </label>
+      <label>Kennitala
+        <input type="text" id="clientKennitala" placeholder="t.d. 123456-7890" maxlength="11">
+      </label>
+      <label>Símanúmer
+        <input type="text" id="clientPhone" placeholder="t.d. 555-1234" maxlength="8">
+      </label>
+      <label>Netfang
+        <input type="email" id="clientEmail" placeholder="t.d. name@byko.is">
+      </label>
+      <label>Heimilisfang / Verkefni
+        <input type="text" id="clientAddress" placeholder="t.d. Laugavegur 1, Reykjavík">
+      </label>
+      <label>Úttektaraðili
+        <input type="text" id="clientUttektar" placeholder="t.d. Nafn úttektaraðila">
+      </label>
+    </div>
+  </div>
+
+  <div class="calc-body">
+
+    <!-- SYSTEM TYPE -->
+    <div class="section-label">Tegund mótakerfis</div>
+    <div class="sys-tabs">
+      <button class="sys-tab active" onclick="switchMode('B',this)">
+        <span class="tab-brand">Hünnebeck</span>
+        <span class="tab-name">Kranamót</span>
+        <span class="tab-sub">Manto</span>
+      </button>
+      <button class="sys-tab" onclick="switchMode('A',this)">
+        <span class="tab-brand">Hünnebeck</span>
+        <span class="tab-name">Handflekamót</span>
+        <span class="tab-sub">Rasto / Takko</span>
+      </button>
+      <button class="sys-tab" onclick="switchMode('C',this)">
+        <span class="tab-name">Bitamót / Loftamót</span>
+        <span class="tab-sub">Alufort</span>
+      </button>
+      <button class="sys-tab" onclick="switchMode('D',this)">
+        <span class="tab-brand">Hünnebeck</span>
+        <span class="tab-name">Turnareiknivél</span>
+        <span class="tab-sub">ID-15</span>
+      </button>
+    </div>
+
+    <!-- MODE B: MANTO (default) -->
+    <div id="pane-B" class="mode-pane active">
+      <div class="mode-section-title">Veggmál — MANTO</div>
+      <div class="input-grid">
+        <div class="input-block"><div class="label">Vegglengd <small>(m)</small></div>
+          <input type="number" id="b-wall-length" value="12" min="0.3" step="0.1"></div>
+        <div class="input-block"><div class="label">Vegghæð</div>
+          <select id="b-height">
+            <option value="330">3,3 m</option>
+            <option value="300" selected>3,0 m</option>
+            <option value="270">2,7 m</option>
+            <option value="240">2,4 m</option>
+            <option value="120">1,2 m</option>
+            <option value="60">0,6 m</option>
+          </select></div>
+        <div class="input-block"><div class="label">Innhorn <small>(fjöldi)</small></div>
+          <input type="number" id="b-inside-corners" value="0" min="0"></div>
+        <div class="input-block"><div class="label">Úthorn <small>(fjöldi)</small></div>
+          <input type="number" id="b-outside-corners" value="0" min="0"></div>
+        <div class="input-block"><div class="label">Lengd mótateins</div>
+          <select id="b-motateinar">
+            <option value="01-MÓT-AH21-470" selected>175 cm</option>
+            <option value="01-MÓT-AH21-481">130 cm</option>
+            <option value="01-MÓT-AH21-387">100 cm</option>
+            <option value="01-MÓT-AH21-660">75 cm</option>
+          </select></div>
+        <div class="input-block"><div class="label">Opnir veggender</div>
+          <input type="number" id="b-open-ends" value="2" min="0" max="10"></div>
+      </div>
+    </div>
+
+    <!-- MODE A: RASTO/TAKKO -->
+    <div id="pane-A" class="mode-pane">
+      <div class="mode-section-title">Veggmál — RASTO / TAKKO</div>
+      <div class="input-grid">
+        <div class="input-block"><div class="label">Vegglengd <small>(m)</small></div>
+          <input type="number" id="a-wall-length" value="12" min="0.3" step="0.1"></div>
+        <div class="input-block"><div class="label">Veggkerfi</div>
+          <select id="a-system">
+            <option value="rasto">Rasto — 3 m hæð</option>
+            <option value="takko">Takko — 1,2 m hæð</option>
+          </select></div>
+        <div class="input-block"><div class="label">Innhorn <small>(fjöldi)</small></div>
+          <input type="number" id="a-inside-corners" value="0" min="0"></div>
+        <div class="input-block"><div class="label">Úthorn <small>(fjöldi)</small></div>
+          <input type="number" id="a-outside-corners" value="0" min="0"></div>
+        <div class="input-block"><div class="label">Lengd mótateins</div>
+          <select id="a-motateinar">
+            <option value="01-MÓT-AH21-470" selected>175 cm</option>
+            <option value="01-MÓT-AH21-481">130 cm</option>
+            <option value="01-MÓT-AH21-387">100 cm</option>
+            <option value="01-MÓT-AH21-660">75 cm</option>
+          </select></div>
+        <div class="input-block"><div class="label">Opnir veggender</div>
+          <input type="number" id="a-open-ends" value="2" min="0" max="10"></div>
+      </div>
+    </div>
+
+    <!-- MODE C: ALUFORT -->
+    <div id="pane-C" class="mode-pane">
+      <div class="mode-section-title">Loftamál — ALUFORT</div>
+      <div class="input-grid">
+        <div class="input-block"><div class="label">Loftlengd <small>(m)</small></div>
+          <input type="number" id="c-slab-length" value="6" min="0.75" step="0.1"></div>
+        <div class="input-block"><div class="label">Loftbreidd <small>(m)</small></div>
+          <input type="number" id="c-slab-width" value="5" min="0.75" step="0.1"></div>
+        <div class="input-block"><div class="label">Lofthæð <small>(m)</small></div>
+          <input type="number" id="c-slab-height" value="2.8" min="0.7" max="5.5" step="0.1"></div>
+        <div class="input-block"><div class="label">Steypuþykkt <small>(m)</small></div>
+          <input type="number" id="c-concrete-thickness" value="0.2" min="0.05" max="0.5" step="0.01"></div>
+        <div class="input-block"><div class="label">Bil á lengd <small>(m)</small></div>
+          <input type="number" id="c-spacing-l" value="1.5" min="0.5" max="2" step="0.1"></div>
+        <div class="input-block"><div class="label">Bil á breidd <small>(m)</small></div>
+          <input type="number" id="c-spacing-w" value="1.5" min="0.5" max="2" step="0.1"></div>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="c-use-id" checked>
+        <label for="c-use-id">Nota ID-ramma (ístað f stakra loftastoða)</label>
+      </div>
+    </div>
+
+    <!-- MODE D: ID-15 TOWER -->
+    <div id="pane-D" class="mode-pane">
+      <div class="mode-section-title">ID-15 Turnareiknivél</div>
+
+      <!-- Step 1: Height input -->
+      <div class="id15-section-title">Skref 1: Veldu hæð</div>
+      <div class="input-grid">
+        <div class="input-block">
+          <div class="label">Hæð (m) — 1,42 til 20,10</div>
+          <input type="text" id="id15-heightInput" inputmode="decimal" placeholder="t.d. 5,5" autocomplete="off">
+        </div>
+      </div>
+
+      <!-- Step 2: Option cards -->
+      <div id="id15-options-wrap" class="id15-hidden">
+        <div class="id15-section-title">Skref 2: Veldu samsetning</div>
+        <div id="id15-options" class="id15-options"></div>
+      </div>
+
+      <!-- Step 3: Quantity + materials -->
+      <div id="id15-qty-wrap" class="id15-hidden">
+        <div class="id15-section-title">Skref 3: Magn og efni</div>
+        <div class="id15-qty-row">
+          <span style="font-weight:600;">Fjöldi turna:</span>
+          <button class="id15-qty-btn" onclick="id15_changeQty(-1)">−</button>
+          <span class="id15-qty-val" id="id15-qty">1</span>
+          <button class="id15-qty-btn" onclick="id15_changeQty(1)">+</button>
+        </div>
+        <div class="id15-qty-row">
+          <span style="font-weight:600;">Fylgihlutagrind:</span>
+          <button class="id15-qty-btn" onclick="id15_changeFylgi(-1)">−</button>
+          <span class="id15-qty-val" id="id15-fylgi-qty">0</span>
+          <button class="id15-qty-btn" onclick="id15_changeFylgi(1)">+</button>
+        </div>
+        <table class="id15-mat-table" id="id15-mat-table">
+          <thead>
+            <tr>
+              <th>Hluti</th>
+              <th class="r">Per turn</th>
+              <th class="r">Samtals</th>
+              <th class="r">Þyngd/stk</th>
+              <th class="r">Heildarþyngd</th>
+              <th class="r">Verð/stk/dag</th>
+              <th class="r">Verð/dag</th>
+            </tr>
+          </thead>
+          <tbody id="id15-mat-body"></tbody>
+        </table>
+        <button class="btn-calc" onclick="id15_addToOrder()" style="margin-top:10px;">Bæta við pöntun</button>
+      </div>
+
+      <!-- Order section -->
+      <div id="id15-order-wrap" class="id15-hidden">
+        <div class="id15-section-title">Pöntun</div>
+        <div id="id15-order-items"></div>
+        <div id="id15-order-summary" style="margin-top:14px;"></div>
+        <div style="margin-top:12px;display:flex;gap:10px;">
+          <button class="btn-calc" onclick="id15_resetForNew()" style="background:var(--color-muted);">+ Bæta við annarri hæð</button>
+          <button class="btn-calc" onclick="id15_resetCalculator()" style="background:#e74c3c;">Hreinsa pöntun</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RENTAL PERIOD -->
+    <div class="rental-section">
+      <div class="section-label">Leigutímabil</div>
+      <div class="input-grid">
+        <div class="input-block"><div class="label">Upphafsdagur</div>
+          <input type="date" id="startDate"></div>
+        <div class="input-block"><div class="label">Lokadagur</div>
+          <input type="date" id="endDate"></div>
+        <div class="input-block"><div class="label">Leigutímabil (dagar)</div>
+          <input type="number" id="rentalDays" value="10" min="1"></div>
+        <div class="input-block"><div class="label">Afsláttur (%)</div>
+          <input type="number" id="discountInput" value="0" min="0" max="100" step="1"></div>
+      </div>
+    </div>
+
+    <!-- CALCULATE -->
+    <button class="btn-calc" onclick="calculate()">Reikna efnislista</button>
+
+    <div class="divider"></div>
+
+    <!-- RESULTS -->
+    <div id="resultBox">
+      <div class="result-empty">Fylltu inn upplýsingar og ýttu á „Reikna efnislista“.</div>
+    </div>
+
+    <button class="btn-pdf" id="pdfBtn" onclick="openPdfDialog()">⬇ Sækja PDF</button>
+    <button class="btn-excel" id="excelBtn" onclick="exportToExcel()">📊 Flytja í Excel</button>
+
+  </div>
+</div>
+
+
+<script>
+// =============================================================================
+// STOCK DATA — Hünnebeck wall formwork, Alufort slab, accessories
+// =============================================================================
+
+// ---- HM01: Rasto panels (14) ----
+const HM01 = [
+    { id:"01-MÓT-HM01-001", desc:"Rasto Mótaflekar 30×300", w:30, h:300, qty:19, dayRate:70.16, weekRate:491.13 },
+    { id:"01-MÓT-HM01-624", desc:"Rasto Mótaflekar 45×300", w:45, h:300, qty:1, dayRate:70.97, weekRate:496.77 },
+    { id:"01-MÓT-HM01-598", desc:"Rasto Mótaflekar 60×300", w:60, h:300, qty:17, dayRate:80.65, weekRate:564.52 },
+    { id:"01-MÓT-HM01-576", desc:"Rasto Mótaflekar 75×300", w:75, h:300, qty:10, dayRate:90.32, weekRate:632.26 },
+    { id:"01-MÓT-HM01-565", desc:"Rasto Mótaflekar 90×300", w:90, h:300, qty:5, dayRate:103.23, weekRate:722.58 },
+    { id:"01-MÓT-HM01-036", desc:"Rasto Mótaflekar 240×300", w:240, h:300, qty:0, dayRate:373.39, weekRate:2613.71 },
+    { id:"01-MÓT-HM01-057", desc:"Rasto Mótaflekar 45×150", w:45, h:150, qty:8, dayRate:39.52, weekRate:276.61 },
+    { id:"01-MÓT-HM01-551", desc:"Rasto Mótaflekar 90×150", w:90, h:150, qty:12, dayRate:50.00, weekRate:350.00 },
+    { id:"01-MÓT-HM01-131", desc:"Rasto Mp-Mótaflekar 70×300", w:70, h:300, qty:8, dayRate:198.39, weekRate:1388.71, mp:true },
+    { id:"01-MÓT-HM01-218", desc:"Rasto Mp-Mótaflekar 70×150", w:70, h:150, qty:12, dayRate:83.06, weekRate:581.45, mp:true },
+    { id:"01-MÓT-HM01-635", desc:"Rasto Innhorn 30/300", w:30, h:300, qty:6, dayRate:137.90, weekRate:965.32, corner:'inside' },
+    { id:"01-MÓT-HM01-392", desc:"Rasto Veltihorn 30/300", w:30, h:300, qty:4, dayRate:198.39, weekRate:1388.71, corner:'outside' },
+    { id:"01-MÓT-HM01-856", desc:"Rasto Úthorn/Veltihorn 15/300", w:15, h:300, qty:4, dayRate:117.74, weekRate:824.19, corner:'outside-small' },
+    { id:"01-MÓT-HM01-117", desc:"Rasto Hornastillar 5×300", w:5, h:300, qty:16, dayRate:29.84, weekRate:208.87, comp:true },
+];
+
+// ---- HM02: Takko panels (10) ----
+const HM02 = [
+    { id:"01-MÓT-HM02-541", desc:"Takko Mótaflekar 30×120", w:30, h:120, qty:6, dayRate:33.06, weekRate:231.45 },
+    { id:"01-MÓT-HM02-530", desc:"Takko Mótaflekar 45×120", w:45, h:120, qty:10, dayRate:39.52, weekRate:276.61 },
+    { id:"01-MÓT-HM02-520", desc:"Takko Mótaflekar 60×120", w:60, h:120, qty:10, dayRate:42.74, weekRate:299.19 },
+    { id:"01-MÓT-HM02-519", desc:"Takko Mótaflekar 75×120", w:75, h:120, qty:40, dayRate:46.77, weekRate:327.42 },
+    { id:"01-MÓT-HM02-508", desc:"Takko Mótaflekar 90×120", w:90, h:120, qty:158, dayRate:50.00, weekRate:350.00 },
+    { id:"01-MÓT-HM02-574", desc:"Takko Mp-Mótaflekar 70×120", w:70, h:120, qty:5, dayRate:83.06, weekRate:581.45, mp:true },
+    { id:"01-MÓT-HM02-042", desc:"Takko Innhorn 25/120 S", w:25, h:120, qty:9, dayRate:63.71, weekRate:445.97, corner:'inside' },
+    { id:"01-MÓT-HM02-552", desc:"Takko Innhorn 30/120", w:30, h:120, qty:-1, dayRate:63.71, weekRate:445.97, corner:'inside' },
+    { id:"01-MÓT-HM02-563", desc:"Takko Veltihorn 30/120", w:30, h:120, qty:11, dayRate:83.06, weekRate:581.45, corner:'outside' },
+    { id:"01-MÓT-HM02-009", desc:"Takko Hornastillar 5×120", w:5, h:120, qty:85, dayRate:18.55, weekRate:129.84, comp:true },
+];
+
+// ---- HM21: Rasto/Takko accessories (16) ----
+const HM21 = [
+    { id:"01-MÓT-HM21-000", desc:"Rasto Réttskeiðarklemmur", qty:770, dayRate:4.84, weekRate:33.87, cat:'clamp' },
+    { id:"01-MÓT-HM21-910", desc:"Rasto Stillanl.Réttskeiðaklemmur", qty:278, dayRate:8.06, weekRate:56.45, cat:'clamp' },
+    { id:"01-MÓT-HM21-900", desc:"Rasto Úthornaklemmur", qty:404, dayRate:9.68, weekRate:67.74, cat:'clamp' },
+    { id:"01-MÓT-HM21-110", desc:"Takko Skástífur (106-131cm)", qty:63, dayRate:18.55, weekRate:129.84, cat:'brace' },
+    { id:"01-MÓT-HM21-381", desc:"Rasto Tvöfaldar Mótaskástífur", qty:12, dayRate:29.03, weekRate:203.23, cat:'brace' },
+    { id:"01-MÓT-HM21-357", desc:"Fu-Strekkjari f/Girði", qty:259, dayRate:6.45, weekRate:45.16, cat:'tie' },
+    { id:"01-MÓT-HM21-167", desc:"Rasto Kranakrókar", qty:3, dayRate:22.58, weekRate:158.06, cat:'crane' },
+    { id:"01-MÓT-HM21-168", desc:"Rasto Kranakrókar G2", qty:-3, dayRate:22.58, weekRate:158.06, cat:'crane' },
+    { id:"01-MÓT-HM21-264", desc:"RT-Flekaboltar", qty:56, dayRate:1.61, weekRate:11.29, cat:'bolt' },
+    { id:"01-MÓT-HM21-566", desc:"RT-Flekarær", qty:73, dayRate:1.61, weekRate:11.29, cat:'tube' },
+    { id:"01-MÓT-HM21-435", desc:"Rasto Mp Boltar", qty:0, dayRate:2.42, weekRate:16.94, cat:'bolt' },
+    { id:"01-MÓT-HM21-457", desc:"Rasto Mp Rær", qty:0, dayRate:1.61, weekRate:11.29, cat:'tube' },
+    { id:"01-MÓT-HM21-437", desc:"Rasto/Manto tengistykki", qty:1, dayRate:2.88, weekRate:20.16, cat:'connector' },
+    { id:"01-MÓT-HM21-441", desc:"Plata f/Rasto/Manto tengistykki", qty:1, dayRate:2.88, weekRate:20.16, cat:'connector' },
+    { id:"01-MÓT-HM21-667", desc:"Endaklossi MR", qty:65, dayRate:6.45, weekRate:45.16, cat:'end' },
+    { id:"01-MÓT-HM21-810", desc:"Rasto Vinnupallaknekti 100", qty:49, dayRate:19.35, weekRate:135.48, cat:'platform' },
+];
+
+// ---- KM01: Manto panels (60) ----
+const KM01 = [
+    { id:"01-MÓT-KM01-759", desc:"Manto Mótaflekar 240×330", w:240, h:330, qty:-2, dayRate:404.84, weekRate:2833.87 },
+    { id:"01-MÓT-KM01-760", desc:"Manto Mótaflekar 120×330", w:120, h:330, qty:2, dayRate:192.74, weekRate:1349.19 },
+    { id:"01-MÓT-KM01-770", desc:"Manto Mótaflekar 105×330", w:105, h:330, qty:5, dayRate:178.23, weekRate:1247.58 },
+    { id:"01-MÓT-KM01-771", desc:"Manto Mótaflekar 100×330", w:100, h:330, qty:-1, dayRate:178.23, weekRate:1247.58 },
+    { id:"01-MÓT-KM01-781", desc:"Manto Mótaflekar 90×330", w:90, h:330, qty:7, dayRate:158.06, weekRate:1106.45 },
+    { id:"01-MÓT-KM01-782", desc:"Manto Mótaflekar 80×330", w:80, h:330, qty:1, dayRate:146.77, weekRate:1027.42 },
+    { id:"01-MÓT-KM01-792", desc:"Manto Mótaflekar 75×330", w:75, h:330, qty:8, dayRate:146.77, weekRate:1027.42 },
+    { id:"01-MÓT-KM01-807", desc:"Manto Mótaflekar 70×330", w:70, h:330, qty:45, dayRate:136.29, weekRate:954.03 },
+    { id:"01-MÓT-KM01-829", desc:"Manto Mótaflekar 60×330", w:60, h:330, qty:1, dayRate:128.23, weekRate:897.58 },
+    { id:"01-MÓT-KM01-830", desc:"Manto Mótaflekar 55×330", w:55, h:330, qty:3, dayRate:117.74, weekRate:824.19 },
+    { id:"01-MÓT-KM01-840", desc:"Manto Mótaflekar 45×330", w:45, h:330, qty:3, dayRate:108.87, weekRate:762.10 },
+    { id:"01-MÓT-KM01-009", desc:"Manto Mótaflekar 30×330", w:30, h:330, qty:1, dayRate:94.35, weekRate:660.48 },
+    { id:"01-MÓT-KM01-156", desc:"Manto Hornastillar 5×330", w:5, h:330, qty:10, dayRate:62.10, weekRate:434.68, comp:true },
+    { id:"01-MÓT-KM01-996", desc:"Manto Mótaflekar 240×300", w:240, h:300, qty:-69, dayRate:373.39, weekRate:2613.71 },
+    { id:"01-MÓT-KM01-780", desc:"Manto Mótaflekar 120×300", w:120, h:300, qty:-29, dayRate:170.97, weekRate:1196.77 },
+    { id:"01-MÓT-KM01-403", desc:"Manto Mótaflekar 105×300", w:105, h:300, qty:-10, dayRate:163.71, weekRate:1145.97 },
+    { id:"01-MÓT-KM01-414", desc:"Manto Mótaflekar 90×300", w:90, h:300, qty:103, dayRate:150.00, weekRate:1050.00 },
+    { id:"01-MÓT-KM01-425", desc:"Manto Mótaflekar 75×300", w:75, h:300, qty:15, dayRate:150.81, weekRate:1055.65 },
+    { id:"01-MÓT-KM01-436", desc:"Manto Mótaflekar 70×300", w:70, h:300, qty:57, dayRate:151.61, weekRate:1061.29 },
+    { id:"01-MÓT-KM01-056", desc:"Manto Mótaflekar 65×300", w:65, h:300, qty:11, dayRate:141.94, weekRate:993.55 },
+    { id:"01-MÓT-KM01-447", desc:"Manto Mótaflekar 60×300", w:60, h:300, qty:9, dayRate:132.26, weekRate:925.81 },
+    { id:"01-MÓT-KM01-458", desc:"Manto Mótaflekar 55×300", w:55, h:300, qty:57, dayRate:130.65, weekRate:914.52 },
+    { id:"01-MÓT-KM01-469", desc:"Manto Mótaflekar 45×300", w:45, h:300, qty:26, dayRate:106.45, weekRate:745.16 },
+    { id:"01-MÓT-KM01-911", desc:"Manto Mótaflekar 30×300", w:30, h:300, qty:4, dayRate:90.32, weekRate:632.26 },
+    { id:"01-MÓT-KM01-814", desc:"Manto Hornastillar 5×300", w:5, h:300, qty:52, dayRate:33.87, weekRate:237.10, comp:true },
+    { id:"01-MÓT-KM01-055", desc:"Manto Mótaflekar 240×270", w:240, h:270, qty:4, dayRate:373.39, weekRate:2613.71 },
+    { id:"01-MÓT-KM01-046", desc:"Manto Mótaflekar 120×270", w:120, h:270, qty:22, dayRate:170.97, weekRate:1196.77 },
+    { id:"01-MÓT-KM01-048", desc:"Manto Mótaflekar 90×270", w:90, h:270, qty:7, dayRate:150.00, weekRate:1050.00 },
+    { id:"01-MÓT-KM01-049", desc:"Manto Mótaflekar 70×270", w:70, h:270, qty:4, dayRate:151.61, weekRate:1061.29 },
+    { id:"01-MÓT-KM01-054", desc:"Manto Mótaflekar 60×270", w:60, h:270, qty:4, dayRate:132.26, weekRate:925.81 },
+    { id:"01-MÓT-KM01-058", desc:"Manto Mótaflekar 55×270", w:55, h:270, qty:7, dayRate:130.65, weekRate:914.52 },
+    { id:"01-MÓT-KM01-050", desc:"Manto Mótaflekar 45×270", w:45, h:270, qty:0, dayRate:106.45, weekRate:745.16 },
+    { id:"01-MÓT-KM01-047", desc:"Manto Mótaflekar 120×240", w:120, h:240, qty:0, dayRate:170.97, weekRate:1196.77 },
+    { id:"01-MÓT-KM01-066", desc:"Manto Mótaflekar 240×120", w:240, h:120, qty:29, dayRate:84.68, weekRate:592.74 },
+    { id:"01-MÓT-KM01-175", desc:"Manto Mótaflekar 120×120", w:120, h:120, qty:44, dayRate:84.68, weekRate:592.74 },
+    { id:"01-MÓT-KM01-186", desc:"Manto Mótaflekar 105×120", w:105, h:120, qty:-6, dayRate:64.52, weekRate:451.61 },
+    { id:"01-MÓT-KM01-197", desc:"Manto Mótaflekar 90×120", w:90, h:120, qty:5, dayRate:82.26, weekRate:575.81 },
+    { id:"01-MÓT-KM01-201", desc:"Manto Mótaflekar 75×120", w:75, h:120, qty:-2, dayRate:76.61, weekRate:536.29 },
+    { id:"01-MÓT-KM01-212", desc:"Manto Mótaflekar 70×120", w:70, h:120, qty:14, dayRate:72.58, weekRate:508.06 },
+    { id:"01-MÓT-KM01-223", desc:"Manto Mótaflekar 60×120", w:60, h:120, qty:10, dayRate:68.55, weekRate:479.84 },
+    { id:"01-MÓT-KM01-234", desc:"Manto Mótaflekar 55×120", w:55, h:120, qty:20, dayRate:66.13, weekRate:462.90 },
+    { id:"01-MÓT-KM01-245", desc:"Manto Mótaflekar 45×120", w:45, h:120, qty:9, dayRate:64.52, weekRate:451.61 },
+    { id:"01-MÓT-KM01-002", desc:"Manto Mótaflekar 30×120", w:30, h:120, qty:0, dayRate:60.48, weekRate:423.39 },
+    { id:"01-MÓT-KM01-617", desc:"Manto Hornastillar 5×120", w:5, h:120, qty:0, dayRate:0.00, weekRate:0.00, comp:true },
+    { id:"01-MÓT-KM01-437", desc:"Manto Mótaflekar 240×60", w:240, h:60, qty:-10, dayRate:82.77, weekRate:579.37 },
+    { id:"01-MÓT-KM01-851", desc:"Manto Innhorn 35/330", w:35, h:330, qty:8, dayRate:187.10, weekRate:1309.68, corner:'inside' },
+    { id:"01-MÓT-KM01-457", desc:"Manto Innhorn 35/300", w:35, h:300, qty:15, dayRate:187.10, weekRate:1309.68, corner:'inside' },
+    { id:"01-MÓT-KM01-045", desc:"Manto Innhorn 35/270", w:35, h:270, qty:2, dayRate:170.97, weekRate:1196.77, corner:'inside' },
+    { id:"01-MÓT-KM01-012", desc:"Manto Innhorn 35/120", w:35, h:120, qty:98, dayRate:84.68, weekRate:592.74, corner:'inside' },
+    { id:"01-MÓT-KM01-052", desc:"Manto Innhorn Stál 30/120", w:30, h:120, qty:1, dayRate:187.10, weekRate:1309.68, corner:'inside' },
+    { id:"01-MÓT-KM01-188", desc:"Manto Veltihorn 35/330", w:35, h:330, qty:2, dayRate:214.52, weekRate:1501.61, corner:'outside' },
+    { id:"01-MÓT-KM01-899", desc:"Manto Veltihorn 35/300", w:35, h:300, qty:15, dayRate:214.52, weekRate:1501.61, corner:'outside' },
+    { id:"01-MÓT-KM01-057", desc:"Manto Veltihorn 35/270", w:35, h:270, qty:1, dayRate:214.52, weekRate:1501.61, corner:'outside' },
+    { id:"01-MÓT-KM01-577", desc:"Manto Veltihorn 35×120", w:35, h:120, qty:2, dayRate:214.52, weekRate:1501.61, corner:'outside' },
+    { id:"01-MÓT-KM01-040", desc:"Manto Úthorn/Veltihorn 20/330", w:20, h:330, qty:52, dayRate:148.39, weekRate:1038.71, corner:'outside-small' },
+    { id:"01-MÓT-KM01-222", desc:"Manto Úthorn/Veltihorn 20/300", w:20, h:300, qty:5, dayRate:214.52, weekRate:1501.61, corner:'outside-small' },
+    { id:"01-MÓT-KM01-053", desc:"Manto Still. Innhorn 30/300", w:30, h:300, qty:4, dayRate:107.26, weekRate:750.81, corner:'inside-adj' },
+    { id:"01-MÓT-KM01-330", desc:"Manto Gólfbitar 200-300", w:0, h:0, qty:18, dayRate:161.29, weekRate:1129.03, special:'floor' },
+    { id:"01-MÓT-KM01-401", desc:"Horn f/Lyftustokka 120", w:0, h:120, qty:1, dayRate:0.00, weekRate:0.00, special:'lift' },
+    { id:"01-MÓT-KM01-402", desc:"Horn f/Lyftustokka 300", w:0, h:300, qty:4, dayRate:403.23, weekRate:2822.58, special:'lift' },
+];
+
+// ---- KM21: Manto accessories (14) ----
+const KM21 = [
+    { id:"01-MÓT-KM21-000", desc:"Manto Réttskeiðaklemmur", qty:182, dayRate:8.87, weekRate:62.10, cat:'clamp' },
+    { id:"01-MÓT-KM21-010", desc:"Manto Flekaklemmur", qty:89, dayRate:7.26, weekRate:50.81, cat:'clamp' },
+    { id:"01-MÓT-KM21-898", desc:"Manto Stillanl.Réttsk.Klemmur", qty:253, dayRate:10.48, weekRate:73.39, cat:'clamp' },
+    { id:"01-MÓT-KM21-227", desc:"Manto Úthornaklemmur", qty:215, dayRate:13.71, weekRate:95.97, cat:'clamp' },
+    { id:"01-MÓT-KM21-205", desc:"Manto Vinnupallaknekti 90", qty:36, dayRate:19.35, weekRate:135.48, cat:'platform' },
+    { id:"01-MÓT-KM21-710", desc:"Manto Kranakrókar", qty:-15, dayRate:47.58, weekRate:333.06, cat:'crane' },
+    { id:"01-MÓT-KM21-700", desc:"Manto Right Spindle Piece", qty:0, dayRate:12.10, weekRate:84.68, cat:'spindle' },
+    { id:"01-MÓT-KM21-720", desc:"Manto Left Spindle Piece", qty:0, dayRate:12.10, weekRate:84.68, cat:'spindle' },
+    { id:"01-MÓT-KM21-721", desc:"Manto Center Tube 50", qty:0, dayRate:4.03, weekRate:28.23, cat:'tube' },
+    { id:"01-MÓT-KM21-732", desc:"Manto Center Tube 80", qty:-3, dayRate:4.84, weekRate:33.87, cat:'tube' },
+    { id:"01-MÓT-KM21-743", desc:"Manto Center Tube 110", qty:-3, dayRate:6.45, weekRate:45.16, cat:'tube' },
+    { id:"01-MÓT-KM21-754", desc:"Manto Center Tube 140", qty:0, dayRate:8.06, weekRate:56.45, cat:'tube' },
+    { id:"01-MÓT-KM21-765", desc:"Manto Center Tube 170", qty:-12, dayRate:9.68, weekRate:67.74, cat:'tube' },
+    { id:"01-MÓT-KM21-165", desc:"Manto Pouring Platform", qty:1, dayRate:0.00, weekRate:0.00, cat:'platform' },
+];
+
+// ---- LM02: Alufort slab panels (5) ----
+const LM02 = [
+    { id:"01-MÓT-LM02-715", desc:"Alufort Mótaflekar 75×150", w:75, h:150, qty:1124, dayRate:41.67, weekRate:291.73 },
+    { id:"01-MÓT-LM02-315", desc:"Alufort Mótaflekar 37,5×150", w:37.5, h:150, qty:24, dayRate:32.37, weekRate:226.58 },
+    { id:"01-MÓT-LM02-775", desc:"Alufort Mótaflekar 75×75", w:75, h:75, qty:78, dayRate:26.75, weekRate:187.26 },
+    { id:"01-MÓT-LM02-375", desc:"Alufort Mótaflekar 37,5×75", w:37.5, h:75, qty:8, dayRate:23.06, weekRate:161.40 },
+    { id:"01-MÓT-LM02-900", desc:"Alufort Rekki f/Mótafleka (Galv)", w:0, h:0, qty:21, dayRate:177.29, weekRate:1241.04 },
+];
+
+// ---- LM22: Alufort accessories (14) ----
+const LM22 = [
+    { id:"01-MÓT-LM22-400", desc:"Alufort Drop-Head", qty:1190, dayRate:17.29, weekRate:121.02, cat:'head' },
+    { id:"01-MÓT-LM22-040", desc:"Alufort Drop-Head Quick Attack", qty:150, dayRate:17.29, weekRate:121.02, cat:'head' },
+    { id:"01-MÓT-LM22-401", desc:"Alufort Fixed-Head", qty:100, dayRate:5.76, weekRate:40.33, cat:'head' },
+    { id:"01-MÓT-LM22-402", desc:"Alufort Kombi-Head", qty:50, dayRate:13.15, weekRate:92.04, cat:'head' },
+    { id:"01-MÓT-LM22-403", desc:"Alufort Festing f/Drop-Head", qty:30, dayRate:4.29, weekRate:30.00, cat:'head' },
+    { id:"01-MÓT-LM22-546", desc:"Alufort Festing M/Stuðning 10×10cm", qty:38, dayRate:7.54, weekRate:52.74, cat:'head' },
+    { id:"01-MÓT-LM22-322", desc:"Alufort Dregari 150cm", qty:30, dayRate:48.02, weekRate:336.12, cat:'stringer' },
+    { id:"01-MÓT-LM22-323", desc:"Alufort Dregari 225cm", qty:566, dayRate:48.02, weekRate:336.12, cat:'stringer' },
+    { id:"01-MÓT-LM22-510", desc:"Faresin Framlenging 50cm", qty:232, dayRate:7.04, weekRate:49.24, cat:'extension' },
+    { id:"01-MÓT-LM22-850", desc:"Alufort PVC Frágangslisti 150", qty:526, dayRate:2.67, weekRate:18.70, cat:'pvc' },
+    { id:"01-MÓT-LM22-875", desc:"Alufort PVC Frágangslisti 75", qty:989, dayRate:1.78, weekRate:12.47, cat:'pvc' },
+    { id:"01-MÓT-LM22-990", desc:"Alufort Skrúfa M12×40", qty:3805, dayRate:0.05, weekRate:0.34, cat:'fastener' },
+    { id:"01-MÓT-LM22-992", desc:"Alufort Ró M12 (Medium)", qty:3760, dayRate:0.02, weekRate:0.12, cat:'fastener' },
+    { id:"01-MÓT-LM22-600", desc:"Faresin Fylgihlutagrind 160×110", qty:10, dayRate:210.24, weekRate:1471.67, cat:'rack' },
+];
+
+// ---- LM81: ID frames (9) ----
+const LM81 = [
+    { id:"01-MÓT-LM81-162", desc:"ID-Rammar 133", qty:1140, dayRate:37.10, weekRate:259.68, frameW:133 },
+    { id:"01-MÓT-LM81-173", desc:"ID-Rammar 100", qty:1810, dayRate:33.87, weekRate:237.10, frameW:100 },
+    { id:"01-MÓT-LM81-163", desc:"ID-Endarammar", qty:788, dayRate:39.52, weekRate:276.61 },
+    { id:"01-MÓT-LM81-187", desc:"ID-Hálfur Endarammi", qty:511, dayRate:10.48, weekRate:73.39 },
+    { id:"01-MÓT-LM81-200", desc:"ID-Skástífur f/Hálfa Endaramma", qty:471, dayRate:3.23, weekRate:22.58 },
+    { id:"01-MÓT-LM81-530", desc:"ID-Hausar 38/52", qty:1068, dayRate:16.13, weekRate:112.90 },
+    { id:"01-MÓT-LM81-552", desc:"ID-Lappir 38/52", qty:850, dayRate:16.13, weekRate:112.90 },
+    { id:"01-MÓT-LM81-574", desc:"ID-Skástífur", qty:1886, dayRate:4.84, weekRate:33.87 },
+    { id:"01-MÓT-LM81-009", desc:"Rekki fyrir ID rammar", qty:2, dayRate:210.24, weekRate:1471.67 },
+];
+
+// ---- LM51: Loftastoðir/props ----
+const LM51 = [
+    { id:"01-MÓT-LM51-041", desc:"Loftastoðir 0,7-1,2M (Málað)", minH:70, maxH:120, qty:52, dayRate:12.90, weekRate:90.32 },
+    { id:"01-MÓT-LM51-027", desc:"Loftastoðir 1,6-3M (Málað)", minH:160, maxH:300, qty:885, dayRate:12.90, weekRate:90.32 },
+    { id:"01-MÓT-LM51-026", desc:"Loftastoðir 2-3,5M (Málað)", minH:200, maxH:350, qty:976, dayRate:12.90, weekRate:90.32 },
+    { id:"01-MÓT-LM51-029", desc:"Loftastoðir 1,6-2,9M (Galv)", minH:160, maxH:290, qty:185, dayRate:16.13, weekRate:112.90 },
+    { id:"01-MÓT-LM51-028", desc:"Loftastoðir 2-3,5M (Galv)", minH:200, maxH:350, qty:238, dayRate:16.13, weekRate:112.90 },
+    { id:"01-MÓT-LM51-092", desc:"Loftastoðir B/D30 175/300", minH:175, maxH:300, qty:468, dayRate:24.19, weekRate:169.35 },
+    { id:"01-MÓT-LM51-031", desc:"Loftastoðir B30 178/300 HPE Gl", minH:178, maxH:300, qty:88, dayRate:22.58, weekRate:158.06 },
+    { id:"01-MÓT-LM51-913", desc:"Loftastoðir CE30 179/300 Galv", minH:179, maxH:300, qty:500, dayRate:13.71, weekRate:95.97 },
+    { id:"01-MÓT-LM51-935", desc:"Faresin Loftastoðir E35 200/350 (Galv)", minH:200, maxH:350, qty:1049, dayRate:14.65, weekRate:102.56 },
+    { id:"01-MÓT-LM51-032", desc:"Loftastoðir B35 200/350 HPE Gl", minH:200, maxH:350, qty:-3, dayRate:22.58, weekRate:158.06 },
+    { id:"01-MÓT-LM51-091", desc:"Loftastoðir CD35 201/350 Galv", minH:201, maxH:350, qty:147, dayRate:32.26, weekRate:225.81 },
+    { id:"01-MÓT-LM51-235", desc:"Loftastoðir E35 (201/350)", minH:201, maxH:350, qty:1, dayRate:32.26, weekRate:225.81 },
+    { id:"01-MÓT-LM51-048", desc:"Loftastoðir B45 260/480 Galv.", minH:260, maxH:480, qty:-29, dayRate:44.35, weekRate:310.48 },
+    { id:"01-MÓT-LM51-080", desc:"Loftastoðir D45", minH:260, maxH:450, qty:-50, dayRate:48.39, weekRate:338.71 },
+    { id:"01-MÓT-LM51-079", desc:"Loftastoðir D55 301/550 Galv", minH:301, maxH:550, qty:43, dayRate:56.45, weekRate:395.16 },
+];
+
+// ---- LM71: HT-20 beams ----
+const LM71 = [
+    { id:"01-MÓT-LM71-011", desc:"Mótabitar HT-20 1,20M", length:120, qty:-22, dayRate:10.97, weekRate:76.78 },
+    { id:"01-MÓT-LM71-924", desc:"Mótabitar HT-20 2,45M", length:245, qty:3170, dayRate:13.71, weekRate:95.97 },
+    { id:"01-MÓT-LM71-926", desc:"Mótabitar HT-20 2,65M", length:265, qty:76, dayRate:15.32, weekRate:107.26 },
+    { id:"01-MÓT-LM71-929", desc:"Mótabitar HT-20 2,9M", length:290, qty:26, dayRate:16.13, weekRate:112.90 },
+    { id:"01-MÓT-LM71-935", desc:"Mótabitar HT-20 3,0M", length:300, qty:-19, dayRate:16.69, weekRate:116.80 },
+    { id:"01-MÓT-LM71-933", desc:"Mótabitar HT-20 3,3M", length:330, qty:0, dayRate:16.69, weekRate:116.80 },
+    { id:"01-MÓT-LM71-936", desc:"Mótabitar HT-20 3,6M", length:360, qty:12, dayRate:20.16, weekRate:141.13 },
+    { id:"01-MÓT-LM71-939", desc:"Mótabitar HT-20 3,9M", length:390, qty:222, dayRate:21.77, weekRate:152.42 },
+    { id:"01-MÓT-LM71-949", desc:"Mótabitar HT-20 4,9M", length:490, qty:-45, dayRate:27.42, weekRate:191.94 },
+    { id:"01-MÓT-LM71-990", desc:"Faresin Mótabitar 2,90M", length:290, qty:427, dayRate:7.00, weekRate:49.03 },
+    { id:"01-MÓT-LM71-992", desc:"Faresin Mótabitar 3,90M", length:390, qty:126, dayRate:9.42, weekRate:65.94 },
+];
+
+// ---- AH21: General accessories ----
+const AH21 = [
+    { id:"01-MÓT-AH21-600", desc:"Manto Mótarær DW 15 13cm", qty:3925, dayRate:2.42, weekRate:16.94, cat:'tierod' },
+    { id:"01-MÓT-AH21-332", desc:"Mótarær DW 15 10cm", qty:174, dayRate:5.65, weekRate:39.52, cat:'tierod' },
+    { id:"01-MÓT-AH21-601", desc:"Mótarær DW 15 Forbuilt", qty:-2146, dayRate:2.42, weekRate:16.94, cat:'tierod' },
+    { id:"01-MÓT-AH21-344", desc:"Mótarær 130×230", qty:262, dayRate:2.42, weekRate:16.94, cat:'tierod' },
+    { id:"01-MÓT-AH21-470", desc:"Mótateinar 175cm", qty:493, dayRate:2.42, weekRate:16.94, cat:'tie' },
+    { id:"01-MÓT-AH21-481", desc:"Mótateinar 130cm", qty:77, dayRate:2.42, weekRate:16.94, cat:'tie' },
+    { id:"01-MÓT-AH21-387", desc:"Mótateinar 100cm", qty:-38, dayRate:1.61, weekRate:11.29, cat:'tie' },
+    { id:"01-MÓT-AH21-660", desc:"Mótateinar 75cm", qty:-453, dayRate:0.81, weekRate:5.65, cat:'tie' },
+    { id:"01-MÓT-AH21-053", desc:"Dregarateinar 30cm (Stuttir)", qty:-43, dayRate:1.61, weekRate:11.29, cat:'spacer' },
+    { id:"01-MÓT-AH21-410", desc:"Dregarateinar 50cm (Langir)", qty:-6, dayRate:1.61, weekRate:11.29, cat:'spacer' },
+    { id:"01-MÓT-AH21-093", desc:"Mótaskástífur B35 203/350", qty:281, dayRate:22.58, weekRate:158.06, cat:'brace' },
+    { id:"01-MÓT-AH21-049", desc:"Mótaskástífur 260/480 Galv", qty:-41, dayRate:22.58, weekRate:158.06, cat:'brace' },
+    { id:"01-MÓT-AH21-103", desc:"M-Tvöfaldar Mótaskástífur", qty:-15, dayRate:34.68, weekRate:242.74, cat:'brace' },
+    { id:"01-MÓT-AH21-001", desc:"Sökkulskór", qty:144, dayRate:12.10, weekRate:84.68, cat:'base' },
+    { id:"01-MÓT-AH21-002", desc:"Innveggjaskór", qty:424, dayRate:12.10, weekRate:84.68, cat:'base' },
+    { id:"01-MÓT-AH21-214", desc:"Plötur 8/8", qty:-186, dayRate:2.42, weekRate:16.94, cat:'plate' },
+    { id:"01-MÓT-AH21-010", desc:"Bracket Bearing", qty:212, dayRate:25.00, weekRate:175.00, cat:'bracket' },
+    { id:"01-MÓT-AH21-005", desc:"Samanbr. Vinnupallaknekkti", qty:103, dayRate:967.74, weekRate:6774.19, cat:'platform' },
+    { id:"01-MÓT-AH21-764", desc:"Manto Dregarar 100cm", qty:-45, dayRate:13.71, weekRate:95.97, cat:'stringer' },
+    { id:"01-MÓT-AH21-980", desc:"Dregarar 80cm", qty:57, dayRate:8.87, weekRate:62.10, cat:'stringer' },
+    { id:"01-MÓT-AH21-746", desc:"Krækjufestingar (M-Bolt Conn.)", qty:-66, dayRate:1.61, weekRate:11.29, cat:'connector' },
+    { id:"01-MÓT-AH21-114", desc:"M-Skástífufestingar (Langar)", qty:39, dayRate:14.52, weekRate:101.61, cat:'brace' },
+];
+
+
+// =============================================================================
+// FORMAT & DATE HELPERS
+// =============================================================================
+function fmtNum(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+function fmtDec(n, d) { return n.toFixed(d).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+function fmtInt(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+function parseVal(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function rentalCost(dayRate, weekRate, days, qty) {
+    if (days < 7) return dayRate * days * qty;
+    return weekRate * Math.ceil(days / 7) * qty;
+}
+
+function calculateDaysBetween(s, e) {
+    const d1 = new Date(s + 'T12:00:00');
+    const d2 = new Date(e + 'T12:00:00');
+    return Math.max(1, Math.round((d2 - d1) / 86400000));
+}
+
+function initializeDates() {
+    const today = new Date();
+    const end = new Date(today);
+    end.setDate(end.getDate() + 29); // 30 inclusive
+    const fmt = d => d.toISOString().split('T')[0];
+    document.getElementById('startDate').value = fmt(today);
+    document.getElementById('endDate').value = fmt(end);
+    updateRentalDays();
+}
+
+function updateRentalDays() {
+    const s = document.getElementById('startDate').value;
+    const e = document.getElementById('endDate').value;
+    if (s && e) {
+        const days = calculateDaysBetween(s, e);
+        document.getElementById('rentalDays').value = days;
+    }
+}
+
+function updateEndDateFromDays() {
+    const s = document.getElementById('startDate').value;
+    const days = parseInt(document.getElementById('rentalDays').value) || 1;
+    if (s) {
+        const d = new Date(s + 'T12:00:00');
+        d.setDate(d.getDate() + days);
+        document.getElementById('endDate').value = d.toISOString().split('T')[0];
+    }
+}
+
+function getRentalDays() {
+    return Math.max(1, parseInt(document.getElementById('rentalDays').value) || 10);
+}
+
+
+// =============================================================================
+// TAB SWITCHING
+// =============================================================================
+let currentMode = 'B';
+let _calcTimer = null;
+
+function scheduleCalculate() {
+    if (currentMode === 'D') return;
+    clearTimeout(_calcTimer);
+    _calcTimer = setTimeout(function() { calculate(true); }, 350);
+}
+
+function switchMode(mode, btnEl) {
+    currentMode = mode;
+    document.querySelectorAll('.sys-tab').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    document.querySelectorAll('.mode-pane').forEach(p => p.classList.remove('active'));
+    const pane = document.getElementById('pane-' + mode);
+    if (pane) pane.classList.add('active');
+    scheduleCalculate();
+}
+
+
+// =============================================================================
+// GREEDY PANEL PACKING (largest-first)
+// =============================================================================
+function packPanels(lengthCm, panels) {
+    const available = panels
+        .filter(p => !p.corner && !p.comp && !p.mp && !p.special && p.w > 0)
+        .sort((a, b) => b.w - a.w);
+
+    let remaining = lengthCm;
+    const used = new Map();
+
+    while (remaining > 0) {
+        let placed = false;
+        for (const p of available) {
+            if (p.w <= remaining) {
+                used.set(p.id, (used.get(p.id) || 0) + 1);
+                remaining -= p.w;
+                placed = true;
+                break;
+            }
+        }
+        if (!placed) {
+            const compPanel = panels.find(p => p.comp);
+            if (compPanel && remaining >= compPanel.w) {
+                const strips = Math.floor(remaining / compPanel.w);
+                used.set(compPanel.id, (used.get(compPanel.id) || 0) + strips);
+                remaining -= strips * compPanel.w;
+            }
+            break;
+        }
+    }
+    return { used, gap: remaining };
+}
+
+
+// =============================================================================
+// ENGINEERING HELPERS
+// =============================================================================
+function getTieRows(heightCm, system) {
+    if (system === 'takko') return 2;
+    if (system === 'rasto') return 3;
+    if (heightCm <= 60) return 1;
+    if (heightCm <= 120) return 2;
+    if (heightCm <= 240) return 2;
+    if (heightCm <= 300) return 3;
+    return 4;
+}
+
+function getClampsPerJoint(heightCm) {
+    if (heightCm <= 120) return 2;
+    if (heightCm <= 300) return 3;
+    return 4;
+}
+
+function getMaxStrutSpacing(system) {
+    return system === 'takko' ? 270 : 225;
+}
+
+function getOuterCornerClamps(heightCm, system) {
+    if (system === 'takko') return 2;
+    if (heightCm <= 120) return 3;
+    if (heightCm <= 300) return 6;
+    if (heightCm <= 450) return 7;
+    return 9;
+}
+
+function pushBoQ(boq, item, qty, cat) {
+    if (item && qty > 0) {
+        boq.push({ id: item.id, desc: item.desc, qty, stock: item.qty, dayRate: item.dayRate, weekRate: item.weekRate, cat });
+    }
+}
+
+
+// =============================================================================
+// MODE A: RASTO/TAKKO
+// =============================================================================
+function calculateModeA() {
+    const wallLength = (parseFloat(document.getElementById('a-wall-length').value) || 12) * 100;
+    const system = document.getElementById('a-system').value;
+    const insideCorners = parseInt(document.getElementById('a-inside-corners').value) || 0;
+    const outsideCorners = parseInt(document.getElementById('a-outside-corners').value) || 0;
+
+    const panels = system === 'rasto' ? HM01 : HM02;
+    const accessories = HM21;
+    const netLength = Math.max(30, wallLength);
+    const { used, gap } = packPanels(netLength, panels);
+    const boq = [];
+
+    for (const [id, count] of used) {
+        const p = panels.find(x => x.id === id);
+        boq.push({ id: p.id, desc: p.desc, qty: count * 2, stock: p.qty, dayRate: p.dayRate, weekRate: p.weekRate, cat: 'Mótaflekar' });
+    }
+
+    const totalPanelsOneFace = Array.from(used.values()).reduce((s, n) => s + n, 0);
+
+    if (insideCorners > 0) {
+        const ic = panels.find(p => p.corner === 'inside');
+        if (ic) boq.push({ id: ic.id, desc: ic.desc, qty: insideCorners * 2, stock: ic.qty, dayRate: ic.dayRate, weekRate: ic.weekRate, cat: 'Horn' });
+    }
+    if (outsideCorners > 0) {
+        const oc = panels.find(p => p.corner === 'outside');
+        if (oc) boq.push({ id: oc.id, desc: oc.desc, qty: outsideCorners * 2, stock: oc.qty, dayRate: oc.dayRate, weekRate: oc.weekRate, cat: 'Horn' });
+    }
+
+    const heightCm = system === 'rasto' ? 300 : 120;
+    const tieRows = getTieRows(heightCm, system);
+    const clampsPerJoint = getClampsPerJoint(heightCm);
+    const joints = Math.max(0, totalPanelsOneFace - 1);
+    const compPanel = panels.find(p => p.comp);
+    const compCount = compPanel ? (used.get(compPanel.id) || 0) : 0;
+
+    const clampQty = joints * clampsPerJoint * 2;
+    pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-HM21-000'), clampQty, 'Klemmur');
+
+    if (compCount > 0) {
+        const adjClampQty = compCount * clampsPerJoint * 2;
+        pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-HM21-910'), adjClampQty, 'Klemmur');
+    }
+
+    if (outsideCorners > 0) {
+        const perCorner = getOuterCornerClamps(heightCm, system);
+        pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-HM21-900'), outsideCorners * perCorner, 'Klemmur');
+    }
+
+    const tieRods = joints * tieRows;
+    pushBoQ(boq, AH21.find(a => a.id === '01-MÓT-AH21-600'), tieRods, 'Mótarær');
+
+    const selectedTieId = document.getElementById('a-motateinar').value;
+    pushBoQ(boq, AH21.find(a => a.id === selectedTieId), tieRods, 'Mótateinar');
+
+    const maxStrutSpacing = getMaxStrutSpacing(system);
+    const braces = Math.ceil(wallLength / maxStrutSpacing);
+    if (system === 'takko') {
+        pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-HM21-110'), braces, 'Skástífur');
+    } else {
+        pushBoQ(boq, AH21.find(a => a.id === '01-MÓT-AH21-093'), braces, 'Skástífur');
+    }
+    pushBoQ(boq, AH21.find(a => a.id === '01-MÓT-AH21-114'), braces, 'Skástífufestingar');
+    pushBoQ(boq, AH21.find(a => a.id === '01-MÓT-AH21-746'), braces * 2, 'Festingar');
+    pushBoQ(boq, AH21.find(a => a.id === '01-MÓT-AH21-001'), braces, 'Sökkulskór');
+
+    const openEnds = parseInt(document.getElementById('a-open-ends').value) || 0;
+    if (openEnds > 0) {
+        const endStopsPerEnd = Math.ceil(heightCm / 100);
+        pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-HM21-667'), openEnds * endStopsPerEnd, 'Endar');
+    }
+
+    if (system === 'rasto') {
+        pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-HM21-810'), Math.ceil(wallLength / 250), 'Vinnupallar');
+    }
+
+    const totalPanelArea = (netLength * heightCm / 10000) * 2;
+    if (totalPanelArea > 5) {
+        const cranePairs = Math.ceil(totalPanelArea / 25);
+        pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-HM21-167'), cranePairs * 2, 'Kranakrókar');
+    }
+
+    const layoutParts = [];
+    for (const [id, count] of used) {
+        const p = panels.find(x => x.id === id);
+        layoutParts.push(`${count * 2}\u00d7 ${p.desc.split('(')[0].trim()} (${p.w}cm)`);
+    }
+    const layoutText = `Veggkerfi: ${system === 'rasto' ? 'RASTO (3 m)' : 'TAKKO (1,2 m)'}\nVegglengd: ${(wallLength/100).toFixed(1).replace('.', ',')} m \u00b7 Nett\u00f3lengd: ${(netLength/100).toFixed(1).replace('.', ',')} m\nHorn: ${insideCorners} innhorn, ${outsideCorners} \u00fathorn\n\n=== B\u00e1\u00f0ar hli\u00f0ar ===\n${layoutParts.join('\n')}\n${gap > 0 ? `Bil: ${gap} cm (ekki \u00feaki\u00f0)` : 'Full\u00feaki\u00f0 \u2713'}\n\nM\u00f3tar\u00e6r (gegnum): ${tieRods} stk\nM\u00f3tateinar: ${tieRods} stk\nSk\u00e1st\u00edfur: ${braces} stk`;
+
+    const visual = buildWallVisual(used, panels, netLength);
+    return { boq, layoutText, visual, modeLabel: system === 'rasto' ? 'RASTO (3 m)' : 'TAKKO (1,2 m)' };
+}
+
+
+// =============================================================================
+// MODE B: MANTO
+// =============================================================================
+function calculateModeB() {
+    const wallLength = (parseFloat(document.getElementById('b-wall-length').value) || 12) * 100;
+    const height = parseInt(document.getElementById('b-height').value);
+    const insideCorners = parseInt(document.getElementById('b-inside-corners').value) || 0;
+    const outsideCorners = parseInt(document.getElementById('b-outside-corners').value) || 0;
+
+    const heightPanels = KM01.filter(p => p.h === height && !p.corner && !p.comp && !p.special);
+    const compPanel = KM01.find(p => p.comp && p.h === height);
+    const panelSet = [...heightPanels];
+    if (compPanel) panelSet.push(compPanel);
+
+    const netLength = Math.max(30, wallLength);
+    const { used, gap } = packPanels(netLength, panelSet);
+    const boq = [];
+
+    for (const [id, count] of used) {
+        const p = KM01.find(x => x.id === id);
+        boq.push({ id: p.id, desc: p.desc, qty: count * 2, stock: p.qty, dayRate: p.dayRate, weekRate: p.weekRate, cat: 'M\u00f3taflekar' });
+    }
+
+    const totalPanelsOneFace = Array.from(used.values()).reduce((s, n) => s + n, 0);
+
+    if (insideCorners > 0) {
+        const ic = KM01.find(p => p.corner === 'inside' && p.h === height);
+        if (ic) boq.push({ id: ic.id, desc: ic.desc, qty: insideCorners * 2, stock: ic.qty, dayRate: ic.dayRate, weekRate: ic.weekRate, cat: 'Horn' });
+    }
+    if (outsideCorners > 0) {
+        const oc = KM01.find(p => p.corner === 'outside' && p.h === height);
+        if (oc) boq.push({ id: oc.id, desc: oc.desc, qty: outsideCorners * 2, stock: oc.qty, dayRate: oc.dayRate, weekRate: oc.weekRate, cat: 'Horn' });
+    }
+
+    const tieRows = getTieRows(height, 'manto');
+    const clampsPerJoint = getClampsPerJoint(height);
+    const joints = Math.max(0, totalPanelsOneFace - 1);
+    const compCount = compPanel ? (used.get(compPanel.id) || 0) : 0;
+
+    pushBoQ(boq, KM21.find(a => a.id === '01-MÓT-KM21-000'), joints * clampsPerJoint * 2, 'Klemmur');
+
+    if (compCount > 0) {
+        pushBoQ(boq, KM21.find(a => a.id === '01-MÓT-KM21-898'), compCount * clampsPerJoint * 2, 'Klemmur');
+    }
+
+    const flekaCount = totalPanelsOneFace * Math.ceil(tieRows / 2) * 2;
+    pushBoQ(boq, KM21.find(a => a.id === '01-MÓT-KM21-010'), flekaCount, 'Klemmur');
+
+    if (outsideCorners > 0 || insideCorners > 0) {
+        const perOuterCorner = getOuterCornerClamps(height, 'manto');
+        pushBoQ(boq, KM21.find(a => a.id === '01-MÓT-KM21-227'), outsideCorners * perOuterCorner + insideCorners * 2, 'Klemmur');
+    }
+
+    const tieRods = joints * tieRows;
+    pushBoQ(boq, AH21.find(a => a.id === '01-MÓT-AH21-600'), tieRods, 'M\u00f3tar\u00e6r');
+
+    const selectedTieId = document.getElementById('b-motateinar').value;
+    pushBoQ(boq, AH21.find(a => a.id === selectedTieId), tieRods, 'M\u00f3tateinar');
+
+    const braces = Math.ceil(wallLength / getMaxStrutSpacing('manto'));
+    if (height > 300) {
+        pushBoQ(boq, AH21.find(a => a.id === '01-MÓT-AH21-103'), braces, 'Sk\u00e1st\u00edfur');
+    } else {
+        pushBoQ(boq, AH21.find(a => a.id === '01-MÓT-AH21-093'), braces, 'Sk\u00e1st\u00edfur');
+    }
+    pushBoQ(boq, AH21.find(a => a.id === '01-MÓT-AH21-114'), braces, 'Sk\u00e1st\u00edfufestingar');
+    pushBoQ(boq, AH21.find(a => a.id === '01-MÓT-AH21-746'), braces * 2, 'Festingar');
+    pushBoQ(boq, AH21.find(a => a.id === '01-MÓT-AH21-001'), braces, 'S\u00f6kkulsk\u00f3r');
+
+    const openEnds = parseInt(document.getElementById('b-open-ends').value) || 0;
+    if (openEnds > 0) {
+        pushBoQ(boq, HM21.find(a => a.id === '01-MÓT-HM21-667'), openEnds * Math.ceil(height / 100), 'Endar');
+    }
+
+    if (height >= 270) {
+        pushBoQ(boq, KM21.find(a => a.id === '01-MÓT-KM21-205'), Math.ceil(wallLength / 250), 'Vinnupallar');
+    }
+
+    const totalPanelArea = (netLength * height / 10000) * 2;
+    if (totalPanelArea > 5) {
+        pushBoQ(boq, KM21.find(a => a.id === '01-MÓT-KM21-710'), Math.ceil(totalPanelArea / 25) * 2, 'Kranakr\u00f3kar');
+    }
+
+    if (openEnds > 0) {
+        pushBoQ(boq, AH21.find(a => a.id === '01-MÓT-AH21-410'), openEnds * 2, 'Dregarar');
+    }
+
+    const layoutParts = [];
+    for (const [id, count] of used) {
+        const p = KM01.find(x => x.id === id);
+        layoutParts.push(`${count * 2}\u00d7 ${p.desc.split('(')[0].trim()} (${p.w}cm)`);
+    }
+    const layoutText = `Veggkerfi: MANTO (${(height/100).toFixed(1).replace('.', ',')} m h\u00e6\u00f0)\nVegglengd: ${(wallLength/100).toFixed(1).replace('.', ',')} m \u00b7 Nett\u00f3lengd: ${(netLength/100).toFixed(1).replace('.', ',')} m\nHorn: ${insideCorners} innhorn, ${outsideCorners} \u00fathorn\n\n=== B\u00e1\u00f0ar hli\u00f0ar ===\n${layoutParts.join('\n')}\n${gap > 0 ? `Bil: ${gap} cm (ekki \u00feaki\u00f0)` : 'Full\u00feaki\u00f0 \u2713'}\n\nM\u00f3tar\u00e6r (gegnum): ${tieRods} stk\nM\u00f3tateinar: ${tieRods} stk\nSk\u00e1st\u00edfur: ${braces} stk`;
+
+    const visual = buildWallVisual(used, KM01, netLength);
+    return { boq, layoutText, visual, modeLabel: `MANTO (${(height/100).toFixed(1).replace('.', ',')} m)` };
+}
+
+
+// =============================================================================
+// MODE C: ALUFORT SLAB
+// =============================================================================
+function calculateModeC() {
+    const slabL = (parseFloat(document.getElementById('c-slab-length').value) || 6) * 100;
+    const slabW = (parseFloat(document.getElementById('c-slab-width').value) || 5) * 100;
+    const slabH = (parseFloat(document.getElementById('c-slab-height').value) || 2.8) * 100;
+    const concreteT = (parseFloat(document.getElementById('c-concrete-thickness').value) || 0.2) * 100;
+    const spacingL = (parseFloat(document.getElementById('c-spacing-l').value) || 1.5) * 100;
+    const spacingW = (parseFloat(document.getElementById('c-spacing-w').value) || 1.5) * 100;
+    const useID = document.getElementById('c-use-id').checked;
+
+    const panelL = packSlabDirection(slabL, [150, 75]);
+    const panelW = packSlabDirection(slabW, [75, 37.5]);
+
+    const panelCounts = new Map();
+    for (const pl of panelL.pieces) {
+        for (const pw of panelW.pieces) {
+            const panel = LM02.find(p => (p.w === pw && p.h === pl) || (p.w === pl && p.h === pw));
+            if (panel) panelCounts.set(panel.id, (panelCounts.get(panel.id) || 0) + 1);
+        }
+    }
+
+    const boq = [];
+    for (const [id, count] of panelCounts) {
+        const p = LM02.find(x => x.id === id);
+        if (p) boq.push({ id: p.id, desc: p.desc, qty: count, stock: p.qty, dayRate: p.dayRate, weekRate: p.weekRate, cat: 'Loftaflekar' });
+    }
+
+    const propsL = Math.floor(slabL / spacingL) + 1;
+    const propsW = Math.floor(slabW / spacingW) + 1;
+    const totalProps = propsL * propsW;
+    const selectedProp = selectProp(slabH, concreteT);
+
+    if (selectedProp) {
+        if (useID) {
+            const idFrame = LM81.find(f => f.id === '01-MÓT-LM81-162');
+            const idEnd = LM81.find(f => f.id === '01-MÓT-LM81-163');
+            if (idFrame) boq.push({ id: idFrame.id, desc: idFrame.desc, qty: totalProps, stock: idFrame.qty, dayRate: idFrame.dayRate, weekRate: idFrame.weekRate, cat: 'ID-Rammar' });
+            if (idEnd) boq.push({ id: idEnd.id, desc: idEnd.desc, qty: Math.ceil(totalProps * 0.5), stock: idEnd.qty, dayRate: idEnd.dayRate, weekRate: idEnd.weekRate, cat: 'ID-Rammar' });
+            const idHead = LM81.find(f => f.id === '01-MÓT-LM81-530');
+            const idLap = LM81.find(f => f.id === '01-MÓT-LM81-552');
+            if (idHead) boq.push({ id: idHead.id, desc: idHead.desc, qty: totalProps, stock: idHead.qty, dayRate: idHead.dayRate, weekRate: idHead.weekRate, cat: 'ID-Hlutir' });
+            if (idLap) boq.push({ id: idLap.id, desc: idLap.desc, qty: totalProps, stock: idLap.qty, dayRate: idLap.dayRate, weekRate: idLap.weekRate, cat: 'ID-Hlutir' });
+            const idBrace = LM81.find(f => f.id === '01-MÓT-LM81-574');
+            if (idBrace) boq.push({ id: idBrace.id, desc: idBrace.desc, qty: propsL * 2, stock: idBrace.qty, dayRate: idBrace.dayRate, weekRate: idBrace.weekRate, cat: 'ID-Hlutir' });
+        } else {
+            boq.push({ id: selectedProp.id, desc: selectedProp.desc, qty: totalProps, stock: selectedProp.qty, dayRate: selectedProp.dayRate, weekRate: selectedProp.weekRate, cat: 'Loftasto\u00f0ir' });
+        }
+    }
+
+    const dropHead = LM22.find(a => a.id === '01-MÓT-LM22-400');
+    if (dropHead) boq.push({ id: dropHead.id, desc: dropHead.desc, qty: totalProps, stock: dropHead.qty, dayRate: dropHead.dayRate, weekRate: dropHead.weekRate, cat: 'Hausar' });
+
+    const selectedBeam = selectBeam(spacingL);
+    if (selectedBeam) {
+        const beamsPerLine = Math.ceil(slabL / selectedBeam.length);
+        boq.push({ id: selectedBeam.id, desc: selectedBeam.desc, qty: propsW * beamsPerLine, stock: selectedBeam.qty, dayRate: selectedBeam.dayRate, weekRate: selectedBeam.weekRate, cat: 'HT-20 Bitar' });
+    }
+    const selectedBeam2 = selectBeam(spacingW);
+    if (selectedBeam2) {
+        const beamsPerLine2 = Math.ceil(slabW / selectedBeam2.length);
+        const existing = boq.find(b => b.id === selectedBeam2.id);
+        if (existing) {
+            existing.qty += propsL * beamsPerLine2;
+        } else {
+            boq.push({ id: selectedBeam2.id, desc: selectedBeam2.desc, qty: propsL * beamsPerLine2, stock: selectedBeam2.qty, dayRate: selectedBeam2.dayRate, weekRate: selectedBeam2.weekRate, cat: 'HT-20 Bitar' });
+        }
+    }
+
+    const perimeter = 2 * (slabL + slabW);
+    const pvc150 = LM22.find(a => a.id === '01-MÓT-LM22-850');
+    if (pvc150) boq.push({ id: pvc150.id, desc: pvc150.desc, qty: Math.ceil(perimeter / 150), stock: pvc150.qty, dayRate: pvc150.dayRate, weekRate: pvc150.weekRate, cat: 'PVC' });
+
+    const stringer = LM22.find(a => a.id === '01-MÓT-LM22-323');
+    if (stringer) boq.push({ id: stringer.id, desc: stringer.desc, qty: Math.max(propsL, propsW) * 2, stock: stringer.qty, dayRate: stringer.dayRate, weekRate: stringer.weekRate, cat: 'Dregarar' });
+
+    const totalPanels = Array.from(panelCounts.values()).reduce((s, n) => s + n, 0);
+    const screws = totalPanels * 4;
+    const screw = LM22.find(a => a.id === '01-MÓT-LM22-990');
+    if (screw) boq.push({ id: screw.id, desc: screw.desc, qty: screws, stock: screw.qty, dayRate: screw.dayRate, weekRate: screw.weekRate, cat: 'Festingar' });
+    const washer = LM22.find(a => a.id === '01-MÓT-LM22-992');
+    if (washer) boq.push({ id: washer.id, desc: washer.desc, qty: screws, stock: washer.qty, dayRate: washer.dayRate, weekRate: washer.weekRate, cat: 'Festingar' });
+
+    const slabArea = (slabL * slabW) / 10000;
+    const layoutText = `Loftam\u00f3t: ALUFORT\nLoftflatarm\u00e1l: ${(slabL/100).toFixed(1).replace('.', ',')} \u00d7 ${(slabW/100).toFixed(1).replace('.', ',')} m = ${slabArea.toFixed(1).replace('.', ',')} m\u00b2\nLofth\u00e6\u00f0: ${(slabH/100).toFixed(1).replace('.', ',')} m \u00b7 Steypu\u00feykkt: ${(concreteT/100).toFixed(2).replace('.', ',')} m\nSto\u00f0abil: ${(spacingL/100).toFixed(1).replace('.', ',')} \u00d7 ${(spacingW/100).toFixed(1).replace('.', ',')} m\n\n=== Sto\u00f0agrind ===\nSto\u00f0ir \u00e1 lengd: ${propsL} \u00b7 Sto\u00f0ir \u00e1 breidd: ${propsW}\nSamtals sto\u00f0ir/Drop-Heads: ${totalProps} stk\n${useID ? 'ID-Rammar nota\u00f0ir (shoring towers)' : `Loftasto\u00f0ir: ${selectedProp ? selectedProp.desc : 'VANTAR'}`}\n\n=== Loftaflekar ===\n${Array.from(panelCounts.entries()).map(([id, c]) => { const p = LM02.find(x => x.id === id); return `${c}\u00d7 ${p ? p.desc : id}`; }).join('\n')}\nSamtals flekar: ${totalPanels} stk`;
+
+    return { boq, layoutText, visual: '', modeLabel: 'ALUFORT Loft' };
+}
+
+
+// =============================================================================
+// SLAB HELPERS
+// =============================================================================
+function packSlabDirection(totalCm, sizes) {
+    sizes.sort((a, b) => b - a);
+    let remaining = totalCm;
+    const pieces = [];
+    while (remaining > 0) {
+        let placed = false;
+        for (const s of sizes) {
+            if (s <= remaining + 0.5) {
+                pieces.push(s);
+                remaining -= s;
+                placed = true;
+                break;
+            }
+        }
+        if (!placed) break;
+    }
+    return { pieces, gap: remaining };
+}
+
+function selectProp(slabH, concreteT) {
+    const propH = slabH - 35;
+    const suitable = LM51.filter(p => propH >= p.minH && propH <= p.maxH);
+    if (suitable.length === 0) return LM51[LM51.length - 1];
+    suitable.sort((a, b) => a.dayRate - b.dayRate);
+    return suitable[0];
+}
+
+function selectBeam(spacingCm) {
+    const suitable = LM71.filter(b => b.length >= spacingCm);
+    if (suitable.length === 0) return LM71[LM71.length - 1];
+    suitable.sort((a, b) => a.length - b.length);
+    return suitable[0];
+}
+
+
+// =============================================================================
+// WALL VISUAL BUILDER
+// =============================================================================
+function buildWallVisual(used, panels, totalWidth) {
+    if (used.size === 0) return '';
+    const available = panels
+        .filter(p => !p.corner && !p.comp && !p.mp && !p.special && p.w > 0)
+        .sort((a, b) => b.w - a.w);
+
+    let rem = totalWidth;
+    const ordered = [];
+    while (rem > 0) {
+        let placed = false;
+        for (const p of available) {
+            if (p.w <= rem && used.has(p.id)) {
+                ordered.push(p);
+                rem -= p.w;
+                placed = true;
+                break;
+            }
+        }
+        if (!placed) {
+            const comp = panels.find(p => p.comp);
+            if (comp && rem >= comp.w) { ordered.push(comp); rem -= comp.w; }
+            else break;
+        }
+    }
+
+    const scale = Math.min(1, 600 / totalWidth);
+    let html = '<div class="wall-diagram">';
+    for (const p of ordered) {
+        const w = Math.max(12, p.w * scale);
+        const cls = p.comp ? 'wall-panel comp' : 'wall-panel';
+        html += `<div class="${cls}" style="width:${w}px" title="${p.desc} (${p.w}cm)">${p.w > 30 ? p.w : ''}</div>`;
+    }
+    html += '</div>';
+    return html;
+}
+
+
+// =============================================================================
+// MAIN CALCULATE + RENDER
+// =============================================================================
+let lastBoqResult = null;
+
+function calculate(silent) {
+    let result;
+    if (currentMode === 'A') result = calculateModeA();
+    else if (currentMode === 'B') result = calculateModeB();
+    else result = calculateModeC();
+
+    lastBoqResult = result;
+    const days = getRentalDays();
+    const discount = parseFloat(document.getElementById('discountInput').value) || 0;
+    const { boq, layoutText, visual, modeLabel } = result;
+
+    let totalCost = 0;
+    let tableRows = '';
+    let currentCat = '';
+
+    for (const item of boq) {
+        if (item.cat !== currentCat) {
+            currentCat = item.cat;
+            tableRows += `<tr class="cat-row"><td colspan="5">${currentCat}</td></tr>`;
+        }
+        const cost = rentalCost(item.dayRate, item.weekRate, days, item.qty);
+        totalCost += cost;
+        tableRows += `<tr>
+            <td>${item.id}</td>
+            <td>${item.desc}</td>
+            <td style="text-align:right">${fmtInt(item.qty)} stk</td>
+            <td style="text-align:right">${fmtInt(Math.round(item.dayRate))} kr</td>
+            <td style="text-align:right">${fmtInt(Math.round(cost))} kr</td>
+        </tr>`;
+    }
+
+    const discountedCost = discount > 0 ? totalCost * (1 - discount / 100) : totalCost;
+    const summaryClass = discount > 0 ? 'cost-summary discounted' : 'cost-summary';
+
+    let html = `<div class="result-box">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;margin-bottom:8px;color:#404042">${modeLabel}</div>
+        <div class="layout-preview">${layoutText}</div>
+        ${visual ? visual : ''}
+        <table class="boq-table">
+            <thead><tr><th>Leigunr.</th><th>L\u00fdsing</th><th>Magn</th><th>Dagver\u00f0</th><th>Leiguver\u00f0</th></tr></thead>
+            <tbody>${tableRows}</tbody>
+        </table>
+        <div class="${summaryClass}">
+            <div class="cost-label">Samtals leiguver\u00f0 \u2014 ${fmtInt(days)} dagar</div>
+            <div class="cost-value">${fmtInt(Math.round(discountedCost))} kr</div>
+            ${discount > 0 ? `<div class="cost-meta">${fmtInt(Math.round(totalCost))} kr fyrir afsl\u00e1tt (${fmtDec(discount,0)}%)</div>` : ''}
+        </div>
+    </div>`;
+
+    document.getElementById('resultBox').innerHTML = html;
+
+    if (!silent) setTimeout(() => document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+
+// =============================================================================
+// AUTO-FORMAT: Kennitala & Phone
+// =============================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    const kt = document.getElementById('clientKennitala');
+    if (kt) kt.addEventListener('input', function() {
+        let v = this.value.replace(/\D/g, '');
+        if (v.length > 10) v = v.slice(0, 10);
+        if (v.length > 6) v = v.slice(0, 6) + '-' + v.slice(6);
+        this.value = v;
+    });
+
+    const ph = document.getElementById('clientPhone');
+    if (ph) ph.addEventListener('input', function() {
+        let v = this.value.replace(/\D/g, '');
+        if (v.length > 7) v = v.slice(0, 7);
+        if (v.length > 3) v = v.slice(0, 3) + '-' + v.slice(3);
+        this.value = v;
+    });
+});
+
+
+// =============================================================================
+// PDF GENERATION — DOM-based (matches Vinnupallar pattern)
+// =============================================================================
+function openPdfDialog() {
+    if (!lastBoqResult) { alert('Reiknaðu fyrst efnislistann.'); return; }
+    document.getElementById('pdfOverlay').classList.add('visible');
+}
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('pdfCancelBtn').addEventListener('click', function() {
+        document.getElementById('pdfOverlay').classList.remove('visible');
+    });
+    document.getElementById('pdfOverlay').addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('visible');
+    });
+    document.getElementById('pdfConfirmBtn').addEventListener('click', function() {
+        document.getElementById('pdfOverlay').classList.remove('visible');
+        generatePDF();
+    });
+});
+
+async function generatePDF() {
+    if (!lastBoqResult) {
+        alert('Reiknaðu fyrst efnislistann.');
+        return;
+    }
+    if (typeof html2pdf === 'undefined') {
+        alert('Villa: html2pdf.js tókst ekki að hlaðast. Endurhladdu síðuna.');
+        return;
+    }
+
+    var hideZeroQty = document.getElementById('pdfCheckHideZero').checked;
+
+    var days = getRentalDays();
+    var discount = parseFloat(document.getElementById('discountInput').value) || 0;
+    var boq = lastBoqResult.boq;
+
+    // ── Client info ──
+    var name      = (document.getElementById('clientName').value || '').trim() || '\u2013';
+    var company   = (document.getElementById('clientCompany').value || '').trim() || '\u2013';
+    var kennitala = (document.getElementById('clientKennitala').value || '').trim() || '\u2013';
+    var phone     = (document.getElementById('clientPhone').value || '').trim() || '\u2013';
+    var email     = (document.getElementById('clientEmail').value || '').trim() || '\u2013';
+    var address   = (document.getElementById('clientAddress').value || '').trim() || '\u2013';
+    var uttektar  = (document.getElementById('clientUttektar').value || '').trim() || '\u2013';
+    var today     = new Date();
+    var dateStr   = today.getDate() + '.' + (today.getMonth() + 1) + '.' + today.getFullYear();
+
+    document.getElementById('pdf-c-name').textContent      = name;
+    document.getElementById('pdf-c-company').textContent   = company;
+    document.getElementById('pdf-c-kennitala').textContent = kennitala;
+    document.getElementById('pdf-c-phone').textContent     = phone;
+    document.getElementById('pdf-c-email').textContent     = email;
+    document.getElementById('pdf-c-address').textContent   = address;
+    document.getElementById('pdf-c-uttektar').textContent  = uttektar;
+    document.getElementById('pdf-c-date').textContent      = dateStr;
+    document.getElementById('pdf-c-days').textContent      = days + ' dagar';
+
+    // Meta line in header
+    var pdfClientMeta = document.getElementById('pdfClientMeta');
+    if (pdfClientMeta) {
+        var metaParts = [];
+        if (company !== '\u2013') metaParts.push(company);
+        else if (name !== '\u2013') metaParts.push(name);
+        metaParts.push(dateStr);
+        pdfClientMeta.textContent = metaParts.join('  \u00b7  ') || '\u2013';
+    }
+
+    // ── Mode label + layout text ──
+    var modeLbl = document.getElementById('pdf-mode-label');
+    if (modeLbl) modeLbl.textContent = lastBoqResult.modeLabel || 'Uppsetning';
+    var layoutEl = document.getElementById('pdf-layout-text');
+    if (layoutEl) layoutEl.textContent = lastBoqResult.layoutText || '';
+
+    // ── Signature name ──
+    var sigName = document.getElementById('pdf-sig-name');
+    if (sigName) sigName.textContent = name !== '\u2013' ? name : '';
+
+    // ── Build BoQ rows ──
+    var totalCost = 0;
+    var rowsHtml = '';
+    var currentCat = '';
+    for (var i = 0; i < boq.length; i++) {
+        var item = boq[i];
+        if (hideZeroQty && item.qty === 0) continue;
+        if (item.cat !== currentCat) {
+            currentCat = item.cat;
+            rowsHtml += '<tr class="cat-row"><td colspan="5">' + currentCat + '</td></tr>';
+        }
+        var cost = rentalCost(item.dayRate, item.weekRate, days, item.qty);
+        totalCost += cost;
+        rowsHtml += '<tr style="border-bottom:1px solid #f1f5f9;">'
+            + '<td>' + item.id + '</td>'
+            + '<td>' + item.desc + '</td>'
+            + '<td style="text-align:right">' + fmtInt(item.qty) + ' stk</td>'
+            + '<td style="text-align:right">' + fmtInt(Math.round(item.dayRate)) + ' kr</td>'
+            + '<td style="text-align:right">' + fmtInt(Math.round(cost)) + ' kr</td>'
+            + '</tr>';
+    }
+    document.getElementById('pdfBoqBody').innerHTML = rowsHtml;
+
+    // ── Summary boxes ──
+    var discounted = discount > 0 ? totalCost * (1 - discount / 100) : totalCost;
+    document.getElementById('pdf-s-days').textContent      = days + ' dagar';
+    document.getElementById('pdf-s-discount').textContent  = discount > 0 ? discount + '%' : '–';
+    document.getElementById('pdf-s-before').textContent    = fmtInt(Math.round(totalCost)) + ' kr';
+    document.getElementById('pdf-s-total').textContent     = fmtInt(Math.round(discounted)) + ' kr';
+    document.getElementById('pdf-discount-val').textContent = discount + '%';
+
+    // ── Filename ──
+    var pdfParts = ['Tilbod'];
+    var _c = (document.getElementById('clientCompany').value || '').trim();
+    var _n = (document.getElementById('clientName').value || '').trim();
+    if (_c) pdfParts.push(_c.replace(/[\\/:*?"<>|]/g, ''));
+    else if (_n) pdfParts.push(_n.replace(/[\\/:*?"<>|]/g, ''));
+    pdfParts.push(dateStr);
+    var pdfFilename = pdfParts.join('-') + '.pdf';
+
+    // ── Show block, generate, hide ──
+    var pdfBlock = document.getElementById('pdf-print-block');
+    pdfBlock.classList.add('pdf-rendering');
+
+    var opt = {
+        margin:      [6, 8, 6, 8],
+        filename:    pdfFilename,
+        image:       { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0, windowWidth: 794, width: 700, onclone: function(doc) { Array.from(doc.body.children).forEach(function(child) { if (child.id !== 'pdf-print-block') child.style.display = 'none'; }); doc.body.style.padding = '0'; doc.body.style.margin = '0'; var el = doc.getElementById('pdf-print-block'); if (el) { el.style.position = 'static'; el.style.left = '0'; el.style.top = '0'; el.style.width = '700px'; el.style.margin = '0 auto'; } } },
+        jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:   { mode: ['css', 'legacy'], avoid: '.pdf-box' }
+    };
+
+    // Wait for fonts and layout before capturing
+    try {
+        await document.fonts.ready;
+        await new Promise(function(resolve) { requestAnimationFrame(function() { requestAnimationFrame(resolve); }); });
+        await html2pdf().set(opt).from(pdfBlock).save();
+    } catch (err) {
+        console.error('html2pdf error:', err);
+        alert('Villa við PDF gerð: ' + (err && err.message ? err.message : String(err)));
+    } finally {
+        pdfBlock.classList.remove('pdf-rendering');
+    }
+}
+
+
+// =============================================================================
+// EXCEL EXPORT
+// =============================================================================
+function exportToExcel() {
+    if (!lastBoqResult) {
+        alert('Reiknaðu fyrst efnislistann.');
+        return;
+    }
+    if (typeof XLSX === 'undefined') {
+        alert('Villa: XLSX.js tókst ekki að hlaðast. Endurhladdu síðuna.');
+        return;
+    }
+
+    var days = getRentalDays();
+    var discount = parseFloat(document.getElementById('discountInput').value) || 0;
+    var boq = lastBoqResult.boq;
+    var modeLabel = lastBoqResult.modeLabel || 'Uppsetning';
+    var layoutText = lastBoqResult.layoutText || '';
+
+    // Client info
+    var name      = (document.getElementById('clientName').value || '').trim() || '–';
+    var company   = (document.getElementById('clientCompany').value || '').trim() || '–';
+    var kennitala = (document.getElementById('clientKennitala').value || '').trim() || '–';
+    var phone     = (document.getElementById('clientPhone').value || '').trim() || '–';
+    var email     = (document.getElementById('clientEmail').value || '').trim() || '–';
+    var address   = (document.getElementById('clientAddress').value || '').trim() || '–';
+    var uttektar  = (document.getElementById('clientUttektar').value || '').trim() || '–';
+    var today     = new Date();
+    var dateStr   = today.getDate() + '.' + (today.getMonth() + 1) + '.' + today.getFullYear();
+
+    // Calculate totals
+    var totalCost = 0;
+    for (var i = 0; i < boq.length; i++) {
+        totalCost += rentalCost(boq[i].dayRate, boq[i].weekRate, days, boq[i].qty);
+    }
+    var discounted = discount > 0 ? totalCost * (1 - discount / 100) : totalCost;
+
+    // ── Sheet 1: Upplýsingar ──
+    var infoData = [
+        ['Leigutilboð á steypumót — BYKO Leiga'],
+        [],
+        ['Viðskiptavinur'],
+        ['Nafn', name],
+        ['Fyrirtæki', company],
+        ['Kennitala', kennitala],
+        ['Sími', phone],
+        ['Netfang', email],
+        ['Heimilisfang', address],
+        ['Úttektaraðili', uttektar],
+        [],
+        ['Dagsetning', dateStr],
+        ['Tegund', modeLabel],
+        ['Uppsetning', layoutText],
+        ['Leigutími (dagar)', days],
+        ['Afsláttur', discount > 0 ? discount + '%' : '–'],
+        [],
+        ['Leiguverð fyrir afslátt', Math.round(totalCost)],
+        ['Samtals leiguverð', Math.round(discounted)]
+    ];
+    var wsInfo = XLSX.utils.aoa_to_sheet(infoData);
+    wsInfo['!cols'] = [{ wch: 26 }, { wch: 40 }];
+
+    // ── Sheet 2: Efnislisti ──
+    var matData = [['Leigunr.', 'Lýsing', 'Magn', 'Dagverð (kr)', 'Leiguverð (kr)', 'Flokkur']];
+    for (var j = 0; j < boq.length; j++) {
+        var item = boq[j];
+        var cost = rentalCost(item.dayRate, item.weekRate, days, item.qty);
+        matData.push([item.id, item.desc, item.qty, Math.round(item.dayRate), Math.round(cost), item.cat || '']);
+    }
+    matData.push([]);
+    matData.push(['', '', '', 'Samtals', Math.round(discounted)]);
+    var wsMat = XLSX.utils.aoa_to_sheet(matData);
+    wsMat['!cols'] = [{ wch: 12 }, { wch: 36 }, { wch: 8 }, { wch: 14 }, { wch: 14 }, { wch: 20 }];
+
+    // ── Build workbook ──
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, wsInfo, 'Upplýsingar');
+    XLSX.utils.book_append_sheet(wb, wsMat, 'Efnislisti');
+
+    // ── Filename ──
+    var parts = ['Tilbod'];
+    var _c = (document.getElementById('clientCompany').value || '').trim();
+    var _n = (document.getElementById('clientName').value || '').trim();
+    if (_c) parts.push(_c.replace(/[\\/:*?"<>|]/g, ''));
+    else if (_n) parts.push(_n.replace(/[\\/:*?"<>|]/g, ''));
+    parts.push(dateStr);
+    XLSX.writeFile(wb, parts.join('-') + '.xlsx');
+}
+
+
+
+// =============================================================================
+// ID-15 TOWER CALCULATOR
+// =============================================================================
+const ID15_COMBO = [
+  [1.42,1.75,4,4,0,2,2,2,0,0,135.96],[1.75,2.08,4,4,2,0,2,2,0,0,141.9],[1.84,2.17,4,4,2,0,3,2,0,0,157.57],[1.93,2.26,4,4,2,0,4,2,0,0,173.24],
+  [2.42,2.75,4,4,0,4,2,4,1,1,185.74],[2.75,3.08,4,4,2,2,2,4,1,1,191.68],[3.09,3.42,4,4,4,0,2,4,1,1,197.62],
+  [3.42,3.75,4,4,0,6,2,6,2,2,235.52],[3.75,4.08,4,4,2,4,2,6,2,2,241.46],[4.09,4.42,4,4,4,2,2,6,2,2,247.4],[4.42,4.75,4,4,6,0,2,6,2,2,253.34],
+  [4.75,5.08,4,4,2,6,2,8,3,3,291.24],[5.09,5.42,4,4,4,4,2,8,3,3,297.18],[5.42,5.75,4,4,6,2,2,8,3,3,303.12],[5.76,6.09,4,4,8,0,2,8,3,3,309.06],
+  [6.09,6.42,4,4,4,6,2,10,4,4,346.96],[6.42,6.75,4,4,6,4,2,10,4,4,352.9],[6.76,7.09,4,4,8,2,2,10,4,4,358.84],[7.09,7.42,4,4,10,0,2,10,4,4,364.78],
+  [7.42,7.75,4,4,6,6,2,12,5,5,402.68],[7.76,8.09,4,4,8,4,2,12,5,5,408.62],[8.09,8.42,4,4,10,2,2,12,5,5,414.56],[8.43,8.76,4,4,12,0,2,12,5,5,420.5],
+  [8.76,9.09,4,4,8,6,2,14,6,6,458.4],[9.09,9.42,4,4,10,4,2,14,6,6,464.34],[9.43,9.76,4,4,12,2,2,14,6,6,470.28],[9.76,10.09,4,4,14,0,2,14,6,6,476.22],
+  [10.09,10.42,4,4,10,6,2,16,7,7,514.12],[10.43,10.76,4,4,12,4,2,16,7,7,520.06],[10.76,11.09,4,4,14,2,2,16,7,7,526.0],[11.1,11.43,4,4,16,0,2,16,7,7,531.94],
+  [11.43,11.76,4,4,12,6,2,18,8,8,569.84],[11.76,12.09,4,4,14,4,2,18,8,8,575.78],[12.1,12.43,4,4,16,2,2,18,8,8,581.72],[12.43,12.76,4,4,18,0,2,18,8,8,587.66],
+  [12.76,13.09,4,4,14,6,2,20,9,9,625.56],[13.1,13.43,4,4,16,4,2,20,9,9,631.5],[13.43,13.76,4,4,18,2,2,20,9,9,637.44],[13.77,14.1,4,4,20,0,2,20,9,9,643.38],
+  [14.1,14.43,4,4,16,6,2,22,10,10,681.28],[14.43,14.76,4,4,18,4,2,22,10,10,687.22],[14.77,15.1,4,4,20,2,2,22,10,10,693.16],[15.1,15.43,4,4,22,0,2,22,10,10,699.1],
+  [15.43,15.76,4,4,18,6,2,24,11,11,737.0],[15.77,16.1,4,4,20,4,2,24,11,11,742.94],[16.1,16.43,4,4,22,2,2,24,11,11,748.88],[16.44,16.77,4,4,24,0,2,24,11,11,754.82],
+  [16.77,17.1,4,4,20,6,2,26,12,12,792.72],[17.1,17.43,4,4,22,4,2,26,12,12,798.66],[17.44,17.77,4,4,24,2,2,26,12,12,804.6],[17.77,18.1,4,4,26,0,2,26,12,12,810.54],
+  [18.1,18.43,4,4,22,6,2,28,13,13,848.44],[18.44,18.76,4,4,24,4,2,28,13,13,854.38],[18.77,19.1,4,4,26,2,2,28,13,13,860.32],[19.11,19.44,4,4,28,0,2,28,13,13,866.26],
+  [19.44,19.77,4,4,24,6,2,30,14,14,904.16],[19.77,20.1,4,4,26,4,2,30,14,14,910.1]
+];
+
+const ID15_PARTS = {
+  head_jack:  ['ID - Gafflar 38/52', 8.56, 20],
+  base_jack:  ['ID - Lappir 38/52', 8.34, 20],
+  frame133:   ['ID - Rammar 133', 18.85, 46],
+  frame100:   ['ID - Rammar 100', 15.88, 42],
+  end_frame10:['ID - Endarammar 10', 15.67, 49],
+  diagonal:   ['ID - Skástífur', 2.63, 6],
+  fylgihluta: ['Fylgihlutagrind', 80, 100]
+};
+
+let id15_options = [];
+let id15_selectedIdx = -1;
+let id15_qty = 1;
+let id15_fylgiQty = 0;
+let id15_order = [];
+
+function id15_findTowers() {
+  var raw = document.getElementById('id15-heightInput').value.replace(',', '.');
+  var h = parseFloat(raw);
+  if (isNaN(h) || h < 1.42 || h > 20.10) {
+    document.getElementById('id15-options-wrap').classList.add('id15-hidden');
+    document.getElementById('id15-qty-wrap').classList.add('id15-hidden');
+    return;
+  }
+
+  // Find exact matches and nearby
+  var matches = [];
+  for (var i = 0; i < ID15_COMBO.length; i++) {
+    var c = ID15_COMBO[i];
+    if (h >= c[0] && h <= c[1]) {
+      matches.push({ idx: i, combo: c, type: 'exact' });
+    }
+  }
+
+  // If no exact, find closest
+  if (matches.length === 0) {
+    var sorted = ID15_COMBO.map(function(c, idx) {
+      var mid = (c[0] + c[1]) / 2;
+      return { idx: idx, combo: c, dist: Math.abs(h - mid) };
+    }).sort(function(a, b) { return a.dist - b.dist; });
+    for (var j = 0; j < Math.min(3, sorted.length); j++) {
+      matches.push({ idx: sorted[j].idx, combo: sorted[j].combo, type: j === 0 ? 'best' : 'nearby' });
+    }
+  }
+
+  // Label cards
+  if (matches.length >= 3) {
+    matches[0].label = 'Lægri';
+    matches[1].label = 'Besti valkostur';
+    matches[2].label = 'Hærri';
+  } else if (matches.length === 2) {
+    matches[0].label = 'Valkostur 1';
+    matches[1].label = 'Valkostur 2';
+  } else if (matches.length === 1) {
+    matches[0].label = 'Besti valkostur';
+  }
+
+  id15_options = matches;
+  id15_selectedIdx = -1;
+
+  var html = '';
+  matches.forEach(function(m, mi) {
+    var c = m.combo;
+    html += '<div class="id15-card" onclick="id15_selectOption(' + mi + ')" id="id15-card-' + mi + '">';
+    html += '<div class="id15-card-title">' + m.label + '</div>';
+    html += '<div class="id15-card-sub">';
+    html += 'Hæð: ' + c[0].toFixed(2).replace('.', ',') + ' – ' + c[1].toFixed(2).replace('.', ',') + ' m<br>';
+    html += 'Þyngd: ' + c[10].toFixed(1).replace('.', ',') + ' kg';
+    html += '</div></div>';
+  });
+
+  document.getElementById('id15-options').innerHTML = html;
+  document.getElementById('id15-options-wrap').classList.remove('id15-hidden');
+  document.getElementById('id15-qty-wrap').classList.add('id15-hidden');
+}
+
+function id15_selectOption(idx) {
+  id15_selectedIdx = idx;
+  document.querySelectorAll('.id15-card').forEach(function(c) { c.classList.remove('selected'); });
+  document.getElementById('id15-card-' + idx).classList.add('selected');
+  id15_qty = 1;
+  id15_fylgiQty = 0;
+  document.getElementById('id15-qty').textContent = '1';
+  document.getElementById('id15-fylgi-qty').textContent = '0';
+  id15_updateMaterials();
+  document.getElementById('id15-qty-wrap').classList.remove('id15-hidden');
+}
+
+function id15_changeQty(delta) {
+  id15_qty = Math.max(1, id15_qty + delta);
+  document.getElementById('id15-qty').textContent = id15_qty;
+  id15_updateMaterials();
+}
+
+function id15_changeFylgi(delta) {
+  id15_fylgiQty = Math.max(0, id15_fylgiQty + delta);
+  document.getElementById('id15-fylgi-qty').textContent = id15_fylgiQty;
+  id15_updateMaterials();
+}
+
+function id15_getItemParts(c) {
+  return {
+    head_jack:   c[2],
+    base_jack:   c[3],
+    frame133:    c[4],
+    frame100:    c[5],
+    end_frame10: c[6],
+    diagonal:    c[7]
+  };
+}
+
+function id15_updateMaterials() {
+  if (id15_selectedIdx < 0) return;
+  var c = id15_options[id15_selectedIdx].combo;
+  var parts = id15_getItemParts(c);
+  var tbody = document.getElementById('id15-mat-body');
+  var html = '';
+  var keys = ['head_jack', 'base_jack', 'frame133', 'frame100', 'end_frame10', 'diagonal'];
+
+  keys.forEach(function(key) {
+    var perTower = parts[key];
+    if (perTower <= 0) return;
+    var info = ID15_PARTS[key];
+    var total = perTower * id15_qty;
+    var wPc = info[1];
+    var totalW = wPc * total;
+    var pricePcDay = info[2];
+    var priceDay = pricePcDay * total;
+    html += '<tr>';
+    html += '<td>' + info[0] + '</td>';
+    html += '<td class="r">' + perTower + '</td>';
+    html += '<td class="r">' + total + '</td>';
+    html += '<td class="r">' + wPc.toFixed(1).replace('.', ',') + ' kg</td>';
+    html += '<td class="r">' + totalW.toFixed(1).replace('.', ',') + ' kg</td>';
+    html += '<td class="r">' + fmtInt(pricePcDay) + ' kr</td>';
+    html += '<td class="r">' + fmtInt(priceDay) + ' kr</td>';
+    html += '</tr>';
+  });
+
+  // Fylgihlutagrind
+  if (id15_fylgiQty > 0) {
+    var fInfo = ID15_PARTS.fylgihluta;
+    var fTotal = id15_fylgiQty;
+    var fW = fInfo[1] * fTotal;
+    var fPrice = fInfo[2] * fTotal;
+    html += '<tr>';
+    html += '<td>' + fInfo[0] + '</td>';
+    html += '<td class="r">–</td>';
+    html += '<td class="r">' + fTotal + '</td>';
+    html += '<td class="r">' + fInfo[1].toFixed(1).replace('.', ',') + ' kg</td>';
+    html += '<td class="r">' + fW.toFixed(1).replace('.', ',') + ' kg</td>';
+    html += '<td class="r">' + fmtInt(fInfo[2]) + ' kr</td>';
+    html += '<td class="r">' + fmtInt(fPrice) + ' kr</td>';
+    html += '</tr>';
+  }
+
+  tbody.innerHTML = html;
+}
+
+function id15_addToOrder() {
+  if (id15_selectedIdx < 0) return;
+  var c = id15_options[id15_selectedIdx].combo;
+  var parts = id15_getItemParts(c);
+  id15_order.push({
+    combo: c,
+    parts: parts,
+    qty: id15_qty,
+    fylgiQty: id15_fylgiQty,
+    label: c[0].toFixed(2).replace('.', ',') + ' – ' + c[1].toFixed(2).replace('.', ',') + ' m'
+  });
+  id15_renderOrder();
+  document.getElementById('id15-order-wrap').classList.remove('id15-hidden');
+  id15_resetForNew();
+}
+
+function id15_removeOrderItem(idx) {
+  id15_order.splice(idx, 1);
+  if (id15_order.length === 0) {
+    document.getElementById('id15-order-wrap').classList.add('id15-hidden');
+  }
+  id15_renderOrder();
+}
+
+function id15_toggleDetail(idx) {
+  var el = document.getElementById('id15-detail-' + idx);
+  if (el) el.classList.toggle('open');
+}
+
+function id15_renderOrder() {
+  var days = getRentalDays();
+  var discount = parseFloat(document.getElementById('discountInput').value) || 0;
+
+  var itemsHtml = '';
+  var grandTotal = 0;
+  var grandWeight = 0;
+  var allParts = {};
+
+  id15_order.forEach(function(order, oi) {
+    var dayTotal = 0;
+    var orderWeight = 0;
+    var keys = ['head_jack', 'base_jack', 'frame133', 'frame100', 'end_frame10', 'diagonal'];
+
+    keys.forEach(function(key) {
+      var perTower = order.parts[key];
+      if (perTower <= 0) return;
+      var info = ID15_PARTS[key];
+      var total = perTower * order.qty;
+      dayTotal += info[2] * total;
+      orderWeight += info[1] * total;
+      allParts[key] = (allParts[key] || 0) + total;
+    });
+
+    // Fylgihlutagrind
+    if (order.fylgiQty > 0) {
+      var fInfo = ID15_PARTS.fylgihluta;
+      dayTotal += fInfo[2] * order.fylgiQty;
+      orderWeight += fInfo[1] * order.fylgiQty;
+      allParts['fylgihluta'] = (allParts['fylgihluta'] || 0) + order.fylgiQty;
+    }
+
+    var rentalCostVal = dayTotal * days;
+    grandTotal += rentalCostVal;
+    grandWeight += orderWeight;
+
+    // Detail table
+    var detailHtml = '<table class="id15-mat-table"><thead><tr><th>Hluti</th><th class="r">Magn</th><th class="r">Verð/dag</th></tr></thead><tbody>';
+    keys.forEach(function(key) {
+      var perTower = order.parts[key];
+      if (perTower <= 0) return;
+      var info = ID15_PARTS[key];
+      var total = perTower * order.qty;
+      detailHtml += '<tr><td>' + info[0] + '</td><td class="r">' + total + '</td><td class="r">' + fmtInt(info[2] * total) + ' kr</td></tr>';
+    });
+    if (order.fylgiQty > 0) {
+      var fInfo2 = ID15_PARTS.fylgihluta;
+      detailHtml += '<tr><td>' + fInfo2[0] + '</td><td class="r">' + order.fylgiQty + '</td><td class="r">' + fmtInt(fInfo2[2] * order.fylgiQty) + ' kr</td></tr>';
+    }
+    detailHtml += '</tbody></table>';
+
+    itemsHtml += '<div class="id15-order-item">';
+    itemsHtml += '<div class="id15-order-header" onclick="id15_toggleDetail(' + oi + ')">';
+    itemsHtml += '<div><span class="id15-order-title">Turn ' + (oi + 1) + ': ' + order.label + '</span>';
+    itemsHtml += ' <span class="id15-order-meta">×' + order.qty + ' · ' + fmtInt(Math.round(dayTotal)) + ' kr/dag</span></div>';
+    itemsHtml += '<button onclick="event.stopPropagation();id15_removeOrderItem(' + oi + ')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:16px;">✕</button>';
+    itemsHtml += '</div>';
+    itemsHtml += '<div class="id15-order-detail" id="id15-detail-' + oi + '">' + detailHtml + '</div>';
+    itemsHtml += '</div>';
+  });
+
+  document.getElementById('id15-order-items').innerHTML = itemsHtml;
+
+  // Summary
+  var discounted = discount > 0 ? grandTotal * (1 - discount / 100) : grandTotal;
+  var summaryHtml = '';
+  summaryHtml += '<div class="id15-summary-row"><span>Heildarþyngd</span><span>' + grandWeight.toFixed(1).replace('.', ',') + ' kg</span></div>';
+  summaryHtml += '<div class="id15-summary-row"><span>Leigutími</span><span>' + days + ' dagar</span></div>';
+  summaryHtml += '<div class="id15-summary-row"><span>Leiguverð (fyrir afslátt)</span><span>' + fmtInt(Math.round(grandTotal)) + ' kr</span></div>';
+  if (discount > 0) {
+    summaryHtml += '<div class="id15-summary-row"><span>Afsláttur</span><span>' + discount + '%</span></div>';
+  }
+  summaryHtml += '<div class="id15-summary-row total"><span>Samtals leiguverð</span><span>' + fmtInt(Math.round(discounted)) + ' kr</span></div>';
+
+  // Combined materials table
+  summaryHtml += '<div class="id15-section-title" style="margin-top:16px;">Samanlagður efnislisti</div>';
+  summaryHtml += '<table class="id15-mat-table"><thead><tr><th>Hluti</th><th class="r">Magn</th><th class="r">Þyngd</th><th class="r">Verð/dag</th></tr></thead><tbody>';
+  var allKeys = ['head_jack', 'base_jack', 'frame133', 'frame100', 'end_frame10', 'diagonal', 'fylgihluta'];
+  allKeys.forEach(function(key) {
+    var total = allParts[key] || 0;
+    if (total <= 0) return;
+    var info = ID15_PARTS[key];
+    summaryHtml += '<tr><td>' + info[0] + '</td><td class="r">' + total + '</td>';
+    summaryHtml += '<td class="r">' + (info[1] * total).toFixed(1).replace('.', ',') + ' kg</td>';
+    summaryHtml += '<td class="r">' + fmtInt(info[2] * total) + ' kr</td></tr>';
+  });
+  summaryHtml += '</tbody></table>';
+
+  document.getElementById('id15-order-summary').innerHTML = summaryHtml;
+}
+
+function id15_resetForNew() {
+  id15_selectedIdx = -1;
+  id15_qty = 1;
+  id15_fylgiQty = 0;
+  id15_options = [];
+  document.getElementById('id15-heightInput').value = '';
+  document.getElementById('id15-options-wrap').classList.add('id15-hidden');
+  document.getElementById('id15-qty-wrap').classList.add('id15-hidden');
+  document.getElementById('id15-heightInput').focus();
+}
+
+function id15_resetCalculator() {
+  id15_order = [];
+  document.getElementById('id15-order-wrap').classList.add('id15-hidden');
+  document.getElementById('id15-order-items').innerHTML = '';
+  document.getElementById('id15-order-summary').innerHTML = '';
+  id15_resetForNew();
+}
+
+// =============================================================================
+// INIT
+// =============================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    initializeDates();
+    document.getElementById('startDate').addEventListener('change', function() { updateRentalDays(); scheduleCalculate(); });
+    document.getElementById('endDate').addEventListener('change', function() { updateRentalDays(); scheduleCalculate(); });
+    document.getElementById('rentalDays').addEventListener('input', function() { updateEndDateFromDays(); scheduleCalculate(); });
+    document.getElementById('discountInput').addEventListener('input', scheduleCalculate);
+
+    // Auto-calculate on mode A/B/C inputs (event delegation)
+    ['pane-A', 'pane-B', 'pane-C'].forEach(function(id) {
+        document.getElementById(id).addEventListener('input', scheduleCalculate);
+        document.getElementById(id).addEventListener('change', scheduleCalculate);
+    });
+
+    // ID-15 height input debounce
+    var id15Timer = null;
+    var id15Input = document.getElementById('id15-heightInput');
+    if (id15Input) {
+      id15Input.addEventListener('input', function() {
+        clearTimeout(id15Timer);
+        id15Timer = setTimeout(id15_findTowers, 350);
+      });
+    }
+
+    // Initial calculation
+    calculate(true);
+});
+</script>
+
+<!-- PDF DIALOG OVERLAY -->
+<div class="pdf-overlay" id="pdfOverlay">
+  <div class="pdf-dialog">
+    <h3>Búa til PDF – valkostir</h3>
+    <p class="pdf-dialog-sub">Veldu hvað á að koma fram í tilboðinu.</p>
+    <label class="pdf-check-row">
+      <input type="checkbox" id="pdfCheckHideZero">
+      Fela línur með magn = 0
+    </label>
+    <div class="pdf-actions">
+      <button type="button" class="pdf-cancel-btn" id="pdfCancelBtn">Hætta við</button>
+      <button type="button" class="pdf-confirm-btn" id="pdfConfirmBtn">⬇ Sækja PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     DEDICATED PDF PRINT BLOCK - only visible when printing
+     ═══════════════════════════════════════════════════════ -->
+<div id="pdf-print-block">
+
+  <!-- Branded header -->
+  <div class="pdf-hdr" style="display:flex;align-items:stretch;border-radius:6px;overflow:hidden;border:1px solid #e0e0e0;margin-bottom:12px;">
+    <div style="width:100%;background:#404042;padding:16px 20px;display:flex;flex-direction:column;justify-content:center;">
+      <h2 style="font-size:20px;font-weight:700;color:#fff;margin:0 0 4px;">Leigutilboð á steypumót</h2>
+      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:3px;">BYKO Leiga &nbsp;·&nbsp; Hünnebeck / Alufort</div>
+      <div id="pdfClientMeta" style="font-size:11px;color:rgba(255,255,255,.7);">–</div>
+    </div>
+  </div>
+
+  <!-- Client info + Layout -->
+  <div class="pdf-top-row" style="width:100%;box-sizing:border-box;">
+    <div class="pdf-box" style="flex:1;">
+      <div class="pdf-box-title">Viðskiptavinur</div>
+      <div class="pdf-client-grid">
+        <span class="cl">Nafn</span><span class="cv" id="pdf-c-name">–</span>
+        <span class="cl">Fyrirtæki</span><span class="cv" id="pdf-c-company">–</span>
+        <span class="cl">Kennitala</span><span class="cv" id="pdf-c-kennitala">–</span>
+        <span class="cl">Sími</span><span class="cv" id="pdf-c-phone">–</span>
+        <span class="cl">Netfang</span><span class="cv" id="pdf-c-email">–</span>
+        <span class="cl">Heimilisfang</span><span class="cv" id="pdf-c-address">–</span>
+        <span class="cl">Úttektaraðili</span><span class="cv" id="pdf-c-uttektar">–</span>
+        <span class="cl">Dagsetning</span><span class="cv" id="pdf-c-date">–</span>
+        <span class="cl">Leigutími</span><span class="cv" id="pdf-c-days">–</span>
+      </div>
+    </div>
+    <div class="pdf-box" style="flex:1;">
+      <div class="pdf-box-title" id="pdf-mode-label">Uppsetning</div>
+      <div class="pdf-layout-box" id="pdf-layout-text"></div>
+    </div>
+  </div>
+
+  <!-- BoQ table -->
+  <div style="margin-bottom:10px;padding:10px 14px;width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-radius:4px;">
+    <div class="pdf-box-title">Efnislisti</div>
+    <table class="pdf-boq-table">
+      <thead>
+        <tr>
+          <th>Leigunr.</th>
+          <th>Lýsing</th>
+          <th style="text-align:right">Magn</th>
+          <th style="text-align:right">Dagverð</th>
+          <th style="text-align:right">Leiguverð</th>
+        </tr>
+      </thead>
+      <tbody id="pdfBoqBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Summary boxes -->
+  <div class="pdf-sum-row" style="width:100%;box-sizing:border-box;">
+    <div class="pdf-sum-box"><div class="pdf-sum-lbl">Leigutími</div><div class="pdf-sum-val" id="pdf-s-days">–</div></div>
+    <div class="pdf-sum-box"><div class="pdf-sum-lbl">Afsláttur</div><div class="pdf-sum-val" id="pdf-s-discount">–</div></div>
+    <div class="pdf-sum-box"><div class="pdf-sum-lbl">Leiguverð fyrir afslátt</div><div class="pdf-sum-val" id="pdf-s-before">–</div></div>
+    <div class="pdf-sum-box accent"><div class="pdf-sum-lbl">Samtals leiguverð</div><div class="pdf-sum-val" id="pdf-s-total">–</div></div>
+  </div>
+
+  <!-- Discount line -->
+  <div class="pdf-discount-line">
+    <span style="font-weight:600;color:#64748b;">AFSLÁTTUR</span>&nbsp;&nbsp;<span id="pdf-discount-val" style="font-weight:700;">0%</span>
+  </div>
+
+  <!-- Signatures -->
+  <div style="display:flex;justify-content:flex-end;">
+    <div class="pdf-sig-section" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;width:50%;padding-top:12px;border-top:1px solid #e0e0e0;">
+      <div>
+        <div class="pdf-sig-lbl">Dagsetning / Staður</div>
+        <div class="pdf-sig-line"></div>
+      </div>
+      <div>
+        <div class="pdf-sig-lbl">Undirskrift viðskiptavinar</div>
+        <div class="pdf-sig-line"></div>
+        <div class="pdf-sig-name" id="pdf-sig-name"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align:center;font-size:10px;color:#999;margin-top:20px;padding-top:10px;border-top:1px solid #eee;">BYKO Leiga · Selhella · Þessi útreikningur er áætlun og gæti breyst við endanlega pöntun.</div>
+
+</div><!-- /pdf-print-block -->
+
+</body>
+</html>

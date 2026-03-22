@@ -18,6 +18,8 @@ import {
   calcFenceGeometry,
   calculateLevelsFromHeight,
   calculateFacadeMaterials,
+  calculateRacks,
+  calculateAccessoryGrids,
 } from '../geometry'
 
 // Formwork
@@ -83,17 +85,17 @@ describe('calcStandardRental', () => {
     expect(calcStandardRental(100, 500, 14, 0)).toBe(0)
   })
 
-  // Real product test: Villalta 160/290M ceiling prop
-  it('ceiling prop 160/290M: 14 days × 10 qty', () => {
-    const prop = LOFTASTODIR[3] // dayRate: 25, weekRate: 93
-    // 14 days → ceil(14/7) = 2 weeks × 93 × 10 = 1860
-    expect(calcStandardRental(prop.dayRate, prop.weekRate, 14, 10)).toBe(1860)
+  // Real product test: Loftastoðir 1,6–2,9M (Galv.) ceiling prop
+  it('ceiling prop 1.6-2.9M Galv: 14 days × 10 qty', () => {
+    const prop = LOFTASTODIR[3] // dayRate: 20, weekRate: 140
+    // 14 days → ceil(14/7) = 2 weeks × 140 × 10 = 2800
+    expect(calcStandardRental(prop.dayRate, prop.weekRate, 14, 10)).toBe(2800)
   })
 
-  it('ceiling prop 160/290M: 5 days × 10 qty', () => {
-    const prop = LOFTASTODIR[3] // dayRate: 25
-    // 5 × 25 × 10 = 1250
-    expect(calcStandardRental(prop.dayRate, prop.weekRate, 5, 10)).toBe(1250)
+  it('ceiling prop 1.6-2.9M Galv: 5 days × 10 qty', () => {
+    const prop = LOFTASTODIR[3] // dayRate: 20
+    // 5 × 20 × 10 = 1000
+    expect(calcStandardRental(prop.dayRate, prop.weekRate, 5, 10)).toBe(1000)
   })
 })
 
@@ -153,18 +155,18 @@ describe('calcFenceRental', () => {
 
   it('plastic fence: different rates', () => {
     const plasticRates = FENCE_PRODUCTS['plastic-fence'].rates
-    // rates = [50, 25, 13, 7, 7, 7, 7, 7, 7, 7, 7, 7]
-    // 60 days: 30×50 + 30×25 = 2250
-    expect(calcFenceRental(60, plasticRates, 1)).toBe(2250)
+    // rates = [80, 40, 20, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+    // 60 days: 30×80 + 30×40 = 3600
+    expect(calcFenceRental(60, plasticRates, 1)).toBe(3600)
   })
 
   it('heavy fence: 365 days × 10 panels', () => {
     const heavyRates = FENCE_PRODUCTS['fence-3500x2000x1.7'].rates
-    // rates = [120, 60, 30, 15, 15, 15, 15, 15, 15, 15, 15, 15]
-    // tiers: 30×120 + 30×60 + 30×30 + 9×30×15 = 3600+1800+900+4050 = 10350
+    // rates = [100, 50, 25, 13, 13, 13, 13, 13, 13, 13, 13, 13]
+    // tiers: 30×100 + 30×50 + 30×25 + 9×30×13 = 3000+1500+750+3510 = 8760
     // But 365 days = 12 full periods (360) + 5 extra days (ignored - max 12 tiers)
     // So 360 days used, remaining 5 days lost
-    const expected12Tiers = 30 * 120 + 30 * 60 + 30 * 30 + 9 * 30 * 15
+    const expected12Tiers = 30 * 100 + 30 * 50 + 30 * 25 + 9 * 30 * 13
     expect(calcFenceRental(365, heavyRates, 10)).toBe(expected12Tiers * 10)
   })
 })
@@ -174,52 +176,52 @@ describe('calcFenceRental', () => {
 // 3. ROLLING SCAFFOLD RENTAL (24h / extra / weekly)
 // ═══════════════════════════════════════════════════
 describe('calcRollingRental', () => {
-  // Narrow 4.5m: { '24h': 7576, extra: 3788, week: 18941 }
+  // Narrow 4.5m: { '24h': 7620, extra: 3810, week: 19051 }
   const narrow45 = NARROW_PRICING['4.5']
 
   it('1 day = 24h price', () => {
-    expect(calcRollingRental(1, narrow45)).toBe(7576)
+    expect(calcRollingRental(1, narrow45)).toBe(7620)
   })
 
   it('2 days = 24h + 1 extra', () => {
-    // 7576 + 3788 = 11364
-    expect(calcRollingRental(2, narrow45)).toBe(11364)
+    // 7620 + 3810 = 11430
+    expect(calcRollingRental(2, narrow45)).toBe(11430)
   })
 
   it('3 days = 24h + 2 extra', () => {
-    // 7576 + 2 × 3788 = 15152
-    expect(calcRollingRental(3, narrow45)).toBe(15152)
+    // 7620 + 2 × 3810 = 15240
+    expect(calcRollingRental(3, narrow45)).toBe(15240)
   })
 
   it('6 days = 24h + 5 extra', () => {
-    // 7576 + 5 × 3788 = 26516
-    expect(calcRollingRental(6, narrow45)).toBe(26516)
+    // 7620 + 5 × 3810 = 26670
+    expect(calcRollingRental(6, narrow45)).toBe(26670)
   })
 
   it('7 days = 1 week price', () => {
-    // floor(7/7) = 1 week, 0 extra → 18941
-    expect(calcRollingRental(7, narrow45)).toBe(18941)
+    // floor(7/7) = 1 week, 0 extra → 19051
+    expect(calcRollingRental(7, narrow45)).toBe(19051)
   })
 
   it('8 days = 1 week + 1 extra day (24h rate)', () => {
-    // 18941 + 7576 = 26517
-    expect(calcRollingRental(8, narrow45)).toBe(26517)
+    // 19051 + 7620 = 26671
+    expect(calcRollingRental(8, narrow45)).toBe(26671)
   })
 
   it('14 days = 2 weeks', () => {
-    // 2 × 18941 = 37882
-    expect(calcRollingRental(14, narrow45)).toBe(37882)
+    // 2 × 19051 = 38102
+    expect(calcRollingRental(14, narrow45)).toBe(38102)
   })
 
   it('10 days = 1 week + 3 extra days', () => {
-    // 18941 + 3 × 7576 = 41669
-    expect(calcRollingRental(10, narrow45)).toBe(41669)
+    // 19051 + 3 × 7620 = 41911
+    expect(calcRollingRental(10, narrow45)).toBe(41911)
   })
 
   it('wide 6.5m: 5 days', () => {
     const wide65 = WIDE_PRICING['6.5']
-    // 11298 + 4 × 5649 = 33894
-    expect(calcRollingRental(5, wide65)).toBe(33894)
+    // 12157 + 4 × 6079 = 36473
+    expect(calcRollingRental(5, wide65)).toBe(36473)
   })
 
   it('quickly scaffold: 7 days', () => {
@@ -323,43 +325,49 @@ describe('calculateLevelsFromHeight', () => {
     expect(result).toHaveProperty('levels07m')
     expect(result).toHaveProperty('legType')
     expect(result).toHaveProperty('actualHeight')
+    expect(result).toHaveProperty('legs50cm')
+    expect(result).toHaveProperty('legs100cm')
     expect(['50cm', '100cm']).toContain(result.legType)
   })
 
-  it('8m target: should use ~3 × 2m levels', () => {
+  it('8m target: should use 3 × 2m + 2 × 0.7m levels', () => {
     const result = calculateLevelsFromHeight(8)
-    // h = l2×2 + l07×0.7 + leg + 2.0
-    // 3×2 + 0×0.7 + 0.34 + 2 = 8.34 (close to 8)
-    // or 3×2 + 0×0.7 + 0.69 + 2 = 8.69
-    expect(result.levels2m).toBeGreaterThanOrEqual(2)
-    expect(result.levels2m).toBeLessThanOrEqual(4)
-    expect(result.actualHeight).toBeGreaterThan(7)
-    expect(result.actualHeight).toBeLessThan(10)
+    // h = l2×2 + l07×0.7 + leg.actual (NO +2.0)
+    // 3×2 + 2×0.7 + 0.69 = 8.09 (diff 0.09 + 0.02 pen = 0.11, better than 4×2+0+0.34=8.34 diff 0.34)
+    expect(result.levels2m).toBe(3)
+    expect(result.levels07m).toBe(2)
+    expect(result.legType).toBe('100cm')
+    expect(result.actualHeight).toBeCloseTo(8.09, 1)
   })
 
-  it('4m target: optimizer finds closer match with 0.7m levels', () => {
+  it('4m target: optimizer finds optimal combo', () => {
     const result = calculateLevelsFromHeight(4)
-    // Optimizer: 0×2m + 2×0.7m + 0.69 + 2.0 = 4.09 (diff 0.09 + 0.2 complexity = 0.29)
-    // Better than: 1×2m + 0×0.7m + 0.34 + 2.0 = 4.34 (diff 0.34)
-    expect(result.levels2m).toBe(0)
+    // 2×2m + 0×0.7m + 0.34 = 4.34 (diff 0.34)
+    // 1×2m + 2×0.7m + 0.69 = 4.09 (diff 0.09 + 0.02 pen = 0.11)
+    expect(result.levels2m).toBe(1)
     expect(result.levels07m).toBe(2)
     expect(result.legType).toBe('100cm')
     expect(result.actualHeight).toBeCloseTo(4.09, 1)
   })
 
-  it('12m target: ~5 levels', () => {
+  it('12m target: ~6 levels', () => {
     const result = calculateLevelsFromHeight(12)
     const expectedApprox = result.levels2m * 2 + result.levels07m * 0.7
-    expect(expectedApprox).toBeGreaterThanOrEqual(8)
-    expect(result.actualHeight).toBeGreaterThan(10)
-    expect(result.actualHeight).toBeLessThan(14)
+    expect(expectedApprox).toBeGreaterThanOrEqual(10)
+    expect(result.actualHeight).toBeGreaterThan(11)
+    expect(result.actualHeight).toBeLessThan(13)
   })
 
-  it('actual height formula is correct', () => {
+  it('actual height formula is correct (no +2.0)', () => {
     const result = calculateLevelsFromHeight(10)
     const legActual = result.legType === '50cm' ? 0.34 : 0.69
-    const computed = result.levels2m * 2 + result.levels07m * 0.7 + legActual + 2.0
+    const computed = result.levels2m * 2 + result.levels07m * 0.7 + legActual
     expect(result.actualHeight).toBeCloseTo(computed, 5)
+  })
+
+  it('min height constraint: height >= target - 0.2', () => {
+    const result = calculateLevelsFromHeight(6)
+    expect(result.actualHeight).toBeGreaterThanOrEqual(5.8)
   })
 })
 
@@ -371,14 +379,18 @@ describe('calculateFacadeMaterials', () => {
   it('20m facade, 3 levels 2m, 0 levels 0.7m, 2 endcaps, first facade', () => {
     const mats = calculateFacadeMaterials(20, 3, 0, 2, true)
     // bays = ceil(20/1.8) = 12, framesPerLevel = bays + 1 = 13
+    // pairedLevels = min(3, 0) = 0, onlyLevels2m = 3
 
     expect(mats['Rammar 2,0m']).toBe(13 * 3) // 39
     expect(mats['Rammar 0,7m']).toBe(0)
-    expect(mats['Stigapallar 1,8m']).toBe(3) // isFirst: levels2m
-    expect(mats['Stigar 2,0m']).toBe(3) // isFirst: levels2m
+    expect(mats['Stigapallar 1,8m']).toBe(3) // isFirst: stairBoards = levels2m
+    expect(mats['Stigar 2,7m']).toBe(0) // pairedLevels = 0
+    expect(mats['Stigar 2,0m']).toBe(3) // onlyLevels2m = 3
     expect(mats['Gólfborð 1,8m']).toBe(3 * 2 * 12 - 3) // 72 - 3 = 69
     expect(mats['Tvöföld handrið']).toBe((3 + 1) * 12) // 48
     expect(mats['Handriðastoðir']).toBe(13 + 2) // bays+1 + endcaps
+    expect(mats['Veggfestingar 50cm']).toBe(11) // all anchors go to 50cm
+    expect(mats['Klemmur']).toBe(11) // same as anchors
     expect(mats['Endalokur']).toBe(2 * 3 * 2) // 12
     expect(mats['Splitti']).toBe((13 * 3 + 13 * 0) * 2) // 78
     expect(mats['LEGS_TOTAL']).toBe(13 * 2) // 26
@@ -390,23 +402,31 @@ describe('calculateFacadeMaterials', () => {
 
     expect(mats['Stigapallar 1,8m']).toBe(0)
     expect(mats['Stigar 2,0m']).toBe(0)
+    expect(mats['Stigar 2,7m']).toBe(0)
     // No stair deduction
     expect(mats['Gólfborð 1,8m']).toBe(3 * 2 * bays)
+  })
+
+  it('paired levels: 2m + 0.7m → Stigar 2,7m', () => {
+    // 3 levels 2m + 2 levels 0.7m → pairedLevels = 2, onlyLevels2m = 1
+    const mats = calculateFacadeMaterials(20, 3, 2, 0, true)
+    expect(mats['Stigar 2,7m']).toBe(2) // pairedLevels
+    expect(mats['Stigar 2,0m']).toBe(1) // onlyLevels2m
   })
 
   it('1-level scaffold: no wall anchors', () => {
     const mats = calculateFacadeMaterials(10, 1, 0, 0, true)
     expect(mats['Veggfestingar 50cm']).toBe(0)
-    expect(mats['Veggfestingar 100cm']).toBe(0)
+    expect(mats['Klemmur']).toBe(0)
   })
 
-  it('multi-level scaffold: has wall anchors', () => {
+  it('multi-level scaffold: has wall anchors and klemmur', () => {
     const mats = calculateFacadeMaterials(20, 3, 0, 0, true)
     // wallHeight = 3*2 + 0*0.7 + 2.0 = 8.0
     // wallArea = 20 * 8 = 160
     // anchors = round(160/15) = round(10.67) = 11
-    expect(mats['Veggfestingar 50cm']).toBe(Math.round(11 / 2))
-    expect(mats['Veggfestingar 100cm']).toBe(11 - Math.round(11 / 2))
+    expect(mats['Veggfestingar 50cm']).toBe(11) // all anchors go to 50cm
+    expect(mats['Klemmur']).toBe(11) // equal to anchors
   })
 
   it('with 0.7m levels', () => {
@@ -415,6 +435,58 @@ describe('calculateFacadeMaterials', () => {
     expect(mats['Rammar 2,0m']).toBe(7 * 2) // 14
     expect(mats['Rammar 0,7m']).toBe(7 * 1) // 7
     expect(mats['Splitti']).toBe((7 * 2 + 7 * 1) * 2) // 42
+  })
+})
+
+
+// ═══════════════════════════════════════════════════
+// 7b. RACK AND ACCESSORY GRID CALCULATIONS
+// ═══════════════════════════════════════════════════
+describe('calculateRacks', () => {
+  it('calculates frame racks from 2m and 0.7m frames', () => {
+    const combined: Record<string, number> = {
+      'Rammar 2,0m': 39,
+      'Rammar 0,7m': 7,
+      'Gólfborð 1,8m': 69,
+      'Stigapallar 1,8m': 3,
+      'Tvöföld handrið': 48,
+    }
+    calculateRacks(combined)
+    // frameSlots = 39*1 + 7*0.5 = 42.5 → ceil(42.5/50) = 1
+    expect(combined['Rekkar fyrir ramma 50 stk.']).toBe(1)
+    // boards = (69 + 3) / 40 = 1.8 → ceil = 2
+    expect(combined['Rekkar fyrir gólf 40 stk.']).toBe(2)
+    // handrails = 48/38 = 1.26 → ceil = 2
+    expect(combined['Rekki f/tvöföld handrið 40 stk.']).toBe(2)
+  })
+
+  it('zero quantities produce zero racks', () => {
+    const combined: Record<string, number> = {}
+    calculateRacks(combined)
+    expect(combined['Rekkar fyrir ramma 50 stk.']).toBe(0)
+    expect(combined['Rekkar fyrir gólf 40 stk.']).toBe(0)
+    expect(combined['Rekki f/tvöföld handrið 40 stk.']).toBe(0)
+  })
+})
+
+describe('calculateAccessoryGrids', () => {
+  it('calculates grids from small items', () => {
+    const combined: Record<string, number> = {
+      'Lappir 50cm': 26,
+      'Lappir 100cm': 0,
+      'Veggfestingar 50cm': 11,
+      'Endalokur': 12,
+      'Handriðastoðir': 15,
+    }
+    calculateAccessoryGrids(combined, true)
+    // total = 26+0+11+0+12+0+15 = 64 → ceil(64/100) = 1, but max(1,1) = 1
+    expect(combined['Fylgihlutagrind']).toBe(1)
+  })
+
+  it('no facades produces zero', () => {
+    const combined: Record<string, number> = { 'Lappir 50cm': 26 }
+    calculateAccessoryGrids(combined, false)
+    expect(combined['Fylgihlutagrind']).toBe(0)
   })
 })
 
@@ -638,15 +710,15 @@ describe('Ceiling props data', () => {
   })
 
   it('ceiling props rental calculation: 5 days, 20 props', () => {
-    const prop = LOFTASTODIR[0] // Villalta 070/120M: day 16, week 60
+    const prop = LOFTASTODIR[0] // 0.7-1.2M (Málað): day 16, week 112
     // 5 days × 16 × 20 = 1600
     expect(calcStandardRental(prop.dayRate, prop.weekRate, 5, 20)).toBe(1600)
   })
 
   it('ceiling props rental calculation: 14 days, 20 props', () => {
-    const prop = LOFTASTODIR[0] // dayRate: 16, weekRate: 60
-    // ceil(14/7) = 2 weeks × 60 × 20 = 2400
-    expect(calcStandardRental(prop.dayRate, prop.weekRate, 14, 20)).toBe(2400)
+    const prop = LOFTASTODIR[0] // dayRate: 16, weekRate: 112
+    // ceil(14/7) = 2 weeks × 112 × 20 = 4480
+    expect(calcStandardRental(prop.dayRate, prop.weekRate, 14, 20)).toBe(4480)
   })
 })
 
@@ -840,13 +912,13 @@ describe('End-to-end scenarios', () => {
     expect(geo.stones).toBe(59)
     expect(geo.clamps).toBe(57)
 
-    // Fence panels: 90 days = 30×120 + 30×60 + 30×30 = 6300 per panel
+    // Fence panels: 90 days = 30×100 + 30×50 + 30×25 = 5250 per panel
     const fenceRental = calcFenceRental(90, fenceProduct.rates, geo.panels)
-    expect(fenceRental).toBe((30 * 120 + 30 * 60 + 30 * 30) * 58) // 365400
+    expect(fenceRental).toBe((30 * 100 + 30 * 50 + 30 * 25) * 58) // 304500
 
     // Stones: same tiers for 59 stones
     const stoneRental = calcFenceRental(90, stoneProduct.rates, geo.stones)
-    const expectedStone = (30 * 30 + 30 * 15 + 30 * 8) * 59
+    const expectedStone = (30 * 20 + 30 * 10 + 30 * 5) * 59
     expect(stoneRental).toBe(expectedStone)
 
     // Gate: 1 gate
@@ -881,26 +953,26 @@ describe('End-to-end scenarios', () => {
     const total = scaffoldCost + legsCost
 
     // 10 days: 1 week + 3 extra
-    // scaffold: 18941 + 3 × 7576 = 41669
+    // scaffold: 19051 + 3 × 7620 = 41911
     // legs: 1134 + 3 × 453 = 2493
-    expect(scaffoldCost).toBe(41669)
+    expect(scaffoldCost).toBe(41911)
     expect(legsCost).toBe(2493)
-    expect(total).toBe(44162)
-    expect(formatKr(total)).toBe('44.162 kr')
+    expect(total).toBe(44404)
+    expect(formatKr(total)).toBe('44.404 kr')
   })
 
-  it('Ceiling props: 20 Villalta 200/350M + 8 HT-20 beams, 21 days', () => {
-    const prop = LOFTASTODIR[4] // 200/350M: dayRate 30, weekRate 112
-    const beam = MOTABITAR[0] // First beam
+  it('Ceiling props: 20 Galv 2.0-3.5M + 8 HT-20 beams, 21 days', () => {
+    const prop = LOFTASTODIR[4] // 2,0–3,5M (Galv.): dayRate 20, weekRate 140
+    const beam = MOTABITAR[0] // HT-20 2.45m: dayRate 17, weekRate 119
 
     const propCost = calcStandardRental(prop.dayRate, prop.weekRate, 21, 20)
     const beamCost = calcStandardRental(beam.dayRate, beam.weekRate, 21, 8)
 
     // 21 days = ceil(21/7) = 3 weeks
-    // Props: 112 × 3 × 20 = 6720
-    expect(propCost).toBe(6720)
+    // Props: 140 × 3 × 20 = 8400
+    expect(propCost).toBe(8400)
 
-    // Beams: beam.weekRate × 3 × 8
+    // Beams: 119 × 3 × 8 = 2856
     expect(beamCost).toBe(beam.weekRate * 3 * 8)
 
     const total = propCost + beamCost

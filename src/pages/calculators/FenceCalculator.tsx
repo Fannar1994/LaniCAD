@@ -42,6 +42,7 @@ export function FenceCalculator() {
   const [saving, setSaving] = useState(false)
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
+  const [showBreakdown, setShowBreakdown] = useState(false)
 
   const fenceType = FENCE_TYPES.find(t => t.key === selectedType)!
   const fenceProduct = FENCE_PRODUCTS[fenceType.productKey]
@@ -85,6 +86,32 @@ export function FenceCalculator() {
       })
     }
 
+    // Racks — auto-calculated based on fence type
+    const fenceTypeKey = FENCE_TYPES.find(t => t.key === selectedType)?.key ?? ''
+    if (fenceTypeKey.startsWith('standard')) {
+      const rackProduct = FENCE_PRODUCTS['rack-fence']
+      const rackQty = Math.ceil(geometry.panels / 25)
+      if (rackQty > 0) {
+        items.push({
+          product: rackProduct,
+          qty: rackQty,
+          rentalCost: calcFenceRental(effectiveDays, rackProduct.rates, rackQty),
+          saleTotal: getPrice(rackProduct) * rackQty,
+        })
+      }
+    } else if (fenceTypeKey === 'queue') {
+      const rackProduct = FENCE_PRODUCTS['rack-queue']
+      const rackQty = Math.ceil(geometry.panels / 15)
+      if (rackQty > 0) {
+        items.push({
+          product: rackProduct,
+          qty: rackQty,
+          rentalCost: calcFenceRental(effectiveDays, rackProduct.rates, rackQty),
+          saleTotal: getPrice(rackProduct) * rackQty,
+        })
+      }
+    }
+
     // Gate
     if (includeGate) {
       const gateProduct = FENCE_PRODUCTS['walking-gate']
@@ -119,7 +146,7 @@ export function FenceCalculator() {
     }
 
     return items
-  }, [fenceProduct, geometry, effectiveDays, stoneType, includeGate, includeWheels, includeLock, priceMode])
+  }, [fenceProduct, geometry, effectiveDays, stoneType, includeGate, includeWheels, includeLock, priceMode, selectedType])
 
   const totalRental = lines.reduce((sum, l) => sum + l.rentalCost, 0)
   const totalSale = lines.reduce((sum, l) => sum + l.saleTotal, 0)
@@ -409,6 +436,118 @@ export function FenceCalculator() {
             </tfoot>
           </table>
         </div>
+      </div>
+
+      {/* Discount note + period breakdown */}
+      <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
+        <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-4 py-2 text-sm text-amber-800">
+          <span>💡</span>
+          <span><strong>Ábending:</strong> Leiguverð lækkar sjálfkrafa eftir leigutíma. Sjá nánar í sundurliðun eftir tímabilum.</span>
+        </div>
+
+        <button
+          onClick={() => setShowBreakdown(!showBreakdown)}
+          className="flex items-center gap-2 text-sm font-medium text-brand-dark hover:text-brand-accent transition"
+        >
+          <span>{showBreakdown ? '▲' : '▼'}</span>
+          Sjá sundurliðun eftir tímabilum
+        </button>
+
+        {showBreakdown && (() => {
+          const numPeriods = Math.min(Math.ceil(effectiveDays / 30), 12)
+          const CHUNK = 6
+
+          // Pre-calculate period data
+          const dailyTotals: number[] = []
+          const periodCosts: number[] = []
+          for (let p = 0; p < numPeriods; p++) {
+            let dailyTotal = 0
+            for (const line of lines) {
+              dailyTotal += line.product.rates[p] * line.qty
+            }
+            dailyTotals.push(dailyTotal)
+            const remaining = effectiveDays - p * 30
+            const pDays = remaining > 0 ? Math.min(remaining, 30) : 0
+            periodCosts.push(dailyTotal * pDays)
+          }
+
+          const numChunks = Math.ceil(numPeriods / CHUNK)
+
+          return (
+            <div className="space-y-4 overflow-x-auto">
+              {Array.from({ length: numChunks }, (_, c) => {
+                const pFrom = c * CHUNK
+                const pTo = Math.min(pFrom + CHUNK, numPeriods)
+                return (
+                  <table key={c} className="w-full text-xs border-collapse">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium text-gray-600 border border-gray-200">Vara</th>
+                        <th className="px-3 py-2 text-right font-medium text-gray-600 border border-gray-200">Magn</th>
+                        {Array.from({ length: pTo - pFrom }, (_, pi) => {
+                          const p = pFrom + pi
+                          const pStart = p * 30 + 1
+                          const pEnd = Math.min((p + 1) * 30, effectiveDays)
+                          return (
+                            <th key={p} className="px-3 py-2 text-right font-medium text-gray-600 border border-gray-200">
+                              Dagar {pStart}–{pEnd}
+                            </th>
+                          )
+                        })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lines.map((line, i) => (
+                        <tr key={i}>
+                          <td className="px-3 py-1.5 border border-gray-200">{line.product.description}</td>
+                          <td className="px-3 py-1.5 text-right border border-gray-200">{line.qty}</td>
+                          {Array.from({ length: pTo - pFrom }, (_, pi) => {
+                            const p = pFrom + pi
+                            const dailyCost = line.product.rates[p] * line.qty
+                            return (
+                              <td key={p} className="px-3 py-1.5 text-right border border-gray-200">
+                                {formatKr(dailyCost)} <span className="text-gray-400">({line.product.rates[p]} kr/d)</span>
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      ))}
+                      <tr className="bg-gray-50 font-semibold">
+                        <td colSpan={2} className="px-3 py-1.5 border border-gray-200">Samtals dagleiga</td>
+                        {Array.from({ length: pTo - pFrom }, (_, pi) => (
+                          <td key={pi} className="px-3 py-1.5 text-right border border-gray-200">
+                            {formatKr(dailyTotals[pFrom + pi])} kr
+                          </td>
+                        ))}
+                      </tr>
+                      <tr className="bg-gray-50 font-semibold">
+                        <td colSpan={2} className="px-3 py-1.5 border border-gray-200">Samt.kostn.pr.mán</td>
+                        {Array.from({ length: pTo - pFrom }, (_, pi) => (
+                          <td key={pi} className="px-3 py-1.5 text-right border border-gray-200">
+                            {formatKr(periodCosts[pFrom + pi])} kr
+                          </td>
+                        ))}
+                      </tr>
+                      <tr className="bg-brand-accent/10 font-bold">
+                        <td colSpan={2} className="px-3 py-1.5 border border-gray-200">Heildarkostnaður</td>
+                        {Array.from({ length: pTo - pFrom }, (_, pi) => {
+                          const p = pFrom + pi
+                          let cumulative = 0
+                          for (let pp = 0; pp <= p; pp++) cumulative += periodCosts[pp]
+                          return (
+                            <td key={pi} className="px-3 py-1.5 text-right border border-gray-200">
+                              {formatKr(cumulative)} kr
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    </tbody>
+                  </table>
+                )
+              })}
+            </div>
+          )
+        })()}
       </div>
     </div>
   )

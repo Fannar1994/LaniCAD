@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loftastoðir</title>
+<link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap');
+
+:root {
+  --color-border: #ddd;
+  --color-surface: #fafafa;
+  --color-bg: #f2f4f7;
+  --color-muted: #666;
+  --color-dark: #404042;
+  --color-accent: #f5c800;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Barlow', system-ui, Arial, sans-serif; background: var(--color-bg); color: #1a1a1a; padding: 20px; }
+
+/* ===== CONTAINER ===== */
+.container { max-width: 1200px; margin: 0 auto; }
+
+/* ===== HEADER ===== */
+.calc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 28px; background: var(--color-dark);
+  border-radius: var(--radius-lg);
+  position: relative; overflow: hidden; margin-bottom: 16px;
+}
+.calc-header::before { content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%; background: var(--color-accent); }
+.calc-header::after {
+  content: ''; position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size: 28px 28px; pointer-events: none;
+}
+.calc-header-left { position: relative; z-index: 1; }
+.calc-header-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: var(--color-accent); margin-bottom: 4px; }
+.calc-header h2 { margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 700; color: #fff; line-height: 1; }
+.calc-header-sub { font-size: 12px; color: rgba(255,255,255,.45); margin-top: 5px; }
+.calc-header-right { position: relative; z-index: 1; display: flex; gap: 8px; }
+.btn-header { padding: 9px 16px; border: 1.5px solid rgba(255,255,255,.25); border-radius: var(--radius-md); background: transparent; color: #fff; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: .5px; cursor: pointer; transition: background .2s, border-color .2s; text-transform: uppercase; }
+.btn-header:hover { background: rgba(255,255,255,.1); border-color: var(--color-accent); }
+.btn-header.accent { background: var(--color-accent); color: var(--color-dark); border-color: var(--color-accent); }
+.btn-header.accent:hover { opacity: .85; }
+
+/* ===== RESTORE BANNER ===== */
+.restore-banner {
+  display: none; align-items: center; gap: 12px;
+  background: #fffbe6; border: 1.5px solid var(--color-accent);
+  border-radius: var(--radius-md); padding: 12px 18px;
+  margin-bottom: 16px; font-size: 13px; color: #856404; flex-wrap: wrap;
+}
+.restore-banner span { flex: 1; }
+.restore-banner .banner-actions { display: flex; gap: 8px; }
+.btn-restore { padding: 7px 14px; border-radius: var(--radius-sm); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; cursor: pointer; border: none; }
+.btn-restore.yes { background: var(--color-accent); color: var(--color-dark); }
+.btn-restore.no  { background: transparent; color: var(--color-muted); border: 1px solid #ccc; }
+
+/* ===== CARD ===== */
+.card { background: #fff; border-radius: var(--radius-lg); box-shadow: 0 2px 10px rgba(0,0,0,.06); margin-bottom: 16px; overflow: hidden; }
+.card-header {
+  background: var(--color-dark); color: #fff; padding: 12px 22px;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px;
+  letter-spacing: .5px; text-transform: uppercase;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.card-header .badge { font-family: 'Barlow', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1px; background: var(--color-accent); color: var(--color-dark); padding: 3px 12px; border-radius: 20px; }
+.card-body { padding: 18px 22px; }
+
+/* ===== SECTION TITLE ===== */
+.section-title {
+  background: var(--color-dark); color: #fff;
+  padding: 14px 22px 14px 28px;
+  border-radius: var(--radius-lg);
+  margin-top: 20px; margin-bottom: 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+  display: flex; justify-content: space-between; align-items: center;
+  position: relative; overflow: hidden;
+}
+.section-title::before { content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%; background: var(--color-accent); }
+.section-title .count { font-family: 'Barlow', sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 1px; background: rgba(255,255,255,.15); padding: 3px 12px; border-radius: 20px; }
+.section-badge { font-family: 'Barlow', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; background: var(--color-accent); color: var(--color-dark); padding: 3px 12px; border-radius: 20px; margin-left: 4px; }
+
+/* ===== PRODUCT GRID ===== */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; margin-bottom: 8px; }
+
+/* ===== PRODUCT CARD ===== */
+.p-card { border: 1.5px solid var(--color-border); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 8px; transition: border-color .2s, box-shadow .2s; background: #fff; }
+.p-card:hover { border-color: var(--color-dark); box-shadow: 0 4px 14px rgba(64,64,66,.12); }
+.p-card.hidden { display: none; }
+.p-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+.p-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: var(--color-dark); line-height: 1.25; flex: 1; }
+.btn-info { background: none; border: 1.5px solid var(--color-border); border-radius: 50%; width: 24px; height: 24px; font-size: 11px; color: var(--color-muted); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: border-color .2s, color .2s; margin-top: 1px; }
+.btn-info:hover { border-color: var(--color-dark); color: var(--color-dark); }
+.p-id { font-size: 11px; color: var(--color-muted); letter-spacing: .3px; }
+.p-specs { display: flex; flex-direction: column; gap: 2px; margin: 2px 0; }
+.spec { font-size: 12px; color: #555; line-height: 1.5; }
+.spec .spec-lbl { color: var(--color-dark); font-weight: 600; }
+
+/* Class badges */
+.cls { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; color: #fff; vertical-align: middle; }
+.cls-A  { background: #4caf50; } .cls-B  { background: #2196f3; }
+.cls-BD { background: #9c27b0; } .cls-CD { background: #ff9800; }
+.cls-CE { background: #e91e63; } .cls-D  { background: #f44336; }
+.cls-E  { background: #795548; }
+/* ID15 type badges */
+.cls-frame { background: #1565c0; } .cls-brace { background: #558b2f; }
+.cls-base  { background: #6a1fa0; } .cls-head  { background: #00838f; }
+.cls-rack  { background: #37474f; }
+
+/* Pricing */
+.p-pricing { display: flex; flex-direction: column; gap: 2px; font-size: 12px; padding: 4px 0; color: var(--color-muted); }
+.p-sale { font-size: 13px; } .p-sale .sale-text { font-weight: 600; color: var(--color-muted); }
+.p-sale .sale-text strong { color: var(--color-dark); }
+
+/* ===== STEPPER INPUT ===== */
+.num-wrap { display: flex; border: 1px solid #ccc; border-radius: var(--radius-md); overflow: hidden; background: #fff; transition: border-color .2s; }
+.num-wrap:focus-within { border-color: var(--color-dark); }
+.num-wrap input { flex: 1; border: none; padding: 9px 10px; font-family: 'Barlow', sans-serif; font-size: 14px; font-weight: 500; outline: none; background: transparent; min-width: 0; text-align: center; }
+.num-arrows { display: flex; flex-direction: column; border-left: 1px solid #eee; flex-shrink: 0; }
+.num-arrows button { background: none; border: none; width: 32px; height: 21px; cursor: pointer; font-size: 9px; color: #888; display: flex; align-items: center; justify-content: center; transition: background .15s; padding: 0; }
+.num-arrows button:hover { background: #f5f5f5; color: var(--color-dark); }
+.num-arrows button:first-child { border-bottom: 1px solid #eee; }
+
+/* Qty row */
+.p-qty { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--color-border); }
+.p-qty label { font-size: 12px; color: var(--color-muted); font-weight: 500; flex: 1; }
+.p-qty input[type="number"] { width: 80px; flex-shrink: 0; padding: 8px 10px; border: 1px solid #ccc; border-radius: var(--radius-md); font-family: 'Barlow', sans-serif; font-size: 14px; font-weight: 500; text-align: center; background: #fff; outline: none; transition: border-color .2s; }
+.p-qty input[type="number"]:focus { border-color: var(--color-dark); }
+.p-qty input[type="number"]::-webkit-outer-spin-button,
+.p-qty input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.p-qty input[type="number"] { -moz-appearance: textfield; }
+
+/* ===== INPUTS / FORMS ===== */
+.input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.input-block { display: flex; flex-direction: column; gap: 5px; }
+.label { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-muted); }
+input[type="date"], input[type="text"] { padding: 10px 12px; border: 1px solid #ccc; border-radius: var(--radius-md); font-family: 'Barlow', sans-serif; font-size: 14px; background: #fff; transition: border-color .2s; width: 100%; }
+input[type="date"]:focus, input[type="text"]:focus { outline: none; border-color: var(--color-dark); }
+.field-hint { font-size: 11px; color: var(--color-muted); margin-top: 3px; font-style: italic; line-height: 1.4; }
+
+/* ===== INFO BOX ===== */
+.info-box { background: #fffbe6; border-left: 4px solid var(--color-accent); border-radius: var(--radius-sm); padding: 14px 18px; font-size: 13px; color: #555; line-height: 1.6; }
+.info-box strong { color: var(--color-dark); font-size: 14px; }
+.info-box ul { margin: 6px 0 0 18px; }
+
+/* ===== FILTER BAR ===== */
+.filter-bar { background: #fff; border-radius: var(--radius-lg); padding: 14px 20px; margin-bottom: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.05); display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; border: 1.5px solid var(--color-border); }
+.filter-group { display: flex; flex-direction: column; gap: 5px; }
+.filter-group.grow { flex: 1; min-width: 150px; }
+.filter-input { padding: 9px 12px; border: 1px solid #ccc; border-radius: var(--radius-md); font-family: 'Barlow', sans-serif; font-size: 14px; background: #fff; transition: border-color .2s; }
+.filter-input:focus { outline: none; border-color: var(--color-dark); }
+.filter-select { padding: 9px 10px; border: 1px solid #ccc; border-radius: var(--radius-md); font-family: 'Barlow', sans-serif; font-size: 14px; background: #fff; color: var(--color-dark); cursor: pointer; outline: none; transition: border-color .2s; }
+.filter-select:focus { border-color: var(--color-dark); }
+.btn-filter-clear { padding: 9px 16px; background: transparent; border: 1px solid #ccc; border-radius: var(--radius-md); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; cursor: pointer; color: var(--color-muted); transition: border-color .2s, color .2s; }
+.btn-filter-clear:hover { border-color: var(--color-dark); color: var(--color-dark); }
+
+/* ===== CLIENT SECTION ===== */
+.client-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.client-grid label { font-family: 'Barlow', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--color-muted); display: flex; flex-direction: column; gap: 5px; }
+.client-grid input { padding: 9px 12px; border: 1px solid #ccc; border-radius: var(--radius-md); font-family: 'Barlow', sans-serif; font-size: 14px; background: #fff; transition: border-color .2s; }
+.client-grid input:focus { outline: none; border-color: var(--color-dark); }
+.client-date-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-bottom: 14px; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--color-muted); }
+.client-date-row input[type="date"] { width: auto; }
+@media (max-width: 700px) { .client-grid { grid-template-columns: 1fr 1fr; } }
+
+/* ===== DISCOUNT ===== */
+.discount-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px dashed var(--color-border); margin-top: 6px; }
+.discount-row label { font-size: 13px; color: #444; flex: 1; }
+.discount-row .num-wrap { width: 110px; flex-shrink: 0; }
+.cost-line.discounted { font-size: 15px; font-weight: 700; color: #166534; }
+.cost-line.discounted .val { color: #166534; }
+
+/* ===== PDF DIALOG ===== */
+.pdf-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; align-items: center; justify-content: center; }
+.pdf-overlay.visible { display: flex; }
+.pdf-box { background: #fff; border-radius: var(--radius-lg); padding: 28px 32px; box-shadow: 0 16px 48px rgba(0,0,0,.3); max-width: 440px; width: 92%; }
+.pdf-box-title { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; color: var(--color-dark); margin: 0 0 3px; }
+.pdf-box-sub { font-size: 13px; color: var(--color-muted); margin: 0 0 18px; }
+.pdf-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--color-muted); margin: 14px 0 8px; }
+.pdf-check-row { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: var(--radius-sm); font-size: 14px; cursor: pointer; transition: background .15s; }
+.pdf-check-row:hover { background: #f4f6f9; }
+.pdf-check-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--color-dark); cursor: pointer; flex-shrink: 0; }
+.pdf-divider { height: 1px; background: var(--color-border); margin: 16px 0; }
+.pdf-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.pdf-cancel-btn { padding: 9px 20px; border-radius: var(--radius-md); border: 1.5px solid var(--color-border); background: #fff; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: .5px; text-transform: uppercase; cursor: pointer; color: var(--color-dark); }
+.pdf-cancel-btn:hover { background: var(--color-surface); }
+.pdf-print-btn { padding: 9px 22px; border-radius: var(--radius-md); border: none; background: var(--color-dark); color: #fff; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: .5px; text-transform: uppercase; cursor: pointer; position: relative; overflow: hidden; }
+.pdf-print-btn::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--color-accent); }
+.pdf-print-btn:hover { background: #555; }
+.pdf-tip { background: #fffbe6; border: 1px solid var(--color-accent); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: #856404; margin-bottom: 14px; }
+
+/* ===== SIGNATURE BLOCK (print only) ===== */
+.print-signature { display: none; }
+@media print {
+  .print-signature { display: block; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+  .print-signature-row { display: flex; gap: 32px; }
+  .print-signature-col { flex: 1; }
+  .print-signature-label { font-size: 11px; color: #666; margin-bottom: 24px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  .print-signature-line { border-bottom: 1px solid #333; margin-bottom: 6px; }
+  .print-signature-name { font-size: 11px; color: #666; }
+}
+
+/* ===== ACTIONS ===== */
+.action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.btn-secondary { flex: 1; min-width: 130px; padding: 13px; background: #fff; color: var(--color-dark); border: 1.5px solid var(--color-border); border-radius: var(--radius-md); font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; cursor: pointer; transition: background .2s, border-color .2s; }
+.btn-secondary:hover { border-color: var(--color-dark); background: var(--color-surface); }
+.btn-accent { flex: 1; min-width: 130px; padding: 13px; background: var(--color-accent); color: var(--color-dark); border: none; border-radius: var(--radius-md); font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; cursor: pointer; transition: opacity .2s; }
+.btn-accent:hover { opacity: .85; }
+
+/* ===== RESULTS ===== */
+#results { opacity: 0; transform: translateY(20px); transition: all .4s ease; }
+#results.show { opacity: 1; transform: translateY(0); }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { background: var(--color-dark); color: #fff; padding: 10px 8px; text-align: left; font-weight: 600; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; }
+tbody td { padding: 8px; border-bottom: 1px solid #eee; color: #444; }
+tbody tr:hover { background: var(--color-surface); }
+
+.cost-box { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 18px 22px; }
+.cost-line { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; color: #444; }
+.cost-line .val { font-weight: 600; color: var(--color-dark); }
+.cost-line.total { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; color: var(--color-dark); border-top: 2px solid var(--color-dark); margin-top: 8px; padding-top: 12px; letter-spacing: .5px; }
+.cost-line.total .val { color: var(--color-dark); }
+.cost-line.sale-total { font-size: 13px; color: var(--color-muted); }
+
+/* ===== CALCULATE BUTTON ===== */
+.btn-calc { width: 100%; padding: 14px; background: var(--color-dark); color: #fff; border: none; border-radius: var(--radius-md); font-size: 16px; font-weight: 700; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; cursor: pointer; transition: transform .1s, box-shadow .2s; margin-top: 16px; text-transform: uppercase; }
+.btn-calc:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(64,64,66,.3); }
+.btn-calc:active { transform: translateY(0); }
+
+/* ===== PRINT BUTTON ===== */
+.btn-print { width: 100%; padding: 14px; background: var(--color-dark); color: #fff; border: none; border-radius: var(--radius-md); font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; position: relative; overflow: hidden; transition: background .2s; margin-top: 0; }
+.btn-print::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--color-accent); }
+.btn-print:hover { background: #555; }
+
+/* ===== TOOLTIP MODAL ===== */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box { background: #fff; border-radius: var(--radius-lg); padding: 24px; max-width: 420px; width: 90%; position: relative; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--color-muted); line-height: 1; transition: color .2s; }
+.modal-close:hover { color: var(--color-dark); }
+.modal-box h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; color: var(--color-dark); margin-bottom: 14px; line-height: 1.2; }
+.tooltip-table { width: 100%; border-collapse: collapse; }
+.tooltip-table td { padding: 6px 8px; font-size: 13px; border-bottom: 1px solid #eee; }
+.tooltip-table td:first-child { color: var(--color-muted); width: 48%; }
+.tooltip-table td:last-child { text-align: right; }
+.tooltip-note { margin-top: 14px; padding: 10px 14px; background: #fffbe6; border-left: 3px solid var(--color-accent); border-radius: 4px; font-size: 12px; color: #555; line-height: 1.5; }
+.tooltip-warn { margin-top: 8px; font-size: 11px; color: var(--color-muted); }
+
+/* ===== EXPORT BUTTONS ===== */
+.export-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.export-btn { flex: 1; min-width: 140px; padding: 12px 18px; border: none; border-radius: var(--radius-md); font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: .5px; cursor: pointer; transition: all .2s; text-align: center; }
+.export-btn.pdf-btn { background: var(--color-dark); color: #fff; }
+.export-btn.pdf-btn:hover { background: #2a2a2c; }
+.export-btn.excel-btn { background: #217346; color: #fff; }
+.export-btn.excel-btn:hover { background: #1a5c38; }
+
+/* ===== TOAST ===== */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--color-dark); color: #fff; padding: 12px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600; opacity: 0; transform: translateY(10px); transition: opacity .3s, transform .3s; pointer-events: none; z-index: 1100; border-left: 4px solid var(--color-accent); }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ===== PRINT ONLY ===== */
+.print-only { display: none; }
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  body { padding: 0; background: #fff; }
+  .container > *:not(.calc-header):not(#print-client-block):not(#results) { display: none !important; }
+  .calc-header { border-radius: 0 !important; margin-bottom: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #print-client-block { display: block !important; margin: 10px 0 14px; padding: 10px 16px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; line-height: 1.8; }
+  #results { opacity: 1 !important; transform: none !important; margin-top: 10px !important; }
+  #results .action-row, .btn-print, .discount-row { display: none !important; }
+  .print-only { display: block !important; }
+  thead th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .cost-box { border: 1px solid #ddd !important; }
+  .card { box-shadow: none !important; }
+  @page { margin: 1.2cm; }
+}
+
+/* ===== PDF OPTIONS — body class toggles ===== */
+body.pdf-hide-sale .p-sale,
+body.pdf-hide-sale #results-body td:last-child { display: none !important; }
+body.pdf-hide-weight .summary-weight-row { display: none !important; }
+body.pdf-hide-sig .print-signature { display: none !important; }
+
+/* ===== HANDBOOK BUTTON ===== */
+.btn-lb { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; background: var(--color-accent); color: var(--color-dark); border: none; border-radius: var(--radius-md); font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .5px; cursor: pointer; transition: opacity .2s; }
+.btn-lb:hover { opacity: .85; }
+
+/* ===== HANDBOOK MODAL ===== */
+.lb-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 3000; display: none; justify-content: center; align-items: flex-start; padding: 24px; }
+.lb-overlay.lb-open { display: flex; }
+.lb-modal { background: #fff; border-radius: 10px; max-width: 860px; width: 100%; max-height: calc(100vh - 48px); display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,.35); }
+.lb-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 3px solid var(--color-accent); flex-shrink: 0; background: var(--color-dark); border-radius: 10px 10px 0 0; }
+.lb-modal-header h2 { margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: #fff; letter-spacing: .5px; }
+.lb-modal-close { background: none; border: none; font-size: 28px; cursor: pointer; color: rgba(255,255,255,.7); line-height: 1; padding: 0 4px; }
+.lb-modal-close:hover { color: var(--color-accent); }
+.lb-modal-body { overflow-y: auto; padding: 20px 28px 32px; font-family: 'Barlow', sans-serif; font-size: 14px; color: #2c3e50; line-height: 1.65; }
+.lb-modal-body h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 19px; font-weight: 700; color: var(--color-dark); border-left: 4px solid var(--color-accent); padding: 6px 0 6px 14px; margin: 28px 0 14px; background: #f9f9f9; }
+.lb-modal-body h3 { font-size: 14px; font-weight: 700; color: var(--color-dark); margin: 18px 0 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+.lb-modal-body ol, .lb-modal-body ul { margin: 8px 0 10px; padding-left: 22px; }
+.lb-modal-body li { margin-bottom: 5px; }
+.lb-modal-body table { width: 100%; border-collapse: collapse; margin: 10px 0 14px; font-size: 13px; }
+.lb-modal-body th { background: var(--color-dark); color: #fff; padding: 8px 10px; text-align: center; font-weight: 700; font-size: 12px; }
+.lb-modal-body th:first-child { text-align: left; }
+.lb-modal-body td { padding: 6px 10px; border: 1px solid #ddd; text-align: center; }
+.lb-modal-body td:first-child { text-align: left; font-weight: 600; }
+.lb-modal-body tr:nth-child(even) td { background: #f7f7f7; }
+.lb-modal-body .lb-note { background: #fffbe6; border-left: 4px solid var(--color-accent); padding: 10px 14px; margin: 12px 0; border-radius: 4px; font-size: 13px; }
+.lb-modal-body .lb-tip { background: #eafaf1; border-left: 4px solid #27ae60; padding: 10px 14px; margin: 10px 0; border-radius: 4px; font-size: 13px; }
+.lb-modal-body .lb-warn { background: #fdf2f2; border-left: 4px solid #e74c3c; padding: 10px 14px; margin: 10px 0; border-radius: 4px; font-size: 13px; color: #922b21; }
+.lb-modal-body .lb-error { color: #c0392b; margin: 6px 0; font-size: 13.5px; }
+.lb-modal-body hr { border: none; border-top: 2px solid var(--color-accent); margin: 28px 0; }
+@media print { .lb-overlay { display: none !important; } }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 700px) {
+  body { padding: 10px; }
+  .product-grid { grid-template-columns: 1fr; }
+  .input-row { grid-template-columns: 1fr; }
+  .calc-header h2 { font-size: 24px; }
+  .filter-bar { flex-direction: column; }
+  .filter-group.grow { width: 100%; }
+}
+/* PDF print block — hidden but renderable for html2canvas */
+#pdf-print-block {
+  overflow: hidden;
+  height: 0;
+  width: 700px;
+  max-width: 700px;
+  box-sizing: border-box;
+  font-family: 'Barlow', system-ui, Arial, sans-serif;
+  font-size: 13px;
+  color: #1e293b;
+  padding: 0 20px;
+  opacity: 0;
+  pointer-events: none;
+}
+#pdf-print-block.pdf-rendering { height: auto; padding: 12px 20px; opacity: 1; pointer-events: auto; }
+#pdf-print-block table { page-break-inside: auto; }
+#pdf-print-block tr { page-break-inside: avoid; }
+#pdf-print-block thead { display: table-header-group; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js" integrity="sha512-MpDFIChbcXl2QgipQrt1VcPHMldRILetapBl5MPCA9Y8r7qvlwx1/Mc9hNTzY+kS5kX6PdoDq41ws1HiVNLdZA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ===== RESTORE BANNER ===== -->
+  <div class="restore-banner" id="restore-banner">
+    <span>💾 Vistað tilboð er til staðar — vilt þú endurheimta það?</span>
+    <div class="banner-actions">
+      <button class="btn-restore yes" onclick="restoreQuote()">Endurheimta</button>
+      <button class="btn-restore no"  onclick="dismissRestore()">Hunsa</button>
+    </div>
+  </div>
+
+  <!-- ===== HEADER ===== -->
+  <div class="calc-header">
+    <div class="calc-header-left">
+      <h2>Loftastoðir</h2>
+      <div class="calc-header-sub">Loftastoðir &amp; mótabitar — verðútreikningur</div>
+    </div>
+    <div class="calc-header-right">
+      <button class="btn-header" onclick="resetAll()">Hreinsa</button>
+      <button class="btn-header accent" onclick="saveQuote()">💾 Vista tilboð</button>
+      <button class="btn-lb" onclick="document.getElementById('lbModal').classList.add('lb-open')">📖 Leiðbeiningar</button>
+    </div>
+  </div>
+
+  <!-- ===== LEIGUTÍMABIL ===== -->
+  <div class="card">
+    <div class="card-header">
+      Leigutímabil
+      <span class="badge" id="rental-days-badge">10 dagar</span>
+    </div>
+    <div class="card-body">
+      <!-- Project name (shows on print) -->
+      <div class="input-block" style="margin-bottom:14px">
+        <label class="label" for="project-name">Verkefnisnafn / Viðskiptavinur (valfrjálst)</label>
+        <input type="text" id="project-name" placeholder="t.d. Suðurgata 12 — Jón Sigurðsson">
+      </div>
+      <!-- Dates -->
+      <div class="input-row">
+        <div class="input-block">
+          <label class="label" for="start-date">Upphafsdagur</label>
+          <input type="date" id="start-date">
+        </div>
+        <div class="input-block">
+          <label class="label" for="end-date">Lokadagur</label>
+          <input type="date" id="end-date">
+        </div>
+      </div>
+      <!-- Days input -->
+      <div class="input-block" style="max-width:320px">
+        <label class="label" for="rental-days">Leigutímabil (dagar)</label>
+        <input type="number" id="rental-days" min="1" value="10" style="margin-top:4px">
+        <div class="field-hint">Breyttu dagsetningum <em>eða</em> sláðu inn dagafjölda — þær uppfærast sjálfkrafa.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SAMTALS (CLIENT INFO + TOTALS) ===== -->
+  <div class="card">
+    <div class="card-header">Samtals</div>
+    <div class="card-body">
+      <div class="client-date-row">
+        <span>Dagsetning tilboðs</span>
+        <input type="date" id="clientDate">
+      </div>
+      <div class="client-grid">
+        <label>Nafn viðskiptavinar
+          <input type="text" id="clientName" placeholder="t.d. Jón Jónsson">
+        </label>
+        <label>Fyrirtæki
+          <input type="text" id="clientCompany" placeholder="t.d. Bygging ehf.">
+        </label>
+        <label>Kennitala
+          <input type="text" id="clientKennitala" placeholder="t.d. 123456-7890">
+        </label>
+        <label>Símanúmer
+          <input type="text" id="clientPhone" placeholder="t.d. 555-1234">
+        </label>
+        <label>Netfang
+          <input type="email" id="clientEmail" placeholder="t.d. jon@bygging.is">
+        </label>
+        <label>Heimilisfang / Verkefni
+          <input type="text" id="clientAddress" placeholder="t.d. Laugavegur 1, Reykjavík">
+        </label>
+        <label>Úttektaraðili
+          <input type="text" id="clientUttektar" placeholder="t.d. Nafn úttektaraðila">
+        </label>
+      </div>
+
+      <div class="cost-box" style="margin-top:18px">
+        <div class="cost-line">
+          <span>Leigutímabil</span>
+          <span class="val" id="summary-days">—</span>
+        </div>
+        <div class="cost-line">
+          <span>Fjöldi vara</span>
+          <span class="val" id="summary-items">—</span>
+        </div>
+        <div class="cost-line">
+          <span>Heildarmæli (kg)</span>
+          <span class="val" id="summary-weight">—</span>
+        </div>
+        <div class="cost-line total">
+          <span>Samtals leiguverð</span>
+          <span class="val" id="total-rental">—</span>
+        </div>
+        <div class="cost-line sale-total">
+          <span>Samtals söluverð</span>
+          <span id="total-sale">—</span>
+        </div>
+        <!-- Discount -->
+        <div class="discount-row">
+          <label for="discount-input" style="font-size:13px;color:#444;flex:1">Afsláttur (%)</label>
+          <input type="number" id="discount-input" min="0" max="100" step="0.5" value="0" style="width:90px;padding:6px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);text-align:center">
+        </div>
+        <div class="cost-line discounted" id="discounted-row" style="display:none">
+          <span>Leiguverð með afslætti</span>
+          <span class="val" id="total-discounted">—</span>
+        </div>
+      </div>
+
+      <!-- Signature block (print only) -->
+      <div class="print-signature">
+        <div class="print-signature-row">
+          <div class="print-signature-col">
+            <div class="print-signature-label">Dagsetning / Staður</div>
+            <div class="print-signature-line"></div>
+          </div>
+          <div class="print-signature-col">
+            <div class="print-signature-label">Undirskrift viðskiptavinar</div>
+            <div class="print-signature-line"></div>
+            <div class="print-signature-name" id="print-sig-name"></div>
+          </div>
+          <div class="print-signature-col">
+            <div class="print-signature-label">Undirskrift BYKO Leiga</div>
+            <div class="print-signature-line"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="export-row" style="margin-bottom:20px">
+    <button class="export-btn pdf-btn" onclick="openPdfDialog()">⬇ Búa til PDF</button>
+    <button class="export-btn excel-btn" onclick="exportExcel()">📊 Flytja í Excel</button>
+  </div>
+
+  <!-- ===== FILTER BAR (Loftastoðir) ===== -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label class="label" for="ls-class-filter">Flokkur</label>
+      <select class="filter-select" id="ls-class-filter" onchange="filterLoftastodir()">
+        <option value="">Allir flokkar</option>
+        <option value="A">Class A</option>
+        <option value="B">Class B</option>
+        <option value="BD">Class B/D</option>
+        <option value="CD">Class C/D</option>
+        <option value="CE">Class C/E</option>
+        <option value="D">Class D</option>
+        <option value="E">Class E</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="label" for="ls-kn-filter">Lágmarks kN (við mesta hæð)</label>
+      <div class="num-wrap" style="width:130px">
+        <input type="number" class="filter-input" id="ls-kn-filter" min="0" placeholder="t.d. 5" style="border:none;padding:8px 10px">
+        <div class="num-arrows">
+          <button type="button" onclick="stepFilterKN(1)">&#9650;</button>
+          <button type="button" onclick="stepFilterKN(-1)">&#9660;</button>
+        </div>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label class="label">&nbsp;</label>
+      <button class="btn-filter-clear" onclick="clearLsFilter()">Hreinsa</button>
+    </div>
+  </div>
+
+  <!-- ===== LOFTASTOÐIR ===== -->
+  <div class="section-title">
+    Loftastoðir
+    <span class="count" id="ls-count"></span>
+  </div>
+  <div class="product-grid" id="loftastodir-grid"></div>
+
+  <!-- ===== MÓTABITAR HT-20 ===== -->
+  <div class="section-title">Mótabitar HT-20</div>
+  <div class="product-grid" id="motabitar-grid"></div>
+
+  <!-- ===== AUKAHLUTIR ===== -->
+  <div class="section-title">Aukahlutir</div>
+  <div class="product-grid" id="aukahlutir-grid"></div>
+
+  <!-- ===== RESULTS (auto-shown) ===== -->
+  <div id="results">
+
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">Efnislisti — Valdar vörur</div>
+      <div class="card-body" style="padding:0;overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Leigunr.</th>
+              <th>Sölunr.</th>
+              <th>Lýsing</th>
+              <th style="text-align:right">Magn</th>
+              <th style="text-align:right">Leiguverð</th>
+              <th style="text-align:right">Söluverð</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /container -->
+
+<!-- ===== PDF EXPORT BLOCK (hidden, used by html2pdf) ===== -->
+<div id="pdf-print-block">
+
+  <!-- Branded header -->
+  <div style="display:flex;align-items:stretch;border-radius:6px;overflow:hidden;border:1px solid #e0e0e0;margin-bottom:12px;">
+    <div style="width:6px;background:#f5c800;flex-shrink:0;"></div>
+    <div style="width:100%;background:#404042;padding:16px 20px;display:flex;flex-direction:column;justify-content:center;">
+      <h2 style="font-size:20px;font-weight:700;color:#fff;margin:0 0 4px;">Leigutilboð — Loftastoðir</h2>
+      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:3px;">BYKO Leiga</div>
+      <div id="pdf-meta" style="font-size:11px;color:rgba(255,255,255,.7);">–</div>
+    </div>
+  </div>
+
+  <!-- Client info cards -->
+  <div style="display:flex;gap:12px;margin-bottom:12px;">
+    <div style="flex:1;border:1px solid #e0e0e0;border-radius:4px;padding:10px 14px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:6px;">Viðskiptavinur</div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:1px 10px;font-size:12px;line-height:1.5;">
+        <span style="color:#64748b;">Nafn</span><span id="pdf-c-name">–</span>
+        <span style="color:#64748b;">Fyrirtæki</span><span id="pdf-c-company">–</span>
+        <span style="color:#64748b;">Kennitala</span><span id="pdf-c-kt">–</span>
+        <span style="color:#64748b;">Úttektaraðili</span><span id="pdf-c-uttektar">–</span>
+        <span style="color:#64748b;">Dagsetning</span><span id="pdf-c-date">–</span>
+      </div>
+    </div>
+    <div style="flex:1;border:1px solid #e0e0e0;border-radius:4px;padding:10px 14px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:6px;">Leiguupplýsingar</div>
+      <div id="pdf-rental-info" style="font-size:12px;line-height:1.5;">–</div>
+    </div>
+  </div>
+
+  <!-- Content area (table) -->
+  <div style="border:1px solid #e0e0e0;border-radius:4px;padding:10px 14px;margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:6px;">Efnislisti</div>
+    <div id="pdf-content"></div>
+  </div>
+
+  <!-- Signature block -->
+  <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;width:50%;padding-top:12px;border-top:1px solid #e0e0e0;">
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:28px;">Dagsetning / Staður</div>
+        <div style="border-bottom:1px solid #cbd5e1;"></div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:28px;">Undirskrift viðskiptavinar</div>
+        <div style="border-bottom:1px solid #cbd5e1;"></div>
+        <div id="pdf-sig-name" style="font-size:11px;color:#64748b;margin-top:4px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align:center;font-size:10px;color:#999;margin-top:20px;padding-top:10px;border-top:1px solid #eee;">BYKO Leiga · Selhella · Þessi útreikningur er áætlun og gæti breyst við endanlega pöntun.</div>
+
+</div>
+
+<!-- ===== PRINT-ONLY CLIENT BLOCK ===== -->
+<div id="print-client-block" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+    <strong id="print-project-title" style="font-size:14px;">Loftastoðir — Byko Leiga</strong>
+    <span id="print-date" style="font-size:12px;color:#666;"></span>
+  </div>
+  <div id="print-client-info"></div>
+</div>
+
+<!-- ===== PDF OPTIONS DIALOG ===== -->
+<div class="pdf-overlay" id="pdf-overlay">
+  <div class="pdf-box">
+    <p class="pdf-box-title">Búa til PDF / Prenta</p>
+    <p class="pdf-box-sub">Veldu hvað á að birtast í tilboðinu.</p>
+    <div class="pdf-tip">💡 <strong>Ábending:</strong> Til að fela vafrabrot — veldu „More settings" og slökktu á „Headers and footers".</div>
+    <div class="pdf-section-label">Valkostir</div>
+    <label class="pdf-check-row">
+      <input type="checkbox" id="pdf-check-sale" checked>
+      Sýna söluverð í efnislista
+    </label>
+    <label class="pdf-check-row">
+      <input type="checkbox" id="pdf-check-weight" checked>
+      Sýna heildarþyngd (kg)
+    </label>
+    <label class="pdf-check-row">
+      <input type="checkbox" id="pdf-check-sig" checked>
+      Undirskriftarblokk
+    </label>
+    <div class="pdf-divider"></div>
+    <div class="pdf-actions">
+      <button class="pdf-cancel-btn" id="pdfCancelBtn" onclick="closePdfDialog()">Hætta við</button>
+      <button class="pdf-print-btn" id="pdfConfirmBtn" onclick="doPrint()">⬇ Búa til PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOOLTIP MODAL ===== -->
+<div id="tooltip-modal" class="modal-overlay" onclick="closeTooltip(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeTooltip()">&times;</button>
+    <div id="tooltip-content"></div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast" class="toast">Tilboð vistað ✓</div>
+
+<script>
+// =====================================================================
+// CLASS INFO
+// =====================================================================
+const CLASS_INFO = {
+  A:  'EN 1065 · Class A: Létt gæðastoðir, hámarksálag ≤25,9 kN. Hentar við létt og miðlungsþungar byrðar.',
+  B:  'EN 1065 · Class B: Meðalþungar stoðir, hámarksálag ≤30 kN. Tilvalið við þakburðir og meðalstórar framkvæmdir.',
+  BD: 'EN 1065 · Class B/D: Tvítegund stoð – hentar bæði sem létt og þung stuðningsstoð eftir stillingu.',
+  CD: 'EN 1065 · Class C/D: Þungar stoðir, hámarksálag ≤35 kN. Hentar við stórar og þungar framkvæmdir.',
+  CE: 'EN 1065 · Class C/E: Sérstaka þung stoð með háan brotþol, hámarksálag ≤35 kN.',
+  D:  'EN 1065 · Class D: Þungar stoðir, hámarksálag ≤35 kN. Hentar við þungar og stórar byrðar.',
+  E:  'EN 1065 · Class E: Sérstaklega þungar stoðir, hámarksálag ≤35 kN. Hentar við erfiðustu verkefni.'
+};
+
+// =====================================================================
+// PRODUCTS — Loftastoðir
+// =====================================================================
+const LOFTASTODIR = [
+  { id:'01-MÓT-LM51-041', articleNumber:'97100041', name:'Loftastoðir 0,7–1,2M (Málað)',         minHeight:'0,7M',  maxHeight:'1,2M',  kN_min:25.9, kN_max:20.8, weight_kg:5.8,   classLabel:'A',   classKey:'A',  dayRate:16, weekRate:112, salePrice:5422  },
+  { id:'01-MÓT-LM51-027', articleNumber:'97100027', name:'Loftastoðir 1,6–3,0M (Málað)',         minHeight:'1,6M',  maxHeight:'3,0M',  kN_min:11.7, kN_max:3.3,  weight_kg:9.75,  classLabel:'A',   classKey:'A',  dayRate:16, weekRate:112, salePrice:6689  },
+  { id:'01-MÓT-LM51-026', articleNumber:'97100026', name:'Loftastoðir 2,0–3,5M (Málað)',         minHeight:'2,0M',  maxHeight:'3,5M',  kN_min:7.5,  kN_max:2.4,  weight_kg:10.26, classLabel:'A',   classKey:'A',  dayRate:16, weekRate:112, salePrice:7547  },
+  { id:'01-MÓT-LM51-029', articleNumber:'97100029', name:'Loftastoðir 1,6–2,9M (Galv.)',         minHeight:'1,6M',  maxHeight:'2,9M',  kN_min:11.7, kN_max:3.6,  weight_kg:11.0,  classLabel:'A',   classKey:'A',  dayRate:20, weekRate:140, salePrice:9174  },
+  { id:'01-MÓT-LM51-028', articleNumber:'97100028', name:'Loftastoðir 2,0–3,5M (Galv.)',         minHeight:'2,0M',  maxHeight:'3,5M',  kN_min:7.5,  kN_max:2.4,  weight_kg:11.0,  classLabel:'A',   classKey:'A',  dayRate:20, weekRate:140, salePrice:10340 },
+  { id:'01-MÓT-LM51-092', articleNumber:'97100092', name:'Loftastoðir B/D30 175/300',             minHeight:'175cm', maxHeight:'300cm', kN_min:13.1, kN_max:4.4,  weight_kg:16.89, classLabel:'B/D', classKey:'BD', dayRate:30, weekRate:210, salePrice:17633 },
+  { id:'01-MÓT-LM51-031', articleNumber:'97100031', name:'Loftastoðir B30 178/300 HPE Galv.',     minHeight:'178cm', maxHeight:'300cm', kN_min:12.6, kN_max:4.4,  weight_kg:16.8,  classLabel:'B',   classKey:'B',  dayRate:28, weekRate:196, salePrice:20869 },
+  { id:'01-MÓT-LM51-913', articleNumber:'97100913', name:'Loftastoðir CE30 179/300 Galv.',        minHeight:'179cm', maxHeight:'300cm', kN_min:18.7, kN_max:6.7,  weight_kg:10.26, classLabel:'C/E', classKey:'CE', dayRate:40, weekRate:280, salePrice:21750 },
+  { id:'01-MÓT-LM51-032', articleNumber:'97100032', name:'Loftastoðir B35 200/350 HPE Galv.',     minHeight:'200cm', maxHeight:'350cm', kN_min:10.0, kN_max:3.3,  weight_kg:17.4,  classLabel:'B',   classKey:'B',  dayRate:28, weekRate:196, salePrice:18706 },
+  { id:'01-MÓT-LM51-091', articleNumber:'97100091', name:'Loftastoðir CD35 201/350 Galv.',        minHeight:'201cm', maxHeight:'350cm', kN_min:14.9, kN_max:4.9,  weight_kg:20.5,  classLabel:'C/D', classKey:'CD', dayRate:40, weekRate:280, salePrice:21395 },
+  { id:'01-MÓT-LM51-235', articleNumber:'97100235', name:'Loftastoðir E35 (201/350)',             minHeight:'201cm', maxHeight:'350cm', kN_min:30.0, kN_max:30.0, weight_kg:20.5,  classLabel:'E',   classKey:'E',  dayRate:40, weekRate:280, salePrice:19995 },
+  { id:'01-MÓT-LM51-935', articleNumber:'FA8169012C',name:'Faresin Loftastoðir E35 200/350 (Galv.)',minHeight:'200cm',maxHeight:'350cm',kN_min:30.0, kN_max:30.0, weight_kg:null,  classLabel:'E',   classKey:'E',  dayRate:40, weekRate:280, salePrice:19621 },
+  { id:'01-MÓT-LM51-048', articleNumber:'97100048', name:'Loftastoðir B45 260/480 Galv.',         minHeight:'260cm', maxHeight:'480cm', kN_min:5.9,  kN_max:1.7,  weight_kg:21.18, classLabel:'B',   classKey:'B',  dayRate:28, weekRate:196, salePrice:39669 },
+  { id:'01-MÓT-LM51-080', articleNumber:'97100209', name:'Loftastoðir D45',                       minHeight:'260cm', maxHeight:'450cm', kN_min:20.0, kN_max:20.0, weight_kg:42.0,  classLabel:'D',   classKey:'D',  dayRate:60, weekRate:420, salePrice:24650 },
+  { id:'01-MÓT-LM51-079', articleNumber:'97100079', name:'Loftastoðir D55 301/550 Galv.',         minHeight:'301cm', maxHeight:'550cm', kN_min:20.0, kN_max:20.0, weight_kg:42.0,  classLabel:'D',   classKey:'D',  dayRate:70, weekRate:490, salePrice:40795 },
+];
+
+// =====================================================================
+// PRODUCTS — Mótabitar HT-20
+// =====================================================================
+const MOTABITAR = [
+  { id:'01-MÓT-LM71-924', articleNumber:'0153924', name:'HT-20 2,45 m', length_m:2.45, weight_kg:11.27, dayRate:17, weekRate:119, salePrice:8647  },
+  { id:'01-MÓT-LM71-926', articleNumber:'0153926', name:'HT-20 2,65 m', length_m:2.65, weight_kg:12.19, dayRate:19, weekRate:133, salePrice:9471  },
+  { id:'01-MÓT-LM71-929', articleNumber:'0153929', name:'HT-20 2,9 m',  length_m:2.9,  weight_kg:13.34, dayRate:20, weekRate:140, salePrice:10295 },
+  { id:'01-MÓT-LM71-933', articleNumber:'0153933', name:'HT-20 3,3 m',  length_m:3.3,  weight_kg:13.34, dayRate:21, weekRate:145, salePrice:11634 },
+  { id:'01-MÓT-LM71-936', articleNumber:'0153936', name:'HT-20 3,6 m',  length_m:3.6,  weight_kg:16.56, dayRate:25, weekRate:175, salePrice:13076 },
+  { id:'01-MÓT-LM71-939', articleNumber:'0153939', name:'HT-20 3,9 m',  length_m:3.9,  weight_kg:17.94, dayRate:27, weekRate:189, salePrice:17633 },
+  { id:'01-MÓT-LM71-949', articleNumber:'0153949', name:'HT-20 4,9 m',  length_m:4.9,  weight_kg:22.54, dayRate:34, weekRate:238, salePrice:17299 },
+];
+
+// =====================================================================
+// PRODUCTS — Aukahlutir
+// =====================================================================
+const AUKAHLUTIR = [
+  { id:'01-MÓT-LM51-024', articleNumber:'97100024',  name:'Þrífótur f/ Loftastoðir',              weight_kg:11.55, dayRate:28,  weekRate:196, salePrice:10156  },
+  { id:'01-MÓT-LM51-095', articleNumber:'97100095',  name:'Framlenging f/ Loftastoðir 100cm',      weight_kg:11.55, dayRate:16,  weekRate:112, salePrice:6295   },
+  { id:'01-MÓT-LM51-040', articleNumber:'97100040',  name:'Rekkar fyrir Loftastoðir (Málað)',       weight_kg:32.6,  dayRate:64,  weekRate:448, salePrice:45580  },
+  { id:'01-MÓT-LM51-954', articleNumber:'FA9169154', name:'Faresin Loftastoðarekki (Galv.)',        weight_kg:null,  dayRate:106, weekRate:745, salePrice:114955 },
+  { id:'01-MÓT-LM51-025', articleNumber:'97100025',  name:'Gafflar stórir',                         weight_kg:2.5,   dayRate:16,  weekRate:112, salePrice:2515   },
+];
+
+// =====================================================================
+// FORMATTING
+// =====================================================================
+function fmtInt(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+function fmtDec(n) { return n.toFixed(1).replace('.', ','); }
+function toISO(d)  { return d.toISOString().split('T')[0]; }
+
+// =====================================================================
+// DUAL DATE ↔ DAYS + 10-DAY MINIMUM
+// =====================================================================
+const MIN_DAYS = 1;
+
+function calculateDaysBetween(s, e) {
+  const start = new Date(s + 'T12:00:00');
+  const end   = new Date(e + 'T12:00:00');
+  return Math.max(1, Math.round((end - start) / 86400000) + 1);
+}
+
+const DEFAULT_DAYS = 10;
+
+function initializeDates() {
+  const today = new Date();
+  const end   = new Date(today);
+  end.setDate(today.getDate() + DEFAULT_DAYS - 1);
+  document.getElementById('start-date').value  = toISO(today);
+  document.getElementById('end-date').value    = toISO(end);
+  document.getElementById('rental-days').value = DEFAULT_DAYS;
+  document.getElementById('clientDate').value  = toISO(today);
+  updateBadge(DEFAULT_DAYS);
+}
+
+function updateRentalDays() {
+  const s = document.getElementById('start-date').value;
+  const e = document.getElementById('end-date').value;
+  if (!s || !e) return;
+  let days = calculateDaysBetween(s, e);
+  if (days < MIN_DAYS) {
+    const start = new Date(s + 'T12:00:00');
+    start.setDate(start.getDate() + MIN_DAYS - 1);
+    document.getElementById('end-date').value = toISO(start);
+    days = MIN_DAYS;
+  }
+  document.getElementById('rental-days').value = days;
+  updateBadge(days);
+  scheduleCalculate();
+}
+
+function updateEndDateFromDays() {
+  const s = document.getElementById('start-date').value;
+  let days = parseInt(document.getElementById('rental-days').value, 10);
+  if (!s || isNaN(days)) return;
+  if (days < MIN_DAYS) {
+    days = MIN_DAYS;
+    document.getElementById('rental-days').value = MIN_DAYS;
+  }
+  const start = new Date(s + 'T12:00:00');
+  start.setDate(start.getDate() + days - 1);
+  document.getElementById('end-date').value = toISO(start);
+  updateBadge(days);
+  scheduleCalculate();
+}
+
+function updateBadge(days) {
+  document.getElementById('rental-days-badge').textContent = days + ' dagar';
+}
+
+function stepRentalDays(dir) {
+  const input = document.getElementById('rental-days');
+  const val   = parseInt(input.value, 10) || MIN_DAYS;
+  input.value = Math.max(MIN_DAYS, val + dir);
+  updateEndDateFromDays();
+}
+
+function getRentalDays() {
+  const val = parseInt(document.getElementById('rental-days').value, 10);
+  return (isNaN(val) || val < MIN_DAYS) ? MIN_DAYS : val;
+}
+
+// =====================================================================
+// AUTO-CALCULATE (debounced)
+// =====================================================================
+let _calcTimer = null;
+let _resultsVisible = false;
+
+function scheduleCalculate() {
+  clearTimeout(_calcTimer);
+  _calcTimer = setTimeout(function() { calculate(true); }, 350);
+}
+
+// =====================================================================
+// QTY STEPPERS
+// =====================================================================
+function stepQty(prefix, idx, dir) {
+  var input = document.getElementById(prefix + '-qty-' + idx);
+  var val   = parseInt(input.value, 10) || 0;
+  input.value = Math.max(0, val + dir);
+  scheduleCalculate();
+}
+
+function makeStepperQty(prefix, idx) {
+  return '<div class="p-qty">' +
+    '<label>Magn (stk)</label>' +
+    '<input type="number" id="' + prefix + '-qty-' + idx + '" class="qty-input" min="0" value="0">' +
+  '</div>';
+}
+
+// =====================================================================
+// FILTER (Loftastoðir)
+// =====================================================================
+function filterLoftastodir() {
+  var minKN   = parseFloat(document.getElementById('ls-kn-filter').value) || 0;
+  var cls     = document.getElementById('ls-class-filter').value;
+  var cards   = document.querySelectorAll('#loftastodir-grid .p-card');
+  var visible = 0;
+  LOFTASTODIR.forEach(function(p, i) {
+    var matchKN     = !minKN  || p.kN_max >= minKN;
+    var matchClass  = !cls    || p.classKey === cls;
+    var show = matchKN && matchClass;
+    cards[i].classList.toggle('hidden', !show);
+    if (show) visible++;
+  });
+  document.getElementById('ls-count').textContent = visible < LOFTASTODIR.length ? visible + ' / ' + LOFTASTODIR.length : '';
+}
+
+function stepFilterKN(dir) {
+  var input = document.getElementById('ls-kn-filter');
+  var val   = parseFloat(input.value) || 0;
+  input.value = Math.max(0, val + dir);
+  filterLoftastodir();
+}
+
+function clearLsFilter() {
+  document.getElementById('ls-kn-filter').value = '';
+  document.getElementById('ls-class-filter').value = '';
+  filterLoftastodir();
+}
+
+// =====================================================================
+// RENTAL COST
+// =====================================================================
+function calculateRentalCost(dayRate, weekRate, days, qty) {
+  if (days < 7) return dayRate * days * qty;
+  return weekRate * Math.ceil(days / 7) * qty;
+}
+
+// =====================================================================
+// RENDER CARDS
+// =====================================================================
+function renderLoftastodir() {
+  var grid = document.getElementById('loftastodir-grid');
+  LOFTASTODIR.forEach(function(p, i) {
+    var card = document.createElement('div');
+    card.className = 'p-card';
+    card.innerHTML =
+      '<div class="p-header-row">' +
+        '<div class="p-name">' + p.name + '</div>' +
+        '<button class="btn-info" type="button" onclick="showTooltip(' + i + ',\'ls\')" title="Nánar">i</button>' +
+      '</div>' +
+      '<div class="p-id">' + p.id + ' · ' + p.articleNumber + '</div>' +
+      '<div class="p-specs">' +
+        '<div class="spec"><span class="spec-lbl">Stærð:</span> ' + p.minHeight + ' – ' + p.maxHeight + '</div>' +
+        '<div class="spec"><span class="spec-lbl">kN:</span> ' + fmtDec(p.kN_max) + ' – ' + fmtDec(p.kN_min) + ' kN</div>' +
+        (p.weight_kg ? '<div class="spec"><span class="spec-lbl">Þyngd:</span> ' + fmtDec(p.weight_kg) + ' kg</div>' : '') +
+        '<div class="spec"><span class="spec-lbl">Class:</span> <span class="cls cls-' + p.classKey + '">' + p.classLabel + '</span></div>' +
+      '</div>' +
+      '<div class="p-pricing">' +
+        '<span>Daggjald: <strong>' + fmtInt(p.dayRate) + ' kr.</strong></span>' +
+        '<span>Vikugjald: <strong>' + fmtInt(p.weekRate) + ' kr.</strong></span>' +
+      '</div>' +
+      (p.salePrice ? '<div class="p-sale"><span class="sale-text">Söluverð: <strong>' + fmtInt(p.salePrice) + ' kr.</strong></span></div>' : '') +
+      makeStepperQty('ls', i);
+    grid.appendChild(card);
+  });
+}
+
+function renderMotabitar() {
+  var grid = document.getElementById('motabitar-grid');
+  MOTABITAR.forEach(function(b, i) {
+    var card = document.createElement('div');
+    card.className = 'p-card';
+    card.innerHTML =
+      '<div class="p-header-row">' +
+        '<div class="p-name">' + b.name + '</div>' +
+        '<button class="btn-info" type="button" onclick="showTooltip(' + i + ',\'mb\')" title="Nánar">i</button>' +
+      '</div>' +
+      '<div class="p-id">' + b.id + ' · ' + b.articleNumber + '</div>' +
+      '<div class="p-specs">' +
+        '<div class="spec"><span class="spec-lbl">Lengd:</span> ' + fmtDec(b.length_m) + ' m</div>' +
+        '<div class="spec"><span class="spec-lbl">Þyngd:</span> ' + fmtDec(b.weight_kg) + ' kg</div>' +
+      '</div>' +
+      '<div class="p-pricing">' +
+        '<span>Daggjald: <strong>' + fmtInt(b.dayRate) + ' kr.</strong></span>' +
+        '<span>Vikugjald: <strong>' + fmtInt(b.weekRate) + ' kr.</strong></span>' +
+      '</div>' +
+      (b.salePrice ? '<div class="p-sale"><span class="sale-text">Söluverð: <strong>' + fmtInt(b.salePrice) + ' kr.</strong></span></div>' : '') +
+      makeStepperQty('mb', i);
+    grid.appendChild(card);
+  });
+}
+
+function renderAukahlutir() {
+  var grid = document.getElementById('aukahlutir-grid');
+  AUKAHLUTIR.forEach(function(a, i) {
+    var card = document.createElement('div');
+    card.className = 'p-card';
+    card.innerHTML =
+      '<div class="p-header-row">' +
+        '<div class="p-name">' + a.name + '</div>' +
+        '<button class="btn-info" type="button" onclick="showTooltip(' + i + ',\'ak\')" title="Nánar">i</button>' +
+      '</div>' +
+      '<div class="p-id">' + a.id + ' · ' + a.articleNumber + '</div>' +
+      '<div class="p-specs">' +
+        (a.weight_kg ? '<div class="spec"><span class="spec-lbl">Þyngd:</span> ' + fmtDec(a.weight_kg) + ' kg</div>' : '') +
+      '</div>' +
+      '<div class="p-pricing">' +
+        '<span>Daggjald: <strong>' + fmtInt(a.dayRate) + ' kr.</strong></span>' +
+        '<span>Vikugjald: <strong>' + fmtInt(a.weekRate) + ' kr.</strong></span>' +
+      '</div>' +
+      (a.salePrice ? '<div class="p-sale"><span class="sale-text">Söluverð: <strong>' + fmtInt(a.salePrice) + ' kr.</strong></span></div>' : '') +
+      makeStepperQty('ak', i);
+    grid.appendChild(card);
+  });
+}
+
+// =====================================================================
+// TOOLTIP MODAL
+// =====================================================================
+function showTooltip(idx, type) {
+  var p = type === 'ls' ? LOFTASTODIR[idx] : type === 'mb' ? MOTABITAR[idx] : AUKAHLUTIR[idx];
+  var rows = '';
+  var noteHtml = '';
+
+  if (type === 'ls') {
+    rows =
+      '<tr><td>Leigunúmer</td><td><strong>' + p.id + '</strong></td></tr>' +
+      '<tr><td>Vörunúmer</td><td><strong>' + p.articleNumber + '</strong></td></tr>' +
+      '<tr><td>Hæðarbil</td><td><strong>' + p.minHeight + ' – ' + p.maxHeight + '</strong></td></tr>' +
+      '<tr><td>kN við lágmarkshæð</td><td><strong>' + fmtDec(p.kN_min) + ' kN</strong></td></tr>' +
+      '<tr><td>kN við hámarkshæð</td><td><strong>' + fmtDec(p.kN_max) + ' kN</strong></td></tr>' +
+      (p.weight_kg ? '<tr><td>Þyngd</td><td><strong>' + fmtDec(p.weight_kg) + ' kg</strong></td></tr>' : '') +
+      '<tr><td>Flokkur</td><td><span class="cls cls-' + p.classKey + '">' + p.classLabel + '</span></td></tr>' +
+      '<tr><td>Daggjald</td><td><strong>' + fmtInt(p.dayRate) + ' kr.</strong></td></tr>' +
+      '<tr><td>Vikugjald</td><td><strong>' + fmtInt(p.weekRate) + ' kr.</strong></td></tr>' +
+      (p.salePrice ? '<tr><td>Söluverð</td><td><strong>' + fmtInt(p.salePrice) + ' kr.</strong></td></tr>' : '');
+    noteHtml =
+      '<div class="tooltip-note"><strong>Flokkslýsing:</strong><br>' + (CLASS_INFO[p.classKey] || '') + '</div>' +
+      '<div class="tooltip-warn">⚠ Öryggisstuðull 1,7 á móti brotþoli. Stoðin verður alltaf að standa beint undir byrðinni.</div>';
+  } else if (type === 'mb') {
+    rows =
+      '<tr><td>Leigunúmer</td><td><strong>' + p.id + '</strong></td></tr>' +
+      '<tr><td>Vörunúmer</td><td><strong>' + p.articleNumber + '</strong></td></tr>' +
+      '<tr><td>Lengd</td><td><strong>' + fmtDec(p.length_m) + ' m</strong></td></tr>' +
+      '<tr><td>Þyngd</td><td><strong>' + fmtDec(p.weight_kg) + ' kg</strong></td></tr>' +
+      '<tr><td>Daggjald</td><td><strong>' + fmtInt(p.dayRate) + ' kr.</strong></td></tr>' +
+      '<tr><td>Vikugjald</td><td><strong>' + fmtInt(p.weekRate) + ' kr.</strong></td></tr>' +
+      (p.salePrice ? '<tr><td>Söluverð</td><td><strong>' + fmtInt(p.salePrice) + ' kr.</strong></td></tr>' : '');
+    noteHtml = '<div class="tooltip-note">HT-20 mótabitar eru láréttir stoðbitar sem notaðir eru þvert á loftastoðirnar. Lengd velst eftir bilmáli milli stoða.</div>';
+  } else {
+    rows =
+      '<tr><td>Leigunúmer</td><td><strong>' + p.id + '</strong></td></tr>' +
+      '<tr><td>Vörunúmer</td><td><strong>' + p.articleNumber + '</strong></td></tr>' +
+      (p.weight_kg ? '<tr><td>Þyngd</td><td><strong>' + fmtDec(p.weight_kg) + ' kg</strong></td></tr>' : '') +
+      '<tr><td>Daggjald</td><td><strong>' + fmtInt(p.dayRate) + ' kr.</strong></td></tr>' +
+      '<tr><td>Vikugjald</td><td><strong>' + fmtInt(p.weekRate) + ' kr.</strong></td></tr>' +
+      (p.salePrice ? '<tr><td>Söluverð</td><td><strong>' + fmtInt(p.salePrice) + ' kr.</strong></td></tr>' : '');
+  }
+
+  document.getElementById('tooltip-content').innerHTML =
+    '<h3>' + p.name + '</h3>' +
+    '<table class="tooltip-table"><tbody>' + rows + '</tbody></table>' +
+    noteHtml;
+  document.getElementById('tooltip-modal').classList.add('open');
+}
+
+function closeTooltip(e) {
+  if (!e || e.target === document.getElementById('tooltip-modal') || e.currentTarget.classList.contains('modal-close')) {
+    document.getElementById('tooltip-modal').classList.remove('open');
+  }
+}
+
+// =====================================================================
+// SAVE / RESTORE
+// =====================================================================
+var STORAGE_KEY = 'loftastodir-quote-v2';
+
+function saveQuote() {
+  var data = {
+    version: 2,
+    savedAt: new Date().toISOString(),
+    startDate:       document.getElementById('start-date').value,
+    endDate:         document.getElementById('end-date').value,
+    days:            getRentalDays(),
+    projectName:     document.getElementById('project-name').value,
+    clientName:      document.getElementById('clientName').value,
+    clientCompany:   document.getElementById('clientCompany').value,
+    clientKennitala: document.getElementById('clientKennitala').value,
+    clientPhone:     document.getElementById('clientPhone').value,
+    clientEmail:     document.getElementById('clientEmail').value,
+    clientAddress:   document.getElementById('clientAddress').value,
+    clientUttektar:  document.getElementById('clientUttektar').value,
+    clientDate:      document.getElementById('clientDate').value,
+    discount:        document.getElementById('discount-input').value,
+    ls: LOFTASTODIR.map(function(_, i)  { return parseInt(document.getElementById('ls-qty-' + i).value) || 0; }),
+    mb: MOTABITAR.map(function(_, i)    { return parseInt(document.getElementById('mb-qty-' + i).value) || 0; }),
+    ak: AUKAHLUTIR.map(function(_, i)   { return parseInt(document.getElementById('ak-qty-' + i).value) || 0; })
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  showToast('Tilboð vistað ✓');
+}
+
+function restoreQuote() {
+  var raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+  try {
+    var d = JSON.parse(raw);
+    if (d.startDate)       document.getElementById('start-date').value       = d.startDate;
+    if (d.endDate)         document.getElementById('end-date').value         = d.endDate;
+    if (d.days)            document.getElementById('rental-days').value      = d.days;
+    if (d.projectName)     document.getElementById('project-name').value     = d.projectName;
+    if (d.clientName)      document.getElementById('clientName').value       = d.clientName;
+    if (d.clientCompany)   document.getElementById('clientCompany').value    = d.clientCompany;
+    if (d.clientKennitala) document.getElementById('clientKennitala').value  = d.clientKennitala;
+    if (d.clientPhone)     document.getElementById('clientPhone').value      = d.clientPhone;
+    if (d.clientEmail)     document.getElementById('clientEmail').value      = d.clientEmail;
+    if (d.clientAddress)   document.getElementById('clientAddress').value    = d.clientAddress;
+    if (d.clientUttektar)  document.getElementById('clientUttektar').value   = d.clientUttektar;
+    if (d.clientDate)      document.getElementById('clientDate').value       = d.clientDate;
+    if (d.discount)        document.getElementById('discount-input').value   = d.discount;
+    (d.ls || []).forEach(function(qty, i) { var el = document.getElementById('ls-qty-' + i); if (el) el.value = qty; });
+    (d.mb || []).forEach(function(qty, i) { var el = document.getElementById('mb-qty-' + i); if (el) el.value = qty; });
+    (d.ak || []).forEach(function(qty, i) { var el = document.getElementById('ak-qty-' + i); if (el) el.value = qty; });
+    updateBadge(d.days || getRentalDays());
+    dismissRestore();
+    scheduleCalculate();
+    showToast('Tilboð endurheimtað ✓');
+  } catch(e) { console.error('Restore failed', e); }
+}
+
+function dismissRestore() {
+  document.getElementById('restore-banner').style.display = 'none';
+}
+
+function checkForSavedQuote() {
+  if (localStorage.getItem(STORAGE_KEY)) {
+    document.getElementById('restore-banner').style.display = 'flex';
+  }
+}
+
+// =====================================================================
+// TOAST
+// =====================================================================
+var _toastTimer = null;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+// =====================================================================
+// PDF & EXCEL EXPORT
+// =====================================================================
+function openPdfDialog() {
+  document.getElementById('pdf-overlay').classList.add('visible');
+}
+function closePdfDialog() {
+  document.getElementById('pdf-overlay').classList.remove('visible');
+}
+function doPrint() {
+  closePdfDialog();
+  exportPDF();
+}
+
+function exportPDF() {
+  if (typeof html2pdf === 'undefined') {
+    alert('Villa: html2pdf.js tókst ekki að hlaðast. Endurhladdu síðuna.');
+    return;
+  }
+
+  var days = getRentalDays();
+  var discount = parseFloat(document.getElementById('discount-input').value) || 0;
+
+  // Client info
+  var name      = (document.getElementById('clientName').value || '').trim() || '\u2013';
+  var company   = (document.getElementById('clientCompany').value || '').trim() || '\u2013';
+  var kt        = (document.getElementById('clientKennitala').value || '').trim() || '\u2013';
+  var uttektar  = (document.getElementById('clientUttektar').value || '').trim() || '\u2013';
+  var cdate     = document.getElementById('clientDate').value;
+  var today     = new Date();
+  var dateStr   = cdate ? new Date(cdate).toLocaleDateString('is-IS') : (today.getDate() + '.' + (today.getMonth()+1) + '.' + today.getFullYear());
+
+  document.getElementById('pdf-c-name').textContent    = name;
+  document.getElementById('pdf-c-company').textContent = company;
+  document.getElementById('pdf-c-kt').textContent      = kt;
+  document.getElementById('pdf-c-uttektar').textContent = uttektar;
+  document.getElementById('pdf-c-date').textContent    = dateStr;
+  document.getElementById('pdf-sig-name').textContent  = name !== '\u2013' ? name : '';
+
+  // Meta line
+  var metaParts = [];
+  if (company !== '\u2013') metaParts.push(company);
+  else if (name !== '\u2013') metaParts.push(name);
+  metaParts.push(dateStr);
+  document.getElementById('pdf-meta').textContent = metaParts.join('  \u00b7  ') || '\u2013';
+
+  // Rental info – structured HTML instead of newline-delimited text
+  var startD = document.getElementById('start-date').value;
+  var endD   = document.getElementById('end-date').value;
+  var rentalHtml = '<div>Leigutími: ' + days + ' dagar</div>';
+  if (startD) rentalHtml += '<div>Upphafsdagur: ' + new Date(startD).toLocaleDateString('is-IS') + '</div>';
+  if (endD)   rentalHtml += '<div>Lokadagur: ' + new Date(endD).toLocaleDateString('is-IS') + '</div>';
+  if (discount > 0) rentalHtml += '<div>Afsláttur: ' + discount + '%</div>';
+  document.getElementById('pdf-rental-info').innerHTML = rentalHtml;
+
+  // Collect items
+  function collectItems(arr, prefix) {
+    var items = [];
+    arr.forEach(function(p, i) {
+      var qty = parseInt(document.getElementById(prefix + '-qty-' + i).value) || 0;
+      if (qty > 0) {
+        var cost = calculateRentalCost(p.dayRate, p.weekRate, days, qty);
+        var sale = p.salePrice ? p.salePrice * qty : 0;
+        var wt   = p.weight_kg ? p.weight_kg * qty : 0;
+        items.push({ id: p.id, name: p.name, qty: qty, cost: cost, sale: sale, weight: wt });
+      }
+    });
+    return items;
+  }
+
+  var allItems = [];
+  allItems = allItems.concat(collectItems(LOFTASTODIR, 'ls'));
+  allItems = allItems.concat(collectItems(MOTABITAR, 'mb'));
+  allItems = allItems.concat(collectItems(AUKAHLUTIR, 'ak'));
+
+  if (allItems.length === 0) {
+    alert('Engir hlutir valdir. Veldu magn á a.m.k. einni vöru.');
+    return;
+  }
+
+  // Build table
+  var totalRental = 0, totalSale = 0, totalWeight = 0;
+  var tbl = '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+  tbl += '<thead><tr style="background:#f8fafc;border-bottom:2px solid #e0e0e0;">';
+  tbl += '<th style="text-align:left;padding:6px;">Leigunr.</th>';
+  tbl += '<th style="text-align:left;padding:6px;">Lýsing</th>';
+  tbl += '<th style="text-align:right;padding:6px;">Magn</th>';
+  tbl += '<th style="text-align:right;padding:6px;">Þyngd (kg)</th>';
+  tbl += '<th style="text-align:right;padding:6px;">Leiguverð</th>';
+  tbl += '<th style="text-align:right;padding:6px;">Söluverð</th>';
+  tbl += '</tr></thead><tbody>';
+  allItems.forEach(function(it) {
+    totalRental += it.cost;
+    totalSale += it.sale;
+    totalWeight += it.weight;
+    tbl += '<tr style="border-bottom:1px solid #f1f5f9;">';
+    tbl += '<td style="padding:5px 6px;">' + it.id + '</td>';
+    tbl += '<td style="padding:5px 6px;">' + it.name + '</td>';
+    tbl += '<td style="text-align:right;padding:5px 6px;">' + it.qty + '</td>';
+    tbl += '<td style="text-align:right;padding:5px 6px;">' + fmtDec(it.weight) + '</td>';
+    tbl += '<td style="text-align:right;padding:5px 6px;">' + fmtInt(Math.round(it.cost)) + ' kr</td>';
+    tbl += '<td style="text-align:right;padding:5px 6px;">' + fmtInt(Math.round(it.sale)) + ' kr</td>';
+    tbl += '</tr>';
+  });
+  tbl += '</tbody></table>';
+
+  // Totals
+  var discounted = discount > 0 ? totalRental * (1 - discount / 100) : totalRental;
+  tbl += '<div style="margin-top:10px;font-size:12px;line-height:1.8;">';
+  tbl += '<strong>Heildarþyngd:</strong> ' + fmtDec(totalWeight) + ' kg<br>';
+  tbl += '<strong>Leiguverð (fyrir afslátt):</strong> ' + fmtInt(Math.round(totalRental)) + ' kr<br>';
+  if (discount > 0) tbl += '<strong>Afsláttur:</strong> ' + discount + '%<br>';
+  tbl += '<strong>Samtals leiguverð:</strong> ' + fmtInt(Math.round(discounted)) + ' kr<br>';
+  tbl += '<strong>Samtals söluverð:</strong> ' + fmtInt(Math.round(totalSale)) + ' kr';
+  tbl += '</div>';
+
+  document.getElementById('pdf-content').innerHTML = tbl;
+
+  // Generate filename
+  var clientName = (document.getElementById('clientName').value || '').trim();
+  var safeName = (clientName || 'tilbod').replace(/[\\/:*?"<>|]/g, '');
+  var fileDateStr = today.getDate() + '.' + (today.getMonth()+1) + '.' + today.getFullYear();
+  var filename = 'Loftastodir-' + safeName + '-' + fileDateStr + '.pdf';
+
+  // Generate PDF
+  var pdfBlock = document.getElementById('pdf-print-block');
+  pdfBlock.classList.add('pdf-rendering');
+  window.scrollTo(0, 0);
+
+  var opt = {
+    margin:      [6, 8, 6, 8],
+    filename:    filename,
+    image:       { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, scrollX: 0, windowWidth: 794, width: 700, onclone: function(doc) { Array.from(doc.body.children).forEach(function(child) { if (child.id !== 'pdf-print-block') child.style.display = 'none'; }); doc.body.style.padding = '0'; doc.body.style.margin = '0'; var el = doc.getElementById('pdf-print-block'); if (el) { el.style.position = 'static'; el.style.left = '0'; el.style.top = '0'; el.style.width = '700px'; el.style.margin = '0 auto'; } } },
+    jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak:   { mode: ['css', 'legacy'] }
+  };
+
+  // Allow browser to fully paint the block before capturing
+  setTimeout(function() {
+    html2pdf().set(opt).from(pdfBlock).save().then(function() {
+      pdfBlock.classList.remove('pdf-rendering');
+    }).catch(function(err) {
+      console.error('html2pdf error:', err);
+      alert('Villa við PDF gerð: ' + (err && err.message ? err.message : String(err)));
+      pdfBlock.classList.remove('pdf-rendering');
+    });
+  }, 200);
+}
+
+function exportExcel() {
+  if (typeof XLSX === 'undefined') {
+    alert('Villa: XLSX.js tókst ekki að hlaðast. Endurhladdu síðuna.');
+    return;
+  }
+
+  var days = getRentalDays();
+  var discount = parseFloat(document.getElementById('discount-input').value) || 0;
+
+  // Client info
+  var name      = (document.getElementById('clientName').value || '').trim() || '\u2013';
+  var company   = (document.getElementById('clientCompany').value || '').trim() || '\u2013';
+  var kt        = (document.getElementById('clientKennitala').value || '').trim() || '\u2013';
+  var uttektar  = (document.getElementById('clientUttektar').value || '').trim() || '\u2013';
+  var address   = (document.getElementById('clientAddress').value || '').trim() || '\u2013';
+  var cdate     = document.getElementById('clientDate').value;
+  var today     = new Date();
+  var dateStr   = cdate ? new Date(cdate).toLocaleDateString('is-IS') : (today.getDate() + '.' + (today.getMonth()+1) + '.' + today.getFullYear());
+
+  // Sheet 1: Upplýsingar
+  var infoData = [
+    ['Upplýsingar'],
+    ['Nafn', name],
+    ['Fyrirtæki', company],
+    ['Kennitala', kt],
+    ['Úttektaraðili', uttektar],
+    ['Heimilisfang', address],
+    ['Dagsetning', dateStr],
+    ['Leigutími (dagar)', days],
+    ['Afsláttur', discount + '%']
+  ];
+
+  // Sheet 2: Efnislisti
+  var itemHeader = ['Leigunr.', 'Lýsing', 'Magn', 'Þyngd (kg)', 'Leiguverð', 'Söluverð'];
+  var itemRows = [itemHeader];
+
+  function addItems(arr, prefix) {
+    arr.forEach(function(p, i) {
+      var qty = parseInt(document.getElementById(prefix + '-qty-' + i).value) || 0;
+      if (qty > 0) {
+        var cost = calculateRentalCost(p.dayRate, p.weekRate, days, qty);
+        var sale = p.salePrice ? p.salePrice * qty : 0;
+        var wt   = p.weight_kg ? p.weight_kg * qty : 0;
+        itemRows.push([p.id, p.name, qty, Math.round(wt * 10) / 10, Math.round(cost), Math.round(sale)]);
+      }
+    });
+  }
+
+  addItems(LOFTASTODIR, 'ls');
+  addItems(MOTABITAR, 'mb');
+  addItems(AUKAHLUTIR, 'ak');
+
+  if (itemRows.length <= 1) {
+    alert('Engir hlutir valdir. Veldu magn á a.m.k. einni vöru.');
+    return;
+  }
+
+  var wb = XLSX.utils.book_new();
+  var ws1 = XLSX.utils.aoa_to_sheet(infoData);
+  XLSX.utils.book_append_sheet(wb, ws1, 'Upplýsingar');
+  var ws2 = XLSX.utils.aoa_to_sheet(itemRows);
+  XLSX.utils.book_append_sheet(wb, ws2, 'Efnislisti');
+
+  var clientName = (document.getElementById('clientName').value || '').trim();
+  var safeName = (clientName || 'tilbod').replace(/[\\/:*?"<>|]/g, '');
+  var fileDateStr = today.getDate() + '.' + (today.getMonth()+1) + '.' + today.getFullYear();
+  XLSX.writeFile(wb, 'Loftastodir-' + safeName + '-' + fileDateStr + '.xlsx');
+}
+
+// =====================================================================
+// DISCOUNT
+// =====================================================================
+function stepDiscount(dir) {
+  var input = document.getElementById('discount-input');
+  var val   = parseFloat(input.value) || 0;
+  input.value = Math.min(100, Math.max(0, val + dir * 0.5)).toFixed(1);
+  scheduleCalculate();
+}
+
+// =====================================================================
+// RESET
+// =====================================================================
+function resetAll() {
+  LOFTASTODIR.forEach(function(_, i)  { document.getElementById('ls-qty-' + i).value = 0; });
+  MOTABITAR.forEach(function(_, i)    { document.getElementById('mb-qty-' + i).value = 0; });
+  AUKAHLUTIR.forEach(function(_, i)   { document.getElementById('ak-qty-' + i).value = 0; });
+  document.getElementById('results').classList.remove('show');
+  _resultsVisible = false;
+}
+
+// =====================================================================
+// CALCULATE
+// =====================================================================
+function calculate(silent) {
+  var days = getRentalDays();
+  var items = [], totalRental = 0, totalSale = 0, totalItems = 0, totalWeight = 0, hasWeight = false;
+
+  LOFTASTODIR.forEach(function(p, i) {
+    var qty = parseInt(document.getElementById('ls-qty-' + i).value) || 0;
+    if (qty > 0) {
+      var cost = calculateRentalCost(p.dayRate, p.weekRate, days, qty);
+      var sale = p.salePrice ? p.salePrice * qty : 0;
+      items.push({ id:p.id, articleNumber:p.articleNumber, name:p.name, qty:qty, cost:cost, sale:sale, hasSale:!!p.salePrice });
+      totalRental += cost; totalSale += sale; totalItems += qty;
+      if (p.weight_kg) { totalWeight += p.weight_kg * qty; hasWeight = true; }
+    }
+  });
+
+  MOTABITAR.forEach(function(b, i) {
+    var qty = parseInt(document.getElementById('mb-qty-' + i).value) || 0;
+    if (qty > 0) {
+      var cost = calculateRentalCost(b.dayRate, b.weekRate, days, qty);
+      var sale = b.salePrice ? b.salePrice * qty : 0;
+      items.push({ id:b.id, articleNumber:b.articleNumber, name:b.name, qty:qty, cost:cost, sale:sale, hasSale:!!b.salePrice });
+      totalRental += cost; totalSale += sale; totalItems += qty;
+      totalWeight += b.weight_kg * qty; hasWeight = true;
+    }
+  });
+
+  AUKAHLUTIR.forEach(function(a, i) {
+    var qty = parseInt(document.getElementById('ak-qty-' + i).value) || 0;
+    if (qty > 0) {
+      var cost = calculateRentalCost(a.dayRate, a.weekRate, days, qty);
+      var sale = a.salePrice ? a.salePrice * qty : 0;
+      items.push({ id:a.id, articleNumber:a.articleNumber, name:a.name, qty:qty, cost:cost, sale:sale, hasSale:!!a.salePrice });
+      totalRental += cost; totalSale += sale; totalItems += qty;
+      if (a.weight_kg) { totalWeight += a.weight_kg * qty; hasWeight = true; }
+    }
+  });
+
+  if (items.length === 0) {
+    document.getElementById('results').classList.remove('show');
+    _resultsVisible = false;
+    return;
+  }
+
+  // Build results table
+  var tbody = document.getElementById('results-body');
+  tbody.innerHTML = '';
+  items.forEach(function(item) {
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + item.id + '</td>' +
+      '<td>' + item.articleNumber + '</td>' +
+      '<td>' + item.name + '</td>' +
+      '<td style="text-align:right">' + fmtInt(item.qty) + ' stk</td>' +
+      '<td style="text-align:right">' + fmtInt(item.cost) + ' kr</td>' +
+      '<td style="text-align:right">' + (item.hasSale ? fmtInt(item.sale) + ' kr' : '—') + '</td>';
+    tbody.appendChild(tr);
+  });
+
+  // Summary
+  var weeks    = Math.ceil(days / 7);
+  var dayLabel = days < 7 ? days + ' dagar (dagverð)' : days + ' dagar (' + weeks + ' vikur — vikuverð)';
+
+  document.getElementById('summary-days').textContent   = dayLabel;
+  document.getElementById('summary-items').textContent  = fmtInt(totalItems) + ' stk';
+  document.getElementById('summary-weight').textContent = hasWeight ? fmtDec(totalWeight) + ' kg' : '—';
+  document.getElementById('total-rental').textContent   = fmtInt(totalRental) + ' kr';
+  document.getElementById('total-sale').textContent     = totalSale > 0 ? fmtInt(totalSale) + ' kr' : '—';
+
+  // Discount
+  var discPct = parseFloat(document.getElementById('discount-input').value) || 0;
+  var discountedRow = document.getElementById('discounted-row');
+  if (discPct > 0) {
+    var discounted = totalRental * (1 - discPct / 100);
+    document.getElementById('total-discounted').textContent = fmtInt(discounted) + ' kr';
+    discountedRow.style.display = '';
+  } else {
+    discountedRow.style.display = 'none';
+  }
+
+  // Print meta
+  var proj = document.getElementById('project-name').value;
+  document.getElementById('print-project-title').textContent = proj || 'Loftastoðir — Byko Leiga';
+  document.getElementById('print-date').textContent = new Date().toLocaleDateString('is-IS');
+
+  // Populate print-client-info for browser print
+  var printParts = [];
+  var cName = (document.getElementById('clientName').value || '').trim();
+  var cCompany = (document.getElementById('clientCompany').value || '').trim();
+  var cKt = (document.getElementById('clientKennitala').value || '').trim();
+  var cPhone = (document.getElementById('clientPhone').value || '').trim();
+  var cEmail = (document.getElementById('clientEmail').value || '').trim();
+  var cAddr = (document.getElementById('clientAddress').value || '').trim();
+  var cUttektar = (document.getElementById('clientUttektar').value || '').trim();
+  if (cName)     printParts.push('<strong>Nafn:</strong> ' + cName);
+  if (cCompany)  printParts.push('<strong>Fyrirtæki:</strong> ' + cCompany);
+  if (cKt)       printParts.push('<strong>Kennitala:</strong> ' + cKt);
+  if (cPhone)    printParts.push('<strong>Sími:</strong> ' + cPhone);
+  if (cEmail)    printParts.push('<strong>Netfang:</strong> ' + cEmail);
+  if (cAddr)     printParts.push('<strong>Heimilisfang:</strong> ' + cAddr);
+  if (cUttektar) printParts.push('<strong>Úttektaraðili:</strong> ' + cUttektar);
+  document.getElementById('print-client-info').innerHTML = printParts.join(' &nbsp;·&nbsp; ');
+
+  // Show results (scroll only first time)
+  var wasVisible = _resultsVisible;
+  document.getElementById('results').classList.add('show');
+  _resultsVisible = true;
+  if (!wasVisible && !silent) {
+    setTimeout(function() {
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+}
+
+// =====================================================================
+// INIT
+// =====================================================================
+document.addEventListener('DOMContentLoaded', function() {
+  initializeDates();
+  checkForSavedQuote();
+  renderLoftastodir();
+  renderMotabitar();
+  renderAukahlutir();
+
+  // Date / days listeners
+  document.getElementById('start-date').addEventListener('change', updateRentalDays);
+  document.getElementById('end-date').addEventListener('change', updateRentalDays);
+  document.getElementById('rental-days').addEventListener('input', updateEndDateFromDays);
+
+  // Filter listeners
+  document.getElementById('ls-kn-filter').addEventListener('input', filterLoftastodir);
+
+  // Discount listener
+  document.getElementById('discount-input').addEventListener('input', scheduleCalculate);
+
+  // Auto-calc on qty input (event delegation on each grid)
+  ['loftastodir-grid', 'motabitar-grid', 'aukahlutir-grid'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', function(e) {
+      if (e.target.classList.contains('qty-input')) scheduleCalculate();
+    });
+  });
+
+  // Close PDF overlay on backdrop click
+  document.getElementById('pdf-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closePdfDialog();
+  });
+});
+</script>
+
+<!-- ===== LEIÐBEININGAR MODAL ===== -->
+<div class="lb-overlay" id="lbModal" onclick="if(event.target===this)this.classList.remove('lb-open')">
+  <div class="lb-modal">
+    <div class="lb-modal-header">
+      <h2>📖 Leiðbeiningar — Loftastoðir &amp; mótabitar</h2>
+      <button class="lb-modal-close" onclick="document.getElementById('lbModal').classList.remove('lb-open')">&times;</button>
+    </div>
+    <div class="lb-modal-body">
+
+      <!-- ============================================================ -->
+      <h2>🪵 HT20 (Formviðarbitar / Mótabitar)</h2>
+
+      <h3>Áður en byrjað er — hvað þarf að vita frá viðskiptavininum</h3>
+      <ol>
+        <li><strong>Hversu stórt svæði á að móta?</strong> — lengd × breidd eða heildarflatarmál í m²</li>
+        <li><strong>Hver er steypuþykkt?</strong> — t.d. 20 cm, 25 cm o.s.frv.</li>
+        <li><strong>Hvaða stoðkerfi verður notað?</strong> — props (stöndur) eða ID15 shoring towers</li>
+        <li><strong>Hver er hæðin frá gólfi upp í undirhlið formwork/beam system?</strong></li>
+        <li><strong>Liggur fyrri teikning eða hönnun fyrir með spacing á beams og supports?</strong></li>
+      </ol>
+      <div class="lb-warn">
+        <strong>Ef spacing milli stoða er ekki lagt fyrirfram af verkfræðingi eða teikningu, á starfsmaður ekki að ávísa það á eigin ábyrgð.</strong>
+      </div>
+      <div class="lb-note">
+        Spönn-tafla (Span Table) sem nota má sem viðmiðun við frumreikning kemur ekki endilega frá Hünnebeck. HT20 sýnir hvað leyfilegt er milli main beams og milli supports, en tekur líka sérstaklega fram að staðfesta þarf burð áður en endanlegir reikningar fara til verkfræðings.
+      </div>
+      <div class="lb-tip">HT20plus er 200 mm hár mótabiti, ~4,6 kg/m. Kemur í stöðluðum lengdum og má styðja í hvaða lengdum sem er.</div>
+
+      <h3>Skref 1: Reikna „leyfileg bil" með Spönn-töflunni (Span Table)</h3>
+      <p>Spönn-töflan vinnur svona:</p>
+      <ul>
+        <li><strong>Tafla 1 (Crossbeams / þverbitar):</strong> gefur leyfilegt bil milli aðalbita (main beams) miðað við plötuþykkt og bil milli þverbita.</li>
+        <li><strong>Tafla 2 (Main beams / aðalbitakerfi):</strong> þegar þú ert búinn að velja bil milli aðalbita (t.d. 2,50 m), þá lestu leyfilegt bil milli stoða út frá plötuþykkt.</li>
+      </ul>
+      <div class="lb-note">
+        <strong>Dæmi:</strong> Plötuþykkt 20 cm og bil milli þverbita 0,75 m ⇒ leyfilegt bil milli aðalbita = 2,58 m → velja næsta lægra í töflu 2 = 2,50 m → leyfilegt bil milli stoða = 1,27 m.
+      </div>
+
+      <h3>Skref 2: Umreikningur í magn (fljótlegt „counter" mat)</h3>
+      <p>Þegar þú ert komin með bil milli þverbita, bil milli aðalbita og bil milli stoða, notarðu:</p>
+      <ul>
+        <li><strong>Fjöldi aðalbita (í breidd):</strong> ≈ (breidd ÷ bil aðalbita) + 1</li>
+        <li><strong>Fjöldi þverbita (í lengd):</strong> ≈ (lengd ÷ bil þverbita) + 1</li>
+        <li><strong>Stoðir per „lína":</strong> ≈ (lengd ÷ bil stoða) + 1</li>
+      </ul>
+      <div class="lb-tip">Þetta er magnreikningur — spönn-töflan er það sem stýrir bilunum.</div>
+
+      <h3>Skref 3: Velja lengdir HT20</h3>
+      <p>HT20plus kemur í stöðluðum lengdum:</p>
+      <table>
+        <thead><tr><th>Lengd</th><th>2,45 m</th><th>2,90 m</th><th>3,30 m</th><th>3,60 m</th><th>3,90 m</th><th>4,90 m</th><th>5,90 m</th></tr></thead>
+        <tbody><tr><td>Til ráðs</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr></tbody>
+      </table>
+      <div class="lb-tip">Bita má skera og styðja í hvaða lengdum sem er vegna 3-laga vefsins.</div>
+
+      <div class="lb-warn">
+        <strong>Algengustu mistök — HT20:</strong><br>
+        <span class="lb-error">❌ Reyna reikna spacing á staðnum án teikninga eða verkfræðings.</span><br>
+        <span class="lb-error">❌ Rugla saman þverbitum (crossbeams) og aðalbitum (main beams) í töflunum.</span><br>
+        <span class="lb-error">❌ Nota spönn-töflu sem endanlegan hönnunarstaðal í stað viðmiðunar.</span><br>
+        <span class="lb-error">❌ Gleyma að staðfesta burð á props eða shoring towers sem eiga að bera kerfið.</span>
+      </div>
+
+      <hr>
+
+      <!-- ============================================================ -->
+      <h2>🔩 Villalta loftastoðir (props)</h2>
+
+      <h3>Áður en byrjað er — hvað þarf að vita frá viðskiptavininum</h3>
+      <ol>
+        <li><strong>Ljós hæð</strong> — gólf → undirhlið móts/bitakerfis</li>
+        <li><strong>Plötuþykkt og áætlað álag</strong> (eða hönnunargögn)</li>
+        <li><strong>Skipting/stæðarbil</strong> — hversu þétt á að setja stoðir</li>
+        <li><strong>Jarðvegur/gólf</strong> — þarf undirlegg/dreifiplötur?</li>
+      </ol>
+      <div class="lb-tip">Villalta stoðir eru til í mörgum útgáfum upp í 5,50 m hæð.</div>
+
+      <h3>Skref 1: Velja rétta stoð (módel) út frá hæð</h3>
+      <table>
+        <thead><tr><th>Módel</th><th>Lágm. hæð</th><th>Hámarks hæð</th></tr></thead>
+        <tbody>
+          <tr><td>160/290</td><td>~1,60 m</td><td>~2,90 m</td></tr>
+          <tr><td>180/320</td><td>~1,80 m</td><td>~3,20 m</td></tr>
+          <tr><td>200/360</td><td>~2,00 m</td><td>~3,60 m</td></tr>
+          <tr><td>220/400</td><td>~2,20 m</td><td>~4,00 m</td></tr>
+          <tr><td>250/440</td><td>~2,50 m</td><td>~4,40 m</td></tr>
+        </tbody>
+      </table>
+      <div class="lb-note">
+        <strong>Regla:</strong> Veldu stoð sem nær hæðinni án þess að vera „max-opnuð" — þá átt þú meira eftir í fínstillingu og burðarþol er almennt betra neðar í töflunni.
+      </div>
+
+      <h3>Skref 2: Hæðarstilling (gróft + fínstillt)</h3>
+      <ul>
+        <li>Innri rör eru götuð á <strong>100 mm fresti</strong> fyrir grófa hæðarstillingu.</li>
+        <li>Síðan kemur millímetrastilling með skrúfu/manicotto.</li>
+        <li><strong>Quick release</strong> losar stoð niður um ~5 mm með einu hamarslætti.</li>
+      </ul>
+
+      <h3>Skref 3: Staðfesta burðarþol úr burðartöflu</h3>
+      <table>
+        <thead><tr><th>Hæð</th><th>160/290</th><th>180/320</th><th>200/360</th><th>220/400</th><th>250/440</th></tr></thead>
+        <tbody>
+          <tr><td>200 cm</td><td>≈1.620 kg</td><td>≈1.785 kg</td><td>≈1.800 kg</td><td>—</td><td>—</td></tr>
+          <tr><td>300 cm</td><td>≈1.071 kg</td><td>≈1.280 kg</td><td>≈1.300 kg</td><td>≈1.420 kg</td><td>≈1.480 kg</td></tr>
+        </tbody>
+      </table>
+      <div class="lb-tip">Burðartaflan miðast við fullkomið lóðrétt (axial) álag — ef það er skakkt/óaxial fellur öryggið.</div>
+
+      <h3>Skref 4: Verkfræðingur / Magn — ábyrgðarmót</h3>
+      <div class="lb-note">
+        Þegar hönnuður/verktaki segir t.d. „setja stoðir á 1,2 m × 1,2 m net":<br>
+        <strong>Stoðir per m²</strong> = 1 ÷ (1,2 × 1,2) = 0,694<br>
+        <strong>Heildarfjöldi</strong> = svæði (m²) × 0,694 (námunda upp)
+      </div>
+
+      <div class="lb-warn">
+        <strong>Algengustu mistök — Villalta props:</strong><br>
+        <span class="lb-error">❌ Velja stoð sem er of nálægt max-hæð — tap á burði og léleg vinnustilling.</span><br>
+        <span class="lb-error">❌ Lesa burð af töflu án þess að staðfesta raunhæð.</span><br>
+        <span class="lb-error">❌ Reikna spacing milli props án þess að verkfræðileg gögn liggi fyrir.</span>
+      </div>
+
+    </div><!-- /lb-modal-body -->
+  </div><!-- /lb-modal -->
+</div><!-- /lb-overlay -->
+
+</body>
+</html>

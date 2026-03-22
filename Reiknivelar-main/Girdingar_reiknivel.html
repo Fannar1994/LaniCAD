@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Girðingareiknivél v10 – Byko Leiga</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap');
+:root{--color-border:#ddd;--color-surface:#fafafa;--color-bg:#f2f4f7;--color-muted:#666;--color-dark:#404042;--color-accent:#f5c800;--radius-sm:5px;--radius-md:8px;--radius-lg:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Barlow',system-ui,Arial,sans-serif;background:var(--color-bg);margin:0;padding:20px}
+.calculator{max-width:640px;margin:auto;background:#fff;padding:20px;border-radius:var(--radius-lg);box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.calc-header{display:flex;align-items:center;justify-content:space-between;margin:-20px -20px 20px -20px;padding:22px 28px;background:var(--color-dark);border-radius:var(--radius-lg) var(--radius-lg) 0 0;position:relative;overflow:hidden}
+.calc-header::before{content:'';position:absolute;top:0;left:0;width:6px;height:100%;background:var(--color-accent)}
+.calc-header::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+.calc-header-left{position:relative;z-index:1}
+.calc-header-eyebrow{font-family:'Barlow',system-ui,sans-serif;font-size:11px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--color-accent);margin-bottom:4px}
+.calc-header h2{margin:0;font-family:'Barlow Condensed',system-ui,sans-serif;font-size:30px;font-weight:700;color:#fff;letter-spacing:.5px;line-height:1}
+.calc-header-sub{font-family:'Barlow',system-ui,sans-serif;font-size:12px;color:rgba(255,255,255,.45);margin-top:5px;letter-spacing:.5px}
+.calc-body{padding:8px 8px 12px}
+.section-label{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--color-muted);margin-bottom:10px}
+.fence-tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.fence-tab{padding:14px 10px;border:2px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;color:var(--color-muted);line-height:1.3;display:flex;flex-direction:column;align-items:center;gap:6px}
+.fence-tab .tab-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;display:block;color:#333}
+.fence-tab .tab-sub{font-size:11px;font-weight:500;color:var(--color-muted);letter-spacing:.3px}
+.fence-tab.active{border-color:var(--color-dark);background:var(--color-dark)}
+.fence-tab.active .tab-name,.fence-tab.active .tab-sub{color:#fff}
+.fence-tab.active .tab-sub{color:var(--color-accent)}
+.option-tabs{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.option-tab{padding:8px 18px;border-radius:50px;background:#e8e8e8;border:none;font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;color:#555;text-align:center}
+.option-tab.active{background:var(--color-dark);color:#fff}
+.option-tab.disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+.field{margin-bottom:18px}
+.field>label{display:block;font-size:13px;font-weight:500;color:#444;margin-bottom:7px}
+.num-wrap{display:flex;border:1px solid #ccc;border-radius:var(--radius-md);overflow:hidden;background:#fff;transition:border-color .2s}
+.num-wrap:focus-within{border-color:var(--color-dark)}
+.num-wrap input{flex:1;border:none;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:16px;font-weight:500;outline:none;background:transparent}
+.num-arrows{display:flex;flex-direction:column;border-left:1px solid #eee}
+.num-arrows button{background:none;border:none;width:36px;height:24px;cursor:pointer;font-size:11px;color:#888;display:flex;align-items:center;justify-content:center;transition:background .15s;padding:0}
+.num-arrows button:hover{background:#f5f5f5;color:#333}
+.num-arrows button:first-child{border-bottom:1px solid #eee}
+.days-discount-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.days-discount-row .field{margin-bottom:0}
+.field-hint{font-size:11px;color:var(--color-muted);margin-top:4px}
+.acc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.acc-item{display:flex;align-items:center;gap:8px}
+.acc-item label{font-size:12px;font-weight:500;color:#444;flex:1;min-width:0}
+.acc-item .num-wrap{width:100px;flex-shrink:0}
+.acc-item .num-wrap input{padding:8px 10px;font-size:14px}
+.note-box{background:#fffbe6;border:1px solid #f5c800;border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:#92400e;margin-bottom:18px;line-height:1.5}
+.divider{height:1px;background:var(--color-border);margin:24px 0}
+.result-box{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:18px 20px;margin-bottom:8px}
+.result-warning{font-size:13px;color:#888;margin-bottom:8px;background:#fffbe6;border:1px solid #f5c800;border-radius:var(--radius-sm);padding:6px 10px}
+.result-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;font-size:15px;color:#444}
+.result-row .r-label{color:var(--color-muted);font-size:13px}
+.result-row .r-val{font-weight:600;color:#111}
+.result-separator{height:1px;background:var(--color-border);margin:10px 0}
+.result-subsection-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--color-muted);margin:12px 0 6px}
+.result-total{display:flex;justify-content:space-between;align-items:baseline;padding-top:14px;margin-top:10px;border-top:2px solid var(--color-dark)}
+.result-total .rt-label{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--color-dark)}
+.result-total .rt-value{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--color-dark);letter-spacing:.5px}
+.result-total.discounted{border-top:2px solid var(--color-accent);margin-top:6px;padding-top:10px}
+.result-total.discounted .rt-label{color:#a07c00}
+.result-total.discounted .rt-value{color:#a07c00}
+.result-empty{font-size:14px;color:#bbb;text-align:center;padding:10px 0}
+.mat-table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0 6px}
+.mat-table th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--color-muted);padding:6px 8px;border-bottom:2px solid var(--color-dark)}
+.mat-table th:last-child,.mat-table td:last-child{text-align:right}
+.mat-table td{padding:7px 8px;border-bottom:1px solid #eee;color:#333}
+.mat-table tr:last-child td{border-bottom:none}
+.tooltip-wrap{position:relative;display:inline-flex;align-items:center;gap:5px}
+.tooltip-icon{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#e0e0e0;color:var(--color-dark);font-size:10px;font-weight:700;cursor:pointer;margin-left:5px;flex-shrink:0}
+.tooltip-bubble{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1e293b;color:#f8fafc;font-size:12px;font-weight:400;line-height:1.5;padding:10px 14px;border-radius:var(--radius-md);width:260px;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.25);pointer-events:none;text-transform:none;letter-spacing:0}
+.tooltip-bubble::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1e293b}
+.tooltip-wrap:hover .tooltip-bubble,.tooltip-wrap:focus-within .tooltip-bubble{display:block}
+.breakdown-btn{display:inline-flex;align-items:center;gap:6px;margin:14px 0 4px;padding:8px 16px;background:none;border:1px solid var(--color-border);border-radius:50px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:var(--color-muted);cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.breakdown-btn:hover{border-color:var(--color-dark);color:var(--color-dark)}
+.breakdown-btn .arrow{font-size:10px;transition:transform .2s}
+.breakdown-btn.open .arrow{transform:rotate(180deg)}
+.breakdown-panel{display:none;margin:8px 0 4px;overflow-x:auto}
+.breakdown-panel.open{display:block}
+.bd-table{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0}
+.bd-table th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;background:var(--color-dark);padding:6px 8px;white-space:nowrap}
+.bd-table th:not(:first-child){text-align:right}
+.bd-table td{padding:5px 8px;border-bottom:1px solid #eee;color:#555;white-space:nowrap}
+.bd-table td:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+.bd-table tr:last-child td{border-bottom:none}
+.bd-table .bd-total td{font-weight:700;color:var(--color-dark);border-top:2px solid var(--color-dark);border-bottom:none}
+.bd-table .bd-rate{color:#999;font-size:11px}
+.print-only-label{display:none}
+.print-btn{display:inline-flex;align-items:center;gap:8px;margin:16px 0 4px;padding:10px 22px;background:var(--color-dark);border:none;border-radius:var(--radius-md);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#fff;cursor:pointer;transition:all .2s;letter-spacing:.5px;text-transform:uppercase}
+.print-btn:hover{background:#2a2a2c}
+.no-print{}
+@page{size:A4 portrait;margin:10mm 12mm}
+@media print{
+  body{background:#fff;padding:0;margin:0}
+  .calculator{box-shadow:none;max-width:100%;padding:6px 12px;border-radius:0}
+  .calc-header{background:#404042!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:14px 20px;margin:-6px -12px 12px -12px;border-radius:0}
+  .calc-header h2{display:none}
+  .calc-header-sub{display:none}
+  .calc-header-eyebrow{margin-bottom:0}
+  .print-header-title{display:block!important;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:#fff;line-height:1}
+  .no-print{display:none!important}
+  .calc-body .field,.calc-body .option-tabs,.calc-body .fence-tabs,.calc-body .section-label,.calc-body .note-box,.calc-body .acc-grid,.calc-body .divider,.calc-body .days-discount-row,.calc-body #heightSection,.calc-body #stoneSection,.calc-body #lengthSection,.calc-body #accSection{display:none!important}
+  .result-box{border:none;background:none;padding:0}
+  .breakdown-panel{display:block!important;overflow:visible}
+  .breakdown-btn{display:none!important}
+  .print-btn{display:none!important}
+  .print-only-label{display:block!important}
+  .bd-table{font-size:9px;margin:4px 0}
+  .bd-table th{background:#404042!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:4px 5px;font-size:8px;letter-spacing:.3px}
+  .bd-table td{padding:3px 5px;font-size:9px}
+  .bd-rate{display:none!important}
+  .mat-table{font-size:11px}
+  .mat-table th{border-bottom:2px solid #404042!important;padding:5px 6px}
+  .mat-table td{padding:5px 6px}
+  .result-total{border-top:2px solid #404042!important}
+  .result-total .rt-value{font-size:26px}
+  .result-row{font-size:13px;padding:2px 0}
+  .result-subsection-label{font-size:10px;margin:8px 0 4px}
+}
+@media(max-width:500px){.fence-tabs{grid-template-columns:1fr}.days-discount-row{grid-template-columns:1fr}.acc-grid{grid-template-columns:1fr}.result-total .rt-value{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="calculator">
+  <div class="calc-header">
+    <div class="calc-header-left">
+      <div class="calc-header-eyebrow">Byko Leiga</div>
+      <h2>Girðingareiknivél</h2>
+      <span class="print-header-title" style="display:none">Tilboð - leiga á girðingum</span>
+      <div class="calc-header-sub">Iðnaðargirðingar — verðútreikningur</div>
+    </div>
+  </div>
+  <div class="calc-body">
+    <div class="section-label">Tegund girðingar</div>
+    <div class="fence-tabs">
+      <button class="fence-tab active" onclick="selectFenceType('standard',this)"><span class="tab-name">Girðingar 3,5m</span><span class="tab-sub">Vinnustaðagirðingar</span></button>
+      <button class="fence-tab" onclick="selectFenceType('queue',this)"><span class="tab-name">Biðraðagirðingar</span><span class="tab-sub">2,5m</span></button>
+      <button class="fence-tab" onclick="selectFenceType('plastic',this)"><span class="tab-name">Plastgirðingar</span><span class="tab-sub">2,1m</span></button>
+      <button class="fence-tab" onclick="selectFenceType('warning',this)"><span class="tab-name">Gátaskjöldur</span><span class="tab-sub">1,3m</span></button>
+    </div>
+    <div id="heightSection">
+      <div class="section-label">Hæð girðingar</div>
+      <div class="option-tabs" id="heightTabs">
+        <button class="option-tab active" onclick="selectHeight('2.0',this)">2,0 m</button>
+        <button class="option-tab" onclick="selectHeight('1.2',this)">1,2 m</button>
+      </div>
+    </div>
+
+    <div id="stoneSection">
+      <div class="section-label">Tegund steina</div>
+      <div class="option-tabs" id="stoneTabs">
+        <button class="option-tab active" onclick="selectStoneType('concrete',this)">Steyptir steinar</button>
+        <button class="option-tab" onclick="selectStoneType('pvc',this)">PVC steinar</button>
+      </div>
+    </div>
+    <div id="lengthSection">
+      <div class="field">
+        <label id="lengthLabel">Heildar lengd girðingar (metrar)</label>
+        <div class="num-wrap">
+          <input type="text" inputmode="decimal" id="lengthInput" value="0" oninput="calculate()">
+          <div class="num-arrows"><button onclick="stepField('lengthInput',1,0.5)">&#9650;</button><button onclick="stepField('lengthInput',-1,0.5)">&#9660;</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="note-box" id="layoutNote">&#128161; <strong>Ábending:</strong> Fjöldi steina = fjöldi girðinga + 1 og klemmur = fjöldi girðinga &#8722; 1 (opinn girðing A&#8594;B). Ef lokuð hringgirðing: steinar = fjöldi girðinga &#8722; 1, klemmur = fjöldi girðinga + 1.</div>
+    <div class="days-discount-row">
+      <div class="field">
+        <label>Leigutími (dagar)</label>
+        <div class="num-wrap">
+          <input type="text" inputmode="numeric" id="rentalDays" value="30" oninput="calculate()">
+          <div class="num-arrows"><button onclick="stepField('rentalDays',1,1)">&#9650;</button><button onclick="stepField('rentalDays',-1,1)">&#9660;</button></div>
+        </div>
+        <div class="field-hint">Lágmark: 10 dagar</div>
+      </div>
+      <div class="field">
+        <label>Afsláttur</label>
+        <div class="note-box" style="margin-bottom:0">Leiguverð lækkar sjálfkrafa eftir leigutíma. Sjá nánar í <em>sundurliðun eftir tímabilum</em>.</div>
+      </div>
+    </div>
+    <div id="accSection">
+      <div class="section-label">Aukahlutir</div>
+      <div class="acc-grid">
+        <div class="acc-item" id="accGate"><label>Gönguhlið (stk)</label><div class="num-wrap"><input type="text" inputmode="numeric" id="gateQty" value="0" oninput="calculate()"><div class="num-arrows"><button onclick="stepField('gateQty',1,1)">&#9650;</button><button onclick="stepField('gateQty',-1,1)">&#9660;</button></div></div></div>
+        <div class="acc-item" id="accWheels"><label>Hjól f/girðingar (stk)</label><div class="num-wrap"><input type="text" inputmode="numeric" id="wheelsQty" value="0" oninput="calculate()"><div class="num-arrows"><button onclick="stepField('wheelsQty',1,1)">&#9650;</button><button onclick="stepField('wheelsQty',-1,1)">&#9660;</button></div></div></div>
+        <div class="acc-item" id="accLock"><label>Efri læsing f/hlið (stk)</label><div class="num-wrap"><input type="text" inputmode="numeric" id="lockQty" value="0" oninput="calculate()"><div class="num-arrows"><button onclick="stepField('lockQty',1,1)">&#9650;</button><button onclick="stepField('lockQty',-1,1)">&#9660;</button></div></div></div>
+        <div class="acc-item" id="accSign"><label>Gátaskjöldur (stk)</label><div class="num-wrap"><input type="text" inputmode="numeric" id="signQty" value="0" oninput="calculate()"><div class="num-arrows"><button onclick="stepField('signQty',1,1)">&#9650;</button><button onclick="stepField('signQty',-1,1)">&#9660;</button></div></div></div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div id="resultBox"><div class="result-empty">Fylltu inn upplýsingar til að sjá verðtilboð.</div></div>
+  </div>
+</div>
+<script>
+var currentFenceType="standard",currentHeight="2.0",currentStoneType="concrete",MIN_DAYS=10;
+var PRODUCTS={
+  "fence-3500x2000x1.1":{rentalNo:"01-BAT-GI01-015",saleNo:"0295300",desc:"Girðingar 3,5x2m",rates:[100,50,25,13,13,13,13,13,13,13,13,13],salePrice:19995},
+  "fence-3500x2000x1.7":{rentalNo:"01-BAT-GI01-053",saleNo:"0295317",desc:"Girðingar 3,5x2m",rates:[100,50,25,13,13,13,13,13,13,13,13,13],salePrice:24995},
+  "fence-3500x1200x1.1":{rentalNo:"01-BAT-GI01-052",saleNo:"0295290",desc:"Girðingar 3,5x1,2m",rates:[80,40,20,10,10,10,10,10,10,10,10,10],salePrice:12995},
+  "queue-barrier":{rentalNo:"01-BAT-GI01-050",saleNo:"0295292",desc:"Biðraðagirðingar 2,5x1,1m",rates:[130,65,33,16,16,16,16,16,16,16,16,16],salePrice:24995},
+  "plastic-fence":{rentalNo:"01-BAT-GI01-043",saleNo:"0295243",desc:"Girðing plast 2,1x1,1m",rates:[80,40,20,10,10,10,10,10,10,10,10,10],salePrice:26995},
+  "stone-concrete":{rentalNo:"01-BAT-GI01-054",saleNo:"0295320",desc:"Steinar f/girðingar",rates:[20,10,5,3,3,3,3,3,3,3,3,3],salePrice:2495},
+  "stone-pvc":{rentalNo:"01-BAT-GI01-0541",saleNo:"0295325",desc:"PVC Steinar f/girðingar",rates:[50,25,13,6,6,6,6,6,6,6,6,6],salePrice:3995},
+  "clamps":{rentalNo:"01-BAT-GI01-097",saleNo:"97100097",desc:"Klemmur f/girðingar",rates:[2,2,2,2,2,2,2,2,2,2,2,2],salePrice:995},
+  "rack-fence":{rentalNo:"01-BAT-GI01-100",saleNo:"97100100",desc:"Rekki f/girðingar (25stk)",rates:[100,100,100,100,100,100,100,100,100,100,100,100],salePrice:99995},
+  "rack-queue":{rentalNo:"01-BAT-GI01-051",saleNo:"97310020",desc:"Rekki f/biðraðagirðingar (15stk)",rates:[64,64,64,64,64,64,64,64,64,64,64,64],salePrice:84995},
+  "walking-gate":{rentalNo:"01-BAT-GI01-096",saleNo:"97100096",desc:"Gönguhlið 1,2m",rates:[100,50,25,13,13,13,13,13,13,13,13,13],salePrice:20312},
+  "wheels":{rentalNo:"01-BAT-GI01-099",saleNo:"97100099",desc:"Hjól f/girðingar",rates:[110,55,28,14,14,14,14,14,14,14,14,14],salePrice:18395},
+  "lock":{rentalNo:"01-BAT-GI01-101",saleNo:"971000981",desc:"Efri læsing f/hlið",rates:[50,25,13,6,6,6,6,6,6,6,6,6],salePrice:4858},
+  "warning-sign":{rentalNo:"01-BAT-GI01-045",saleNo:"0295245",desc:"Gátaskjöldur 1,3x0,31m",rates:[40,20,10,5,5,5,5,5,5,5,5,5],salePrice:9995}
+};
+function fmtNum(n){return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,".")}
+function fmtDec(n,d){return n.toFixed(d).replace(".",",")}
+function parseVal(s){if(!s)return 0;return parseFloat(String(s).replace(/,/g,"."))||0}
+function calcRentalCost(days,rates,qty){var t=0,r=days;for(var i=0;i<12;i++){if(r<=0)break;var pd=Math.min(r,30);t+=pd*rates[i]*qty;r-=pd}return t}
+function selectFenceType(type,btn){currentFenceType=type;document.querySelectorAll(".fence-tab").forEach(function(b){b.classList.remove("active")});btn.classList.add("active");updateVisibility();calculate()}
+function selectHeight(h,btn){currentHeight=h;btn.closest(".option-tabs").querySelectorAll(".option-tab").forEach(function(b){b.classList.remove("active")});btn.classList.add("active");updateVisibility();calculate()}
+
+function selectStoneType(s,btn){currentStoneType=s;btn.closest(".option-tabs").querySelectorAll(".option-tab").forEach(function(b){b.classList.remove("active")});btn.classList.add("active");calculate()}
+function stepField(id,dir,step){var el=document.getElementById(id);var v=parseVal(el.value);var nv=Math.max(0,Math.round((v+dir*step)*10)/10);el.value=step>=1?Math.round(nv):fmtDec(nv,1);calculate()}
+function updateVisibility(){var ft=currentFenceType;var s=function(id,v){document.getElementById(id).style.display=v?"":"none"};s("heightSection",ft==="standard");s("stoneSection",ft==="standard"||ft==="plastic");s("layoutNote",ft==="standard");if(ft==="warning"){document.getElementById("lengthLabel").textContent="Fjöldi gátaskjalda (stk)"}else{document.getElementById("lengthLabel").textContent="Heildar lengd girðingar (metrar)"}s("accGate",ft==="standard"||ft==="plastic");s("accWheels",ft==="standard");s("accLock",ft==="standard"||ft==="plastic");s("accSign",ft==="standard"||ft==="plastic");s("accSection",ft!=="queue"&&ft!=="warning")}
+function toggleBreakdown(){var arrow=document.getElementById("bdArrow");var panel=document.getElementById("bdPanel");if(panel.classList.contains("open")){panel.classList.remove("open");arrow.textContent="\u25BC"}else{panel.classList.add("open");arrow.textContent="\u25B2"}}
+function printPDF(){var panel=document.getElementById("bdPanel");if(panel&&!panel.classList.contains("open")){panel.classList.add("open");var arrow=document.getElementById("bdArrow");if(arrow)arrow.textContent="\u25B2"}setTimeout(function(){window.print()},200)}
+function calculate(){updateVisibility();var days=parseInt(parseVal(document.getElementById("rentalDays").value))||0;var box=document.getElementById("resultBox");var ft=currentFenceType;var minWarning=false;if(days<MIN_DAYS&&days>0){minWarning=true;days=MIN_DAYS}var inputVal=parseVal(document.getElementById("lengthInput").value);var gateQty=Math.max(0,parseInt(parseVal(document.getElementById("gateQty").value))||0);var wheelsQty=Math.max(0,parseInt(parseVal(document.getElementById("wheelsQty").value))||0);var lockQty=Math.max(0,parseInt(parseVal(document.getElementById("lockQty").value))||0);var signQty=Math.max(0,parseInt(parseVal(document.getElementById("signQty").value))||0);if(inputVal<=0||days<=0){box.innerHTML='<div class="result-empty">Fylltu inn upplýsingar til að sjá verðtilboð.</div>';return}var fenceLength,fenceKey,stoneKey,panelCount,stoneCount,clampCount,rackKey,rackCount;if(ft==="standard"){fenceLength=3.5;if(currentHeight==="2.0")fenceKey="fence-3500x2000x1.1";else fenceKey="fence-3500x1200x1.1";stoneKey=currentStoneType==="pvc"?"stone-pvc":"stone-concrete";panelCount=Math.ceil(inputVal/fenceLength);stoneCount=panelCount+1;clampCount=Math.max(0,panelCount-1);rackKey="rack-fence";rackCount=Math.ceil(panelCount/25)}else if(ft==="queue"){fenceLength=2.5;fenceKey="queue-barrier";panelCount=Math.ceil(inputVal/fenceLength);stoneCount=0;clampCount=0;stoneKey=null;rackKey="rack-queue";rackCount=Math.ceil(panelCount/15)}else if(ft==="plastic"){fenceLength=2.1;fenceKey="plastic-fence";stoneKey=currentStoneType==="pvc"?"stone-pvc":"stone-concrete";panelCount=Math.ceil(inputVal/fenceLength);stoneCount=panelCount+1;clampCount=0;rackKey=null;rackCount=0}else{panelCount=Math.round(inputVal);fenceKey="warning-sign";stoneKey="stone-pvc";stoneCount=panelCount;clampCount=0;fenceLength=1;rackKey=null;rackCount=0}var actualLength=ft==="warning"?null:(panelCount*fenceLength);var items=[],totalRental=0,totalSale=0;function addItem(key,qty){if(qty<=0)return;var p=PRODUCTS[key];var cost=calcRentalCost(days,p.rates,qty);totalRental+=cost;totalSale+=p.salePrice*qty;items.push({desc:p.desc,rentalNo:p.rentalNo,saleNo:p.saleNo,qty:qty,cost:cost,salePrice:p.salePrice*qty,rates:p.rates})}addItem(fenceKey,panelCount);if(stoneKey&&stoneCount>0)addItem(stoneKey,stoneCount);if(clampCount>0)addItem("clamps",clampCount);if(rackKey&&rackCount>0)addItem(rackKey,rackCount);if(gateQty>0&&(ft==="standard"||ft==="plastic"))addItem("walking-gate",gateQty);if(wheelsQty>0&&ft==="standard")addItem("wheels",wheelsQty);if(lockQty>0&&(ft==="standard"||ft==="plastic"))addItem("lock",lockQty);if(signQty>0&&(ft==="standard"||ft==="plastic"))addItem("warning-sign",signQty);var TIP='<span class="tooltip-wrap"><span class="tooltip-icon">i</span><span class="tooltip-bubble">Verð er áætlað og byggt á gildandi verðskrá (janúar 2026). Endanlegt verð kann að breytast.</span></span>';var html='<div class="result-box">';if(minWarning)html+='<div class="result-warning">\u26a0 Lágmarksleigutími miðar við '+MIN_DAYS+' daga.</div>';html+='<div class="result-row"><span class="r-label">Tegund</span><span class="r-val">'+PRODUCTS[fenceKey].desc+'</span></div>';if(actualLength!==null){html+='<div class="result-row"><span class="r-label">Umbeðin lengd</span><span class="r-val">'+fmtDec(inputVal,1)+' m</span></div>';html+='<div class="result-row"><span class="r-label">Raunveruleg lengd</span><span class="r-val">'+fmtDec(actualLength,1)+' m</span></div>'}html+='<div class="result-row"><span class="r-label">Leigutími</span><span class="r-val">'+days+' dagar</span></div>';html+='<div class="result-subsection-label">Efnislisti</div>';html+='<table class="mat-table"><thead><tr><th>Vara</th><th>Magn</th><th>Leiga (samtals)</th></tr></thead><tbody>';for(var i=0;i<items.length;i++){var it=items[i];html+='<tr><td>'+it.desc+'</td><td>'+it.qty+' stk</td><td>'+fmtNum(it.cost)+' kr</td></tr>'}html+='</tbody></table>';html+='<div class="result-total"><span class="rt-label">Heildarleiga (með VSK) '+TIP+'</span><span class="rt-value">'+fmtNum(totalRental)+' kr</span></div>';html+='<button class="print-btn no-print" onclick="printPDF()">&#9660; Prenta / Vista PDF</button>';var numPeriods=Math.ceil(days/30);if(numPeriods>12)numPeriods=12;html+='<div class="result-subsection-label no-print" style="margin-top:14px;cursor:pointer" onclick="toggleBreakdown()">Sjá sundurliðun eftir tímabilum <span class="arrow" id="bdArrow" style="font-size:10px">\u25BC</span></div>';html+='<div class="result-subsection-label print-only-label" style="margin-top:14px">Hér má sjá sundurliðun eftir tímabilum:</div>';html+='<div class="breakdown-panel" id="bdPanel">';var CHUNK=6;var numChunks=Math.ceil(numPeriods/CHUNK);var dailyTotals=[];var periodCosts=[];for(var p=0;p<numPeriods;p++){dailyTotals[p]=0;for(var i=0;i<items.length;i++){dailyTotals[p]+=items[i].rates[p]*items[i].qty}var remaining=days-p*30;var pDays=remaining>0?Math.min(remaining,30):0;periodCosts[p]=dailyTotals[p]*pDays}for(var c=0;c<numChunks;c++){var pFrom=c*CHUNK;var pTo=Math.min(pFrom+CHUNK,numPeriods);html+='<table class="bd-table"><thead><tr><th>Vara</th><th>Magn</th>';for(var p=pFrom;p<pTo;p++){var pStart=p*30+1;var pEnd=Math.min((p+1)*30,days);html+='<th>Dagar '+pStart+'-'+pEnd+'</th>'}html+='</tr></thead><tbody>';for(var i=0;i<items.length;i++){var it=items[i];html+='<tr><td>'+it.desc+'</td><td>'+it.qty+'</td>';for(var p=pFrom;p<pTo;p++){var dailyCost=it.rates[p]*it.qty;html+='<td>'+fmtNum(dailyCost)+' <span class="bd-rate">('+it.rates[p]+' kr/d)</span></td>'}html+='</tr>'}html+='<tr class="bd-total"><td colspan="2">Samtals dagleiga</td>';for(var p=pFrom;p<pTo;p++){html+='<td>'+fmtNum(dailyTotals[p])+' kr</td>'}html+='</tr>';html+='<tr class="bd-total"><td colspan="2">Samt.kostn.pr.mán</td>';for(var p=pFrom;p<pTo;p++){html+='<td>'+fmtNum(periodCosts[p])+' kr</td>'}html+='</tr>';html+='<tr class="bd-total"><td colspan="2">Heildarkostnaður</td>';var cumulative=0;for(var pp=0;pp<=pTo-1;pp++){cumulative+=periodCosts[pp]}var cumBefore=0;for(var pp=0;pp<pFrom;pp++){cumBefore+=periodCosts[pp]}for(var p=pFrom;p<pTo;p++){cumBefore+=periodCosts[p];html+='<td>'+fmtNum(cumBefore)+' kr</td>'}html+='</tr>';html+='</tbody></table>';if(c<numChunks-1)html+='<div style="height:12px"></div>'}html+='</div>';html+='</div>';box.innerHTML=html}
+window.onload=function(){updateVisibility();calculate()};
+</script>
+</body>
+</html>

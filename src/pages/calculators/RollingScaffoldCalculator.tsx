@@ -3,7 +3,8 @@ import { useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
   NARROW_PRICING, WIDE_PRICING, QUICKLY_PRICING, SUPPORT_LEGS_PRICING,
-  NARROW_COMPONENTS, ROLLING_TYPES, HEIGHT_OPTIONS
+  NARROW_COMPONENTS, WIDE_COMPONENTS, QUICKLY_COMPONENTS,
+  ROLLING_TYPES, HEIGHT_OPTIONS
 } from '@/data/rolling-scaffold'
 import { calcRollingRental } from '@/lib/calculations/rental'
 import { formatKr } from '@/lib/format'
@@ -50,10 +51,11 @@ export function RollingScaffoldCalculator() {
 
   // Component breakdown for detailed view
   const components = useMemo(() => {
-    if (isQuickly || scaffoldType === 'wide') return []
-    return NARROW_COMPONENTS.map(c => ({
+    const source = isQuickly ? QUICKLY_COMPONENTS : scaffoldType === 'wide' ? WIDE_COMPONENTS : NARROW_COMPONENTS
+    const h = isQuickly ? '4.0' : height
+    return source.map(c => ({
       ...c,
-      qty: c.quantities[height] ?? 0,
+      qty: c.quantities[h] ?? 0,
     })).filter(c => c.qty > 0)
   }, [scaffoldType, height, isQuickly])
 

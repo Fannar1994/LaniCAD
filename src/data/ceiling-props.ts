@@ -37,32 +37,39 @@ export interface AccessoryData {
 }
 
 export const LOFTASTODIR: CeilingPropData[] = [
-  { id: '01-MÓT-LM51-000', articleNumber: '97200039', name: 'Villalta 070/120M', minHeight: 0.7, maxHeight: 1.2, kN_min: 52.1, kN_max: 20, weight_kg: 6.1, classLabel: 'A', classKey: 'A', dayRate: 16, weekRate: 60, salePrice: 5422 },
-  { id: '01-MÓT-LM51-001', articleNumber: '97200040', name: 'Villalta 100/180M', minHeight: 1.0, maxHeight: 1.8, kN_min: 52.1, kN_max: 20, weight_kg: 7.4, classLabel: 'A', classKey: 'A', dayRate: 18, weekRate: 67, salePrice: 6595 },
-  { id: '01-MÓT-LM51-002', articleNumber: '97200041', name: 'Villalta 120/200M', minHeight: 1.2, maxHeight: 2.0, kN_min: 52.1, kN_max: 20, weight_kg: 8.0, classLabel: 'A-B', classKey: 'A', dayRate: 20, weekRate: 75, salePrice: 7195 },
-  { id: '01-MÓT-LM51-003', articleNumber: '97200042', name: 'Villalta 160/290M', minHeight: 1.6, maxHeight: 2.9, kN_min: 35, kN_max: 20, weight_kg: 10.8, classLabel: 'B-BD', classKey: 'BD', dayRate: 25, weekRate: 93, salePrice: 10495 },
-  { id: '01-MÓT-LM51-004', articleNumber: '97200043', name: 'Villalta 200/350M', minHeight: 2.0, maxHeight: 3.5, kN_min: 35, kN_max: 15, weight_kg: 12.2, classLabel: 'B-CD', classKey: 'CD', dayRate: 30, weekRate: 112, salePrice: 13895 },
-  { id: '01-MÓT-LM51-005', articleNumber: '97200044', name: 'Villalta 250/400M', minHeight: 2.5, maxHeight: 4.0, kN_min: 30, kN_max: 12, weight_kg: 14.5, classLabel: 'CE', classKey: 'CE', dayRate: 35, weekRate: 130, salePrice: 17595 },
-  { id: '01-MÓT-LM51-006', articleNumber: '97200045', name: 'Villalta 301/500M', minHeight: 3.01, maxHeight: 5.0, kN_min: 30, kN_max: 10, weight_kg: 18.7, classLabel: 'D-E', classKey: 'E', dayRate: 50, weekRate: 186, salePrice: 26995 },
-  { id: '01-MÓT-LM51-007', articleNumber: '97200046', name: 'Villalta 301/550M', minHeight: 3.01, maxHeight: 5.5, kN_min: 30, kN_max: 10, weight_kg: 22.0, classLabel: 'E', classKey: 'E', dayRate: 70, weekRate: 260, salePrice: 40795 },
+  { id: '01-MÓT-LM51-041', articleNumber: '97100041', name: 'Loftastoðir 0,7–1,2M (Málað)', minHeight: 0.7, maxHeight: 1.2, kN_min: 25.9, kN_max: 20.8, weight_kg: 5.8, classLabel: 'A', classKey: 'A', dayRate: 16, weekRate: 112, salePrice: 5422 },
+  { id: '01-MÓT-LM51-027', articleNumber: '97100027', name: 'Loftastoðir 1,6–3,0M (Málað)', minHeight: 1.6, maxHeight: 3.0, kN_min: 11.7, kN_max: 3.3, weight_kg: 9.75, classLabel: 'A', classKey: 'A', dayRate: 16, weekRate: 112, salePrice: 6689 },
+  { id: '01-MÓT-LM51-026', articleNumber: '97100026', name: 'Loftastoðir 2,0–3,5M (Málað)', minHeight: 2.0, maxHeight: 3.5, kN_min: 7.5, kN_max: 2.4, weight_kg: 10.26, classLabel: 'A', classKey: 'A', dayRate: 16, weekRate: 112, salePrice: 7547 },
+  { id: '01-MÓT-LM51-029', articleNumber: '97100029', name: 'Loftastoðir 1,6–2,9M (Galv.)', minHeight: 1.6, maxHeight: 2.9, kN_min: 11.7, kN_max: 3.6, weight_kg: 11.0, classLabel: 'A', classKey: 'A', dayRate: 20, weekRate: 140, salePrice: 9174 },
+  { id: '01-MÓT-LM51-028', articleNumber: '97100028', name: 'Loftastoðir 2,0–3,5M (Galv.)', minHeight: 2.0, maxHeight: 3.5, kN_min: 7.5, kN_max: 2.4, weight_kg: 11.0, classLabel: 'A', classKey: 'A', dayRate: 20, weekRate: 140, salePrice: 10340 },
+  { id: '01-MÓT-LM51-092', articleNumber: '97100092', name: 'Loftastoðir B/D30 175/300', minHeight: 1.75, maxHeight: 3.0, kN_min: 13.1, kN_max: 4.4, weight_kg: 16.89, classLabel: 'B/D', classKey: 'BD', dayRate: 30, weekRate: 210, salePrice: 17633 },
+  { id: '01-MÓT-LM51-031', articleNumber: '97100031', name: 'Loftastoðir B30 178/300 HPE Galv.', minHeight: 1.78, maxHeight: 3.0, kN_min: 12.6, kN_max: 4.4, weight_kg: 16.8, classLabel: 'B', classKey: 'B', dayRate: 28, weekRate: 196, salePrice: 20869 },
+  { id: '01-MÓT-LM51-913', articleNumber: '97100913', name: 'Loftastoðir CE30 179/300 Galv.', minHeight: 1.79, maxHeight: 3.0, kN_min: 18.7, kN_max: 6.7, weight_kg: 10.26, classLabel: 'C/E', classKey: 'CE', dayRate: 40, weekRate: 280, salePrice: 21750 },
+  { id: '01-MÓT-LM51-032', articleNumber: '97100032', name: 'Loftastoðir B35 200/350 HPE Galv.', minHeight: 2.0, maxHeight: 3.5, kN_min: 10.0, kN_max: 3.3, weight_kg: 17.4, classLabel: 'B', classKey: 'B', dayRate: 28, weekRate: 196, salePrice: 18706 },
+  { id: '01-MÓT-LM51-091', articleNumber: '97100091', name: 'Loftastoðir CD35 201/350 Galv.', minHeight: 2.01, maxHeight: 3.5, kN_min: 14.9, kN_max: 4.9, weight_kg: 20.5, classLabel: 'C/D', classKey: 'CD', dayRate: 40, weekRate: 280, salePrice: 21395 },
+  { id: '01-MÓT-LM51-235', articleNumber: '97100235', name: 'Loftastoðir E35 (201/350)', minHeight: 2.01, maxHeight: 3.5, kN_min: 30.0, kN_max: 30.0, weight_kg: 20.5, classLabel: 'E', classKey: 'E', dayRate: 40, weekRate: 280, salePrice: 19995 },
+  { id: '01-MÓT-LM51-935', articleNumber: 'FA8169012C', name: 'Faresin Loftastoðir E35 200/350 (Galv.)', minHeight: 2.0, maxHeight: 3.5, kN_min: 30.0, kN_max: 30.0, weight_kg: 0, classLabel: 'E', classKey: 'E', dayRate: 40, weekRate: 280, salePrice: 19621 },
+  { id: '01-MÓT-LM51-048', articleNumber: '97100048', name: 'Loftastoðir B45 260/480 Galv.', minHeight: 2.6, maxHeight: 4.8, kN_min: 5.9, kN_max: 1.7, weight_kg: 21.18, classLabel: 'B', classKey: 'B', dayRate: 28, weekRate: 196, salePrice: 39669 },
+  { id: '01-MÓT-LM51-080', articleNumber: '97100209', name: 'Loftastoðir D45', minHeight: 2.6, maxHeight: 4.5, kN_min: 20.0, kN_max: 20.0, weight_kg: 42.0, classLabel: 'D', classKey: 'D', dayRate: 60, weekRate: 420, salePrice: 24650 },
+  { id: '01-MÓT-LM51-079', articleNumber: '97100079', name: 'Loftastoðir D55 301/550 Galv.', minHeight: 3.01, maxHeight: 5.5, kN_min: 20.0, kN_max: 20.0, weight_kg: 42.0, classLabel: 'D', classKey: 'D', dayRate: 70, weekRate: 490, salePrice: 40795 },
 ]
 
 export const MOTABITAR: BeamData[] = [
-  { id: '01-MÓT-LM71-001', articleNumber: '97200050', name: 'HT-20 Mótabiti 2,45m', length_m: 2.45, weight_kg: 11.1, dayRate: 50, weekRate: 186, salePrice: 16995 },
-  { id: '01-MÓT-LM71-002', articleNumber: '97200051', name: 'HT-20 Mótabiti 2,90m', length_m: 2.9, weight_kg: 12.9, dayRate: 60, weekRate: 223, salePrice: 20495 },
-  { id: '01-MÓT-LM71-003', articleNumber: '97200052', name: 'HT-20 Mótabiti 3,30m', length_m: 3.3, weight_kg: 14.5, dayRate: 70, weekRate: 260, salePrice: 23995 },
-  { id: '01-MÓT-LM71-004', articleNumber: '97200053', name: 'HT-20 Mótabiti 3,90m', length_m: 3.9, weight_kg: 16.9, dayRate: 80, weekRate: 297, salePrice: 28995 },
-  { id: '01-MÓT-LM71-005', articleNumber: '97200054', name: 'HT-20 Mótabiti 4,90m', length_m: 4.9, weight_kg: 20.9, dayRate: 100, weekRate: 372, salePrice: 37995 },
-  { id: '01-MÓT-LM71-006', articleNumber: '97200055', name: 'Faresin Mótabiti 3,60m', length_m: 3.6, weight_kg: 18.0, dayRate: 90, weekRate: 335, salePrice: 43895 },
-  { id: '01-MÓT-LM71-007', articleNumber: '97200056', name: 'Faresin Mótabiti 5,90m', length_m: 5.9, weight_kg: 29.0, dayRate: 140, weekRate: 520, salePrice: 57895 },
+  { id: '01-MÓT-LM71-924', articleNumber: '0153924', name: 'HT-20 2,45 m', length_m: 2.45, weight_kg: 11.27, dayRate: 17, weekRate: 119, salePrice: 8647 },
+  { id: '01-MÓT-LM71-926', articleNumber: '0153926', name: 'HT-20 2,65 m', length_m: 2.65, weight_kg: 12.19, dayRate: 19, weekRate: 133, salePrice: 9471 },
+  { id: '01-MÓT-LM71-929', articleNumber: '0153929', name: 'HT-20 2,9 m', length_m: 2.9, weight_kg: 13.34, dayRate: 20, weekRate: 140, salePrice: 10295 },
+  { id: '01-MÓT-LM71-933', articleNumber: '0153933', name: 'HT-20 3,3 m', length_m: 3.3, weight_kg: 13.34, dayRate: 21, weekRate: 145, salePrice: 11634 },
+  { id: '01-MÓT-LM71-936', articleNumber: '0153936', name: 'HT-20 3,6 m', length_m: 3.6, weight_kg: 16.56, dayRate: 25, weekRate: 175, salePrice: 13076 },
+  { id: '01-MÓT-LM71-939', articleNumber: '0153939', name: 'HT-20 3,9 m', length_m: 3.9, weight_kg: 17.94, dayRate: 27, weekRate: 189, salePrice: 17633 },
+  { id: '01-MÓT-LM71-949', articleNumber: '0153949', name: 'HT-20 4,9 m', length_m: 4.9, weight_kg: 22.54, dayRate: 34, weekRate: 238, salePrice: 17299 },
 ]
 
 export const AUKAHLUTIR: AccessoryData[] = [
-  { id: '01-MÓT-AH21-041', name: 'Þrífótur', weight_kg: 7, dayRate: 5, weekRate: 19, salePrice: 4500 },
-  { id: '01-MÓT-AH21-042', name: 'Framlenging 50cm', weight_kg: 3, dayRate: 3, weekRate: 11, salePrice: 2500 },
-  { id: '01-MÓT-AH21-043', name: 'Rekkur (málað)', weight_kg: 45, dayRate: 20, weekRate: 75, salePrice: 15000 },
-  { id: '01-MÓT-AH21-044', name: 'Rekkur (galvanísað)', weight_kg: 45, dayRate: 25, weekRate: 93, salePrice: 18000 },
-  { id: '01-MÓT-AH21-045', name: 'Gafflar', weight_kg: 2, dayRate: 5, weekRate: 19, salePrice: 3500 },
+  { id: '01-MÓT-LM51-024', name: 'Þrífótur f/ Loftastoðir', weight_kg: 11.55, dayRate: 28, weekRate: 196, salePrice: 10156 },
+  { id: '01-MÓT-LM51-095', name: 'Framlenging f/ Loftastoðir 100cm', weight_kg: 11.55, dayRate: 16, weekRate: 112, salePrice: 6295 },
+  { id: '01-MÓT-LM51-040', name: 'Rekkar fyrir Loftastoðir (Málað)', weight_kg: 32.6, dayRate: 64, weekRate: 448, salePrice: 45580 },
+  { id: '01-MÓT-LM51-954', name: 'Faresin Loftastoðarekki (Galv.)', weight_kg: 0, dayRate: 106, weekRate: 745, salePrice: 114955 },
+  { id: '01-MÓT-LM51-025', name: 'Gafflar stórir', weight_kg: 2.5, dayRate: 16, weekRate: 112, salePrice: 2515 },
 ]
 
 export const CLASS_INFO: Record<string, { label: string; desc: string; kN: string }> = {

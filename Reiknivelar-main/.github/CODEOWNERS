@@ -1,0 +1,9 @@
+# CODEOWNERS – used by GitHub branch rulesets to require reviews from
+# code owners before merging pull requests.
+#
+# When the "Require review from Code Owners" option is enabled in a
+# branch ruleset, changes to matching paths must be approved by the
+# listed owners.
+
+# Default owner for everything in the repository
+* @Fannar1994

@@ -1,0 +1,3532 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+<title>Vinnupalla reiknivél – BYKO Leiga</title>
+<style>
+  /* ── Variables ───────────────────────────────── */
+  :root {
+    --color-border:  #ddd;
+    --color-surface: #fafafa;
+    --color-bg:      #f2f4f7;
+    --color-muted:   #666;
+    --radius-sm:     5px;
+    --radius-md:     8px;
+    --radius-lg:     10px;
+  }
+
+  .print-only { display: none; }
+
+  /* ── Base ────────────────────────────────────── */
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: system-ui, Arial, sans-serif;
+    background: var(--color-bg);
+    margin: 0;
+    padding: 20px;
+  }
+
+  /* ── Header ─────────────────────────────────────── */
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500&display=swap');
+
+  .calc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: -20px -20px 20px -20px;
+    padding: 22px 28px;
+    background: #404042;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* diagonal yellow accent stripe */
+  .calc-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 6px;
+    height: 100%;
+    background: #f5c800;
+  }
+
+  /* subtle grid texture */
+  .calc-header::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+  }
+
+  .calc-header-left {
+    position: relative;
+    z-index: 1;
+  }
+
+  .calc-header-eyebrow {
+    font-family: 'Barlow', system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #f5c800;
+    margin-bottom: 4px;
+  }
+
+  .calc-header h2 {
+    margin: 0;
+    font-family: 'Barlow Condensed', system-ui, sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+    line-height: 1;
+  }
+
+  .calc-header-sub {
+    font-family: 'Barlow', system-ui, sans-serif;
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    margin-top: 5px;
+    letter-spacing: 0.5px;
+  }
+
+  .calc-logo {
+    height: 110px;
+    width: auto;
+    object-fit: contain;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Print visibility overrides from PDF dialog */
+  @page {
+    margin: 6mm 8mm;
+    /* Hides browser-generated header/footer: date, URL, title, page number */
+    size: auto;
+  }
+
+  @media print {
+    .print-hide-panel { display: none !important; }
+    .print-show-panel { display: block !important; }
+    .print-force-hide { display: none !important; }
+    .facade-summary-panel { display: none !important; }
+    .facade-summary-panel.print-show-panel { display: block !important; }
+  }
+
+  @media print {
+    .calc-header {
+      background: #2b2b2b !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      margin: 0 0 16px 0;
+      border-radius: 0;
+      padding: 14px 20px;
+    }
+    .calc-logo {
+      height: 64px;
+    }
+  }
+
+  /* ── Layout ──────────────────────────────────── */
+  .calculator {
+    max-width: 1300px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 6px 18px rgba(0,0,0,.08);
+  }
+
+  /* ── Facade Title ───────────────────────────────  */
+  .facade-title-row {
+    margin-bottom: 10px;
+  }
+
+  .facade-name-input {
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-bottom: 2px dashed var(--color-border);
+    background: transparent;
+    padding: 2px 4px;
+    width: 100%;
+    border-radius: 0;
+    color: #111;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .facade-name-input:hover,
+  .facade-name-input:focus {
+    border-bottom-color: #2563eb;
+    background: #f0f4ff;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  }
+
+  /* ── Facade Card ─────────────────────────────── */
+  .facade {
+    border: 1px solid var(--color-border);
+    padding: 12px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    background: var(--color-surface);
+  }
+
+  .facade-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+  }
+
+  /* ── Height Helper ──────────────────────────── */
+  .height-helper {
+    display: flex;
+    align-items: end;
+    gap: 8px;
+    margin-top: 6px;
+    padding: 8px 10px;
+    background: #f0f4ff;
+    border: 1px solid #c7d2fe;
+    border-radius: var(--radius-sm);
+  }
+  .height-helper label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4338ca;
+    flex: 0 0 auto;
+  }
+  .height-helper input {
+    width: 80px;
+    padding: 5px 6px;
+    font-size: 13px;
+  }
+  .height-helper .height-apply-btn {
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #4338ca;
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .height-helper .height-apply-btn:hover { background: #3730a3; }
+  .height-helper .height-apply-btn:disabled {
+    background: #a5b4fc;
+    cursor: default;
+  }
+  .height-helper .height-result {
+    font-size: 11px;
+    color: #4338ca;
+    white-space: nowrap;
+    line-height: 1.3;
+  }
+
+  /* ── Length Toggle ─────────────────────────────── */
+  .length-toggle {
+    display: inline-flex;
+    background: #e8eaed;
+    border-radius: 20px;
+    padding: 2px;
+    gap: 0;
+    margin-bottom: 0;
+  }
+  .length-toggle button {
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border: none;
+    border-radius: 18px;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.2px;
+  }
+  .length-toggle button.active {
+    background: #404042;
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .length-toggle button:not(.active):hover {
+    color: #404042;
+    background: transparent;
+  }
+  .length-hint {
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+    font-style: italic;
+  }
+  .facade-length-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+  }
+  .facade-length-col .length-hint {
+    position: absolute;
+    top: 100%;
+    left: 0;
+  }
+
+  /* ── Form Elements ───────────────────────────── */
+  label {
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  input {
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid #ccc;
+  }
+
+  button {
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid #ccc;
+    background: #f4f6f9;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  button:hover { background: #e9edf3; }
+
+  /* ── Action Row ──────────────────────────────── */
+  .action-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ── Collapsible Panel ───────────────────────── */
+  .panel {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--color-border);
+  }
+
+  .hidden { display: none; }
+
+  /* ── Tables ──────────────────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  th, td {
+    border: 1px solid var(--color-border);
+    padding: 6px 8px;
+    text-align: center;
+  }
+
+  /* Sölunr. (1st), Leigunr. (2nd), Heiti (3rd) left-aligned */
+  th:nth-child(1), td:nth-child(1),
+  th:nth-child(2), td:nth-child(2),
+  th:nth-child(3), td:nth-child(3) { text-align: left; }
+
+  /* ── Signature Block ────────────────────────────── */
+  .print-signature {
+    display: none;
+  }
+  @media print {
+    .print-signature {
+      display: block;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+    }
+    .print-signature-row {
+      display: flex;
+      gap: 32px;
+    }
+    .print-signature-col {
+      flex: 1;
+    }
+    .print-signature-label {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 24px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .print-signature-line {
+      border-bottom: 1px solid #333;
+      margin-bottom: 6px;
+    }
+    .print-signature-name {
+      font-size: 11px;
+      color: #666;
+    }
+  }
+
+  /* ── Tooltip ─────────────────────────────────────── */
+  .tooltip-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  .tooltip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-left: 5px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .tooltip-bubble {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #f8fafc;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+    padding: 10px 14px;
+    border-radius: 8px;
+    width: 240px;
+    z-index: 999;
+    box-shadow: 0 4px 16px rgba(0,0,0,.25);
+    pointer-events: none;
+  }
+  .tooltip-bubble::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1e293b;
+  }
+  .tooltip-wrapper:hover .tooltip-bubble,
+  .tooltip-wrapper:focus-within .tooltip-bubble {
+    display: block;
+  }
+
+  /* ── Stacking Info Modal ────────────────────────── */
+  .info-btn {
+    margin-top: 10px;
+    background: none;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-sm);
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .info-btn:hover { background: #eff6ff; }
+
+  .stack-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  .stack-overlay.visible { display: flex; }
+
+  .stack-box {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    box-shadow: 0 16px 48px rgba(0,0,0,.25);
+    max-width: 480px;
+    width: 92%;
+  }
+  .stack-box h3 { margin: 0 0 4px; font-size: 17px; }
+  .stack-box .stack-sub { font-size: 13px; color: var(--color-muted); margin: 0 0 16px; }
+  .stack-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+  .stack-table th { text-align: left; font-weight: 700; padding: 6px 8px; border-bottom: 2px solid #e2e8f0; color: #555; }
+  .stack-table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; }
+  .stack-table tr:last-child td { border-bottom: none; }
+  .stack-note { font-size: 12px; color: var(--color-muted); background: #f8fafc; border-radius: var(--radius-sm); padding: 10px 12px; }
+  .stack-dim-list { margin-bottom: 16px; }
+  .stack-dim-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; gap: 12px; }
+  .stack-dim-row:last-child { border-bottom: none; }
+  .stack-dim-name { font-weight: 600; color: #334155; white-space: nowrap; }
+  .stack-dim-val { color: #64748b; text-align: right; }
+  .stack-close-btn { margin-top: 18px; width: 100%; padding: 9px; border-radius: var(--radius-md); border: 1px solid #cbd5e1; background: #f4f6f9; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .stack-close-btn:hover { background: #e9edf3; }
+
+  /* ── PDF Options Dialog ─────────────────────────── */
+  .pdf-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pdf-overlay.visible { display: flex; }
+
+  .pdf-box {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    box-shadow: 0 16px 48px rgba(0,0,0,.3);
+    max-width: 440px;
+    width: 92%;
+  }
+
+  .pdf-box h3 {
+    margin: 0 0 4px;
+    font-size: 17px;
+    color: #111;
+  }
+
+  .pdf-box .pdf-box-sub {
+    font-size: 13px;
+    color: var(--color-muted);
+    margin: 0 0 18px;
+  }
+
+  .pdf-section-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    margin: 14px 0 8px;
+  }
+
+  .pdf-check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+
+  .pdf-check-row:hover { background: #f4f6f9; }
+
+  .pdf-check-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #2563eb;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .pdf-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 16px 0;
+  }
+
+  .pdf-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+
+  .pdf-cancel-btn {
+    padding: 8px 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid #ccc;
+    background: #f4f6f9;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .pdf-cancel-btn:hover { background: #e9edf3; }
+
+  .pdf-print-btn {
+    padding: 8px 20px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .pdf-print-btn:hover { background: #1d4ed8; }
+
+  /* ── Confirm Dialog ─────────────────────────────── */
+  .confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .confirm-overlay.visible {
+    display: flex;
+  }
+
+  .confirm-box {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.25);
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+  }
+
+  .confirm-box h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+    color: #111;
+  }
+
+  .confirm-box p {
+    margin: 0 0 22px;
+    font-size: 14px;
+    color: var(--color-muted);
+    line-height: 1.5;
+  }
+
+  .confirm-box .confirm-name {
+    font-weight: 700;
+    color: #111;
+  }
+
+  .confirm-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .confirm-cancel-btn {
+    padding: 8px 22px;
+    border-radius: var(--radius-md);
+    border: 1px solid #ccc;
+    background: #f4f6f9;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .confirm-cancel-btn:hover { background: #e9edf3; }
+
+  .confirm-delete-btn {
+    padding: 8px 22px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: #dc2626;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .confirm-delete-btn:hover { background: #b91c1c; }
+
+  /* ── Edit Panel ─────────────────────────────────── */
+  .edit-panel table { margin-top: 8px; }
+
+  .edit-panel .qty-auto {
+    color: var(--color-muted);
+    font-size: 12px;
+  }
+
+  .edit-panel input.override-input {
+    width: 70px;
+    padding: 4px 6px;
+    border: 1px solid #ccc;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    text-align: right;
+  }
+
+  .edit-panel input.override-input.is-overridden {
+    border-color: #2563eb;
+    background: #eff6ff;
+    font-weight: 700;
+  }
+
+  .edit-btn {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .edit-btn:hover { background: #1d4ed8; }
+
+  .reset-override-btn {
+    font-size: 11px;
+    padding: 2px 6px;
+    color: #2563eb;
+    background: none;
+    border: 1px solid #2563eb;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    margin-left: 4px;
+  }
+
+  .reset-override-btn:hover { background: #eff6ff; }
+
+  /* ── Signature Block ────────────────────────────── */
+  .print-signature {
+    display: none;
+  }
+  @media print {
+    .print-signature {
+      display: block;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+    }
+    .print-signature-row {
+      display: flex;
+      gap: 32px;
+    }
+    .print-signature-col {
+      flex: 1;
+    }
+    .print-signature-label {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 24px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .print-signature-line {
+      border-bottom: 1px solid #333;
+      margin-bottom: 6px;
+    }
+    .print-signature-name {
+      font-size: 11px;
+      color: #666;
+    }
+  }
+
+  /* ── Tooltip ─────────────────────────────────────── */
+  .tooltip-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  .tooltip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-left: 5px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .tooltip-bubble {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #f8fafc;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+    padding: 10px 14px;
+    border-radius: 8px;
+    width: 240px;
+    z-index: 999;
+    box-shadow: 0 4px 16px rgba(0,0,0,.25);
+    pointer-events: none;
+  }
+  .tooltip-bubble::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1e293b;
+  }
+  .tooltip-wrapper:hover .tooltip-bubble,
+  .tooltip-wrapper:focus-within .tooltip-bubble {
+    display: block;
+  }
+
+  /* ── Stacking Info Modal ────────────────────────── */
+  .info-btn {
+    margin-top: 10px;
+    background: none;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-sm);
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .info-btn:hover { background: #eff6ff; }
+
+  .stack-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  .stack-overlay.visible { display: flex; }
+
+  .stack-box {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    box-shadow: 0 16px 48px rgba(0,0,0,.25);
+    max-width: 480px;
+    width: 92%;
+  }
+  .stack-box h3 { margin: 0 0 4px; font-size: 17px; }
+  .stack-box .stack-sub { font-size: 13px; color: var(--color-muted); margin: 0 0 16px; }
+  .stack-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+  .stack-table th { text-align: left; font-weight: 700; padding: 6px 8px; border-bottom: 2px solid #e2e8f0; color: #555; }
+  .stack-table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; }
+  .stack-table tr:last-child td { border-bottom: none; }
+  .stack-note { font-size: 12px; color: var(--color-muted); background: #f8fafc; border-radius: var(--radius-sm); padding: 10px 12px; }
+  .stack-dim-list { margin-bottom: 16px; }
+  .stack-dim-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; gap: 12px; }
+  .stack-dim-row:last-child { border-bottom: none; }
+  .stack-dim-name { font-weight: 600; color: #334155; white-space: nowrap; }
+  .stack-dim-val { color: #64748b; text-align: right; }
+  .stack-close-btn { margin-top: 18px; width: 100%; padding: 9px; border-radius: var(--radius-md); border: 1px solid #cbd5e1; background: #f4f6f9; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .stack-close-btn:hover { background: #e9edf3; }
+
+  /* ── PDF Options Dialog ─────────────────────────── */
+  .pdf-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pdf-overlay.visible { display: flex; }
+
+  .pdf-box {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    box-shadow: 0 16px 48px rgba(0,0,0,.3);
+    max-width: 440px;
+    width: 92%;
+  }
+
+  .pdf-box h3 {
+    margin: 0 0 4px;
+    font-size: 17px;
+    color: #111;
+  }
+
+  .pdf-box .pdf-box-sub {
+    font-size: 13px;
+    color: var(--color-muted);
+    margin: 0 0 18px;
+  }
+
+  .pdf-section-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    margin: 14px 0 8px;
+  }
+
+  .pdf-check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+
+  .pdf-check-row:hover { background: #f4f6f9; }
+
+  .pdf-check-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #2563eb;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .pdf-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 16px 0;
+  }
+
+  .pdf-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+
+  .pdf-cancel-btn {
+    padding: 8px 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid #ccc;
+    background: #f4f6f9;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .pdf-cancel-btn:hover { background: #e9edf3; }
+
+  .pdf-print-btn {
+    padding: 8px 20px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .pdf-print-btn:hover { background: #1d4ed8; }
+
+  /* ── Confirm Dialog ─────────────────────────────── */
+  .confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .confirm-overlay.visible {
+    display: flex;
+  }
+
+  .confirm-box {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.25);
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+  }
+
+  .confirm-box h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+    color: #111;
+  }
+
+  .confirm-box p {
+    margin: 0 0 22px;
+    font-size: 14px;
+    color: var(--color-muted);
+    line-height: 1.5;
+  }
+
+  .confirm-box .confirm-name {
+    font-weight: 700;
+    color: #111;
+  }
+
+  .confirm-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .confirm-cancel-btn {
+    padding: 8px 22px;
+    border-radius: var(--radius-md);
+    border: 1px solid #ccc;
+    background: #f4f6f9;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .confirm-cancel-btn:hover { background: #e9edf3; }
+
+  .confirm-delete-btn {
+    padding: 8px 22px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: #dc2626;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .confirm-delete-btn:hover { background: #b91c1c; }
+
+  /* ── Edit Panel ─────────────────────────────────── */
+  .edit-panel table { margin-top: 8px; }
+
+  .edit-panel .qty-auto {
+    color: var(--color-muted);
+    font-size: 12px;
+  }
+
+  .edit-panel input.override-input {
+    width: 70px;
+    padding: 4px 6px;
+    border: 1px solid #ccc;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    text-align: right;
+  }
+
+  .edit-panel input.override-input.is-overridden {
+    border-color: #2563eb;
+    background: #eff6ff;
+    font-weight: 700;
+  }
+
+  .edit-btn {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .edit-btn:hover { background: #1d4ed8; }
+
+  .reset-override-btn {
+    font-size: 11px;
+    padding: 2px 6px;
+    color: #2563eb;
+    background: none;
+    border: 1px solid #2563eb;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    margin-left: 4px;
+  }
+
+  .reset-override-btn:hover { background: #eff6ff; }
+
+  /* ── Quantity Input ──────────────────────────── */
+  .quantity-input { width: 80px; }
+
+  /* ── Help Text ───────────────────────────────── */
+  .help-text {
+    color: var(--color-muted);
+    font-size: 12px;
+  }
+
+  /* ── Summary Grid ────────────────────────────── */
+  .summary {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 2px solid var(--color-border);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    gap: 10px;
+  }
+
+  .summary-box {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 10px;
+  }
+
+  .summary-label {
+    font-size: 12px;
+    color: var(--color-muted);
+    margin-bottom: 4px;
+  }
+
+  .summary-value {
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  /* ── Print / PDF ─────────────────────────────── */
+  @media print {
+    /* Hide everything except the PDF block */
+    body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+    body > *:not(#pdf-print-block) { display: none !important; }
+    .calculator { display: none !important; }
+    .no-print { display: none !important; }
+    .pdf-overlay { display: none !important; }
+    .lb-overlay { display: none !important; }
+    .stack-overlay { display: none !important; }
+    .confirm-overlay { display: none !important; }
+
+    /* Show and position the PDF block */
+    #pdf-print-block {
+      display: block !important;
+      position: static !important;
+      left: auto !important;
+      top: auto !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 8mm !important;
+      margin: 0 !important;
+      pointer-events: auto !important;
+      font-family: 'Segoe UI', system-ui, sans-serif !important;
+      font-size: 13px !important;
+      color: #1e293b !important;
+    }
+
+    /* Color-adjust for backgrounds */
+    #pdf-print-block * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    #pdf-print-block .pdf-hdr div[style*="background:#1e293b"] { background: #1e293b !important; }
+    .pdf-hdr-right { background: #1e293b !important; }
+    .pdf-hdr-left { background: #fff !important; }
+    .pdf-sum-box.accent { background: #1e293b !important; }
+    .pdf-sum-box.accent .pdf-sum-val { color: #fff !important; }
+    .pdf-hdr-right h2 { color: #fff !important; }
+    .pdf-hdr-right .pdf-sub { color: #94a3b8 !important; }
+    .pdf-hdr-right .pdf-client-meta { color: #cbd5e1 !important; }
+    .pdf-zero td { color: #cbd5e1 !important; }
+
+    /* Table styling */
+    .pdf-mat-table { font-size: 11px !important; width: 100% !important; }
+    .pdf-mat-table col.col-name { width: 35% !important; }
+    .pdf-mat-table col.col-qty  { width: 10% !important; }
+    .pdf-mat-table col.col-price{ width: 12% !important; }
+    .pdf-mat-table col.col-tot  { width: 18% !important; }
+    .pdf-mat-table col.col-wt   { width: 12% !important; }
+    .pdf-mat-table col.col-wtot { width: 13% !important; }
+    .pdf-mat-table th { font-size: 10px !important; padding: 6px 6px !important; }
+    .pdf-mat-table td { padding: 3px 6px !important; }
+    .pdf-mat-table td:first-child { overflow: visible !important; white-space: normal !important; }
+
+    /* Summary boxes grid fix */
+    .pdf-sum-row { display: grid !important; grid-template-columns: repeat(4,1fr) !important; gap: 6px !important; width: 100% !important; }
+    .pdf-top-row { display: flex !important; gap: 8px !important; width: 100% !important; }
+    .pdf-client-grid { display: grid !important; grid-template-columns: auto 1fr !important; }
+    .pdf-sig-section { display: grid !important; }
+
+    /* Page break control */
+    #pdf-print-block table { page-break-inside: auto; }
+    #pdf-print-block tr { page-break-inside: avoid; }
+    #pdf-print-block thead { display: table-header-group; }
+  }
+
+  /* PDF print block — hidden by default */
+  #pdf-print-block {
+    display: none;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    color: #1e293b;
+    padding: 12px 20px;
+    pointer-events: none;
+  }
+  /* PDF header */
+  .pdf-hdr {
+    display: flex;
+    align-items: stretch;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 10px;
+  }
+  .pdf-hdr-left {
+    width: 50%;
+    background: #fff;
+  }
+  .pdf-hdr-right {
+    width: 50%;
+    background: #1e293b;
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .pdf-hdr-right h2 { font-size: 13px; font-weight: 700; color: #fff; margin: 0 0 1px; }
+  .pdf-hdr-right .pdf-sub { font-size: 9px; color: #94a3b8; margin-bottom: 2px; }
+  .pdf-hdr-right .pdf-client-meta { font-size: 9px; color: #cbd5e1; }
+  /* Two-column top row */
+  .pdf-top-row { display: flex; gap: 8px; margin-bottom: 8px; width: 100%; }
+  .pdf-box { border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 10px; box-sizing: border-box; }
+  .pdf-box-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 5px; }
+  .pdf-client-grid { display: grid; grid-template-columns: auto 1fr; gap: 1px 10px; font-size: 12px; line-height: 1.5; }
+  .pdf-client-grid .cl { color: #64748b; white-space: nowrap; }
+  .pdf-client-grid .cv { font-weight: 600; }
+  /* HLIDAR table - bez obramowania komórek jak w docelowym */
+  .pdf-hlid-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .pdf-hlid-table th { text-align: left; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: #64748b; padding: 4px 6px; border-bottom: 1px solid #e2e8f0; }
+  .pdf-hlid-table td { padding: 3px 6px; }
+  .pdf-hlid-table td:first-child { font-weight: 700; }
+  /* Materials table - powiększona o 25% */
+  .pdf-mat-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 8px; table-layout: fixed; }
+  .pdf-mat-table col.col-name { width: 35%; }
+  .pdf-mat-table col.col-qty  { width: 10%; }
+  .pdf-mat-table col.col-price{ width: 12%; }
+  .pdf-mat-table col.col-tot  { width: 18%; }
+  .pdf-mat-table col.col-wt   { width: 12%; }
+  .pdf-mat-table col.col-wtot { width: 13%; }
+  .pdf-mat-table th { text-align: left; background: #f8fafc; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: #64748b; padding: 6px 6px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+  .pdf-mat-table th:not(:first-child) { text-align: right; }
+  .pdf-mat-table td { padding: 3px 6px; border-bottom: 1px solid #f1f5f9; }
+  .pdf-mat-table td:first-child { overflow: visible; white-space: normal; }
+  .pdf-mat-table td:not(:first-child) { text-align: right; white-space: nowrap; }
+  .pdf-mat-table .pdf-zero td { color: #c0c0c0; }
+  /* Summary boxes */
+  .pdf-sum-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 6px; width: 100%; box-sizing: border-box; }
+  .pdf-sum-box { border: 1px solid #e2e8f0; border-radius: 4px; padding: 5px 8px; }
+  .pdf-sum-box.accent { background: #1e293b; border-color: #1e293b; }
+  .pdf-sum-lbl { font-size: 9px; color: #64748b; margin-bottom: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .pdf-sum-box.accent .pdf-sum-lbl { color: #94a3b8; }
+  .pdf-sum-val { font-size: 14px; font-weight: 800; color: #1e293b; }
+  .pdf-sum-box.accent .pdf-sum-val { color: #fff; }
+  /* Discount line */
+  .pdf-discount-line { font-size: 12px; margin-bottom: 15px; }
+  /* Signatures - 2 kolumny, przesunięte w prawo */
+  .pdf-sig-section { margin-top: 10px; }
+  .pdf-sig-lbl { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 14px; }
+  .pdf-sig-line { border-bottom: 1px solid #334155; margin-bottom: 2px; }
+  .pdf-sig-name { font-size: 8px; color: #64748b; }
+
+  /* ── Client Info ─────────────────────────────── */
+  .client-section {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    background: var(--color-surface);
+  }
+
+  .client-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .client-date-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .client-date-label input {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 5px 8px;
+    font-size: 13px;
+    background: #fff;
+  }
+
+  .client-section h3 {
+    margin: 0 0 12px 0;
+    font-size: 15px;
+    color: #333;
+  }
+
+  .client-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .client-grid label {
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .client-grid input {
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid #ccc;
+    font-size: 13px;
+  }
+
+  /* ── Rental Period ───────────────────────────── */
+  .rental-period-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .rental-period-row .input-block {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .rental-period-row .input-block label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+  }
+  .rental-period-row input[type="date"] {
+    width: 140px;
+    padding: 5px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid #ccc;
+    font-size: 13px;
+  }
+  .rental-days-block {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .rental-days-block label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+  }
+  .rental-days-block input {
+    width: 80px;
+    padding: 5px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid #ccc;
+    font-size: 13px;
+  }
+
+  /* ── PDF button ──────────────────────────────── */
+  .pdf-btn {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .pdf-btn:hover { background: #1d4ed8; }
+
+  .excel-btn {
+    background: #16a34a;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .excel-btn:hover { background: #15803d; }
+
+  /* ── Print header (visible only in print) ────── */
+  .print-header {
+    display: none;
+  }
+
+  @media print {
+    .print-header {
+      display: flex;
+      align-items: stretch;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 16px;
+    }
+    .print-header-left {
+      width: 50%;
+      background: #fff;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+    }
+    .print-header-right {
+      width: 50%;
+      background: #1e293b;
+      padding: 12px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+    }
+    .print-header-right h2 { font-size: 15px; font-weight: 700; color: #fff; margin: 0 0 2px; }
+    .print-header-right .print-sub { font-size: 10px; color: #94a3b8; margin-bottom: 6px; }
+    .print-header-right .print-meta { font-size: 11px; color: #cbd5e1; line-height: 1.6; }
+  }
+
+
+/* Leiðbeiningar modal */
+.lb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;display:none;justify-content:center;align-items:flex-start;padding:24px}
+.lb-overlay.lb-open{display:flex}
+.lb-modal{background:#fff;border-radius:10px;max-width:820px;width:100%;max-height:calc(100vh - 48px);display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.lb-modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:2px solid #2563eb;flex-shrink:0}
+.lb-modal-header h2{margin:0;font-size:18px;color:#1a5276}
+.lb-modal-close{background:none;border:none;font-size:28px;cursor:pointer;color:#666;line-height:1;padding:0 4px}
+.lb-modal-close:hover{color:#c0392b}
+.lb-modal-body{overflow-y:auto;padding:20px 28px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:#2c3e50;line-height:1.6}
+.lb-modal-body h2{font-size:17px;color:#1a5276;border-bottom:2px solid #2980b9;padding-bottom:6px;margin:28px 0 12px}
+.lb-modal-body h3{font-size:14.5px;color:#2c3e50;margin:18px 0 8px}
+.lb-modal-body table{width:100%;border-collapse:collapse;margin:10px 0 14px;font-size:13px}
+.lb-modal-body th{background:#1a5276;color:#fff;padding:7px 10px;text-align:left;font-weight:600}
+.lb-modal-body td{padding:6px 10px;border:1px solid #bdc3c7}
+.lb-modal-body tr:nth-child(even) td{background:#f2f3f4}
+.lb-modal-body .lb-important{background:#d6eaf8;border-left:4px solid #2980b9;padding:10px 14px;margin:12px 0;border-radius:4px;font-weight:600;color:#1a5276}
+.lb-modal-body .lb-tip{background:#eafaf1;border-left:4px solid #27ae60;padding:10px 14px;margin:10px 0;border-radius:4px;font-size:13px}
+.lb-modal-body .lb-error{color:#c0392b;margin:6px 0;font-size:13.5px}
+.lb-modal-body .lb-quote{background:#f2f3f4;padding:10px 18px;border-radius:4px;font-style:italic;margin:10px 0}
+.lb-modal-body hr{border:none;border-top:1px solid #bdc3c7;margin:20px 0}
+@media print{.lb-overlay{display:none!important}}
+
+</style>
+<!-- html2pdf removed - using window.print() instead -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+<div class="calculator">
+  <div class="calc-header no-print">
+    <div class="calc-header-left">
+      <h2>Vinnupalla reiknivél</h2>
+      <div class="calc-header-sub">Villalta vinnupallakerfi</div>
+      <button onclick="document.getElementById('lbModal').classList.add('lb-open')" style="display:inline-flex; align-items:center; gap:6px; margin-top:8px; padding:8px 18px; background:#2563eb; color:#fff; border:none; border-radius:5px; font-size:14px; font-weight:600; cursor:pointer;">
+        📖 Leiðbeiningar
+      </button>
+    </div>
+    <img class="calc-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMjAgODAiPjxyZWN0IHdpZHRoPSIyMjAiIGhlaWdodD0iODAiIHJ4PSI4IiBmaWxsPSIjNDA0MDQyIi8+PHRleHQgeD0iMTEwIiB5PSI0NCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrLEltcGFjdCxIZWx2ZXRpY2Esc2Fucy1zZXJpZiIgZm9udC1zaXplPSI0MiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmZmZiIgbGV0dGVyLXNwYWNpbmc9IjQiPkJZS088L3RleHQ+PHRleHQgeD0iMTEwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZjVjODAwIiBsZXR0ZXItc3BhY2luZz0iMyI+TGVpZ2E8L3RleHQ+PC9zdmc+" alt="BYKO Leiga">
+  </div>
+
+  <!-- Print-only header -->
+  <div class="print-header">
+    <div class="calc-header">
+    <div class="calc-header-left">
+      <h2>Leigutilboð á vinnupalla</h2>
+      <div class="calc-header-sub">BYKO Leiga &nbsp;·&nbsp; Villalta vinnupallakerfi</div>
+    </div>
+    <img class="calc-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMjAgODAiPjxyZWN0IHdpZHRoPSIyMjAiIGhlaWdodD0iODAiIHJ4PSI4IiBmaWxsPSIjNDA0MDQyIi8+PHRleHQgeD0iMTEwIiB5PSI0NCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIEJsYWNrLEltcGFjdCxIZWx2ZXRpY2Esc2Fucy1zZXJpZiIgZm9udC1zaXplPSI0MiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmZmZiIgbGV0dGVyLXNwYWNpbmc9IjQiPkJZS088L3RleHQ+PHRleHQgeD0iMTEwIiB5PSI3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZjVjODAwIiBsZXR0ZXItc3BhY2luZz0iMyI+TGVpZ2E8L3RleHQ+PC9zdmc+" alt="BYKO Leiga">
+  </div>
+    <div class="print-meta" id="printMeta"></div>
+  </div>
+
+  <!-- Client info -->
+  <div class="client-section no-print">
+    <div class="client-section-header">
+      <h3>Upplýsingar um viðskiptavin</h3>
+      <label class="client-date-label">Dagsetning
+        <input type="date" id="clientDate">
+      </label>
+    </div>
+    <div class="client-grid">
+      <label>Nafn viðskiptavinar
+        <input type="text" id="clientName" placeholder="t.d. Jón Jónsson">
+      </label>
+      <label>Fyrirtæki
+        <input type="text" id="clientCompany" placeholder="t.d. Bygging ehf.">
+      </label>
+      <label>Kennitala
+        <input type="text" id="clientKennitala" placeholder="t.d. 123456-7890">
+      </label>
+      <label>Símanúmer
+        <input type="text" id="clientPhone" placeholder="t.d. 555-1234">
+      </label>
+      <label>Netfang
+        <input type="email" id="clientEmail" placeholder="t.d. name@byko.is">
+      </label>
+      <label>Heimilisfang / Verkefni
+        <input type="text" id="clientAddress" placeholder="t.d. Laugavegur 1, Reykjavík">
+      </label>
+
+    </div>
+  </div>
+
+  <!-- Print-only client info block -->
+  <div class="print-client" style="display:none; margin-bottom:12px; font-size:13px; line-height:1.8;">
+    <div><strong>Viðskiptavinur:</strong> <span id="printClient"></span></div>
+    <div><strong>Fyrirtæki:</strong> <span id="printCompany"></span></div>
+    <div><strong>Kennitala:</strong> <span id="printKennitala"></span></div>
+    <div><strong>Sími:</strong> <span id="printPhone"></span></div>
+    <div><strong>Netfang:</strong> <span id="printEmail"></span></div>
+    <div><strong>Heimilisfang:</strong> <span id="printAddress"></span></div>
+    <div><strong>Dagsetning:</strong> <span id="printDate"></span></div>
+  </div>
+
+  <div id="print-content-wrapper">
+  <div id="facades"></div>
+
+  <div class="action-row no-print">
+    <button type="button" id="addFacadeBtn">+ Bæta við hlið</button>
+    <button type="button" id="resetBtn">Reset</button>
+    <button type="button" class="pdf-btn" id="pdfBtn">⬇ Búa til PDF</button>
+    <button type="button" class="excel-btn" id="excelBtn">📊 Flytja í Excel</button>
+  </div>
+
+  <div id="globalSummary">
+  <h3 class="no-print">Efnislisti</h3>
+  <h3 class="print-only">Heildaryfirlit</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Sölunr.</th>
+        <th>Leigunr.</th>
+        <th>Heiti</th>
+        <th>Magn</th>
+        <th>Leiguverð</th>
+        <th>Söluverð</th>
+        <th>Þyngd (kg/stk)</th>
+        <th>Samtals kg</th>
+      </tr>
+    </thead>
+    <tbody id="results"></tbody>
+  </table>
+
+  <div class="summary">
+    <div class="summary-box">
+      <div style="display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap;">
+        <div>
+          <div class="summary-label">Heildarþyngd (kg)</div>
+          <div class="summary-value" id="totalWeight">0,00 kg</div>
+        </div>
+        <div>
+          <div class="summary-label">Flatarmál pakka (m²)</div>
+          <div class="summary-value" id="totalM2">0 m²</div>
+        </div>
+        <div>
+          <div class="summary-label">Rúmmál pakka (m³)</div>
+          <div class="summary-value" id="totalM3">0 m³</div>
+        </div>
+        <div>
+          <div class="summary-label" style="display:flex;align-items:center;gap:4px;">
+            Hámarkshæð farms
+            <span class="tooltip-wrapper">
+              <span class="tooltip-icon">i</span>
+              <span class="tooltip-bubble" id="heightTooltip">
+                Ef hæð bíls er minni en <strong id="tooltipHeight">–</strong>, þarf að reikna með flatarmáli án stöflunar: <strong id="tooltipM2NoStack">–</strong>
+              </span>
+            </span>
+          </div>
+          <div class="summary-value" id="totalMaxHeight">0 m</div>
+        </div>
+      </div>
+      <button type="button" class="info-btn no-print" id="stackInfoBtn">ℹ️ Frekari upplýsingar</button>
+    </div>
+    <div class="summary-box">
+      <div class="summary-label">Dagleiga (með VSK)</div>
+      <div class="summary-value" id="dailyTotal">0 kr</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-label">Leigutími og samtals leiga (með VSK)</div>
+      <div class="rental-period-row">
+        <div class="input-block">
+          <label>Upphafsdagur</label>
+          <input type="date" id="startDate">
+        </div>
+        <div class="input-block">
+          <label>Lokadagur</label>
+          <input type="date" id="endDate">
+        </div>
+      </div>
+      <div class="rental-days-block">
+        <label>Leigutímabil (dagar) — breyttu dagsetningum <em>eða</em> sláðu inn fjölda daga</label>
+        <input type="number" id="rentalDays" min="1" value="30">
+      </div>
+      <div class="summary-value" id="monthlyTotal" style="margin-top:6px;">0 kr</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-label">Afsláttur (%)</div>
+      <input id="discountInput" type="number" min="0" max="100" step="0.1" value="0">
+    </div>
+    <div class="summary-box">
+      <div class="summary-label">Dagleiga með afslætti (með VSK)</div>
+      <div class="summary-value" id="dailyDiscounted">0 kr</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-label" id="monthlyDiscountedLabel">Samtals leiga (30d) með afslætti (með VSK)</div>
+      <div class="summary-value" id="monthlyDiscounted">0 kr</div>
+    </div>
+  </div>
+  </div><!-- /globalSummary -->
+
+  <!-- Signature block - print only -->
+  <div class="print-signature">
+    <div class="print-signature-row">
+      <div class="print-signature-col">
+        <div class="print-signature-label">Dagsetning / Staður</div>
+        <div class="print-signature-line"></div>
+      </div>
+      <div class="print-signature-col">
+        <div class="print-signature-label">Undirskrift viðskiptavinar</div>
+        <div class="print-signature-line"></div>
+        <div class="print-signature-name" id="printSignatureName"></div>
+      </div>
+      <div class="print-signature-col">
+        <div class="print-signature-label">Undirskrift BYKO Leiga</div>
+        <div class="print-signature-line"></div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /print-content-wrapper -->
+
+  <!-- Stacking info modal -->
+  <div class="stack-overlay no-print" id="stackOverlay">
+    <div class="stack-box">
+      <h3>Stærðir pakka</h3>
+      <p class="stack-sub">Stærð á einstaka pakka (L = lengd, Br = breidd, H = hæð)</p>
+      <table class="stack-table">
+        <thead>
+          <tr>
+            <th>Tegund</th>
+            <th>L</th>
+            <th>Br</th>
+            <th>H</th>
+            <th>m²</th>
+            <th>m³</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Rekkar f/gólfborð</td>
+            <td>2,1 m</td><td>1,1 m</td><td>1,25 m</td>
+            <td>2,3 m²</td><td>2,9 m³</td>
+          </tr>
+          <tr>
+            <td>Rekkar f/tvöf. handrið</td>
+            <td>1,9 m</td><td>1,1 m</td><td>1,25 m</td>
+            <td>2,1 m²</td><td>2,6 m³</td>
+          </tr>
+          <tr>
+            <td>Fylgihlutagrind</td>
+            <td>1,2 m</td><td>0,8 m</td><td>0,8 m</td>
+            <td>1,0 m²</td><td>0,8 m³</td>
+          </tr>
+          <tr>
+            <td>Rekkar fyrir ramma</td>
+            <td>2,2 m</td><td>1,25 m</td><td>2,2 m</td>
+            <td>2,75 m²</td><td>6,05 m³</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="stack-note">
+        Rekkar fyrir gólfborð, tvöföld handrið og fylgihlutagrind er hægt að stafla við flutning <strong>ef hæð bíls er yfir 2,5 m</strong>.<br><br>
+        Ef bíllinn er lægri en 2,5 m þarf að reikna með heildarflatarmáli án stöflunar: <strong id="stackNoteM2NoStack">–</strong>
+      </div>
+      <button type="button" class="stack-close-btn" id="stackCloseBtn">Loka</button>
+    </div>
+  </div>
+
+  <!-- PDF options dialog -->
+  <div class="pdf-overlay no-print" id="pdfOverlay">
+    <div class="pdf-box">
+      <h3>Búa til PDF – valkostir</h3>
+      <p class="pdf-box-sub">Veldu hvað á að koma fram í tilboðinu.</p>
+      <div style="background:#fefce8;border:1px solid #fde68a;border-radius:6px;padding:8px 12px;font-size:12px;color:#92400e;margin-bottom:12px;">
+        💡 <strong>Ábending:</strong> Til að fela header og footer — veldu „More settings" í prentglugganum og slökktu á „Headers and footers".
+      </div>
+      <div class="pdf-section-label">Annað</div>
+      <label class="pdf-check-row">
+        <input type="checkbox" id="pdfCheckTotal" checked>
+        Heildaryfirlit
+      </label>
+      <label class="pdf-check-row">
+        <input type="checkbox" id="pdfCheckShowZero">
+        Sýna línur með magn = 0
+      </label>
+      <div class="pdf-divider"></div>
+      <div class="pdf-section-label">Hliðar</div>
+      <div id="pdfWallChecks"></div>
+      <div class="pdf-actions">
+        <button type="button" class="pdf-cancel-btn" id="pdfCancelBtn">Hætta við</button>
+        <button type="button" class="pdf-print-btn" id="pdfConfirmBtn">⬇ Prenta / PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset confirm dialog -->
+  <div class="confirm-overlay no-print" id="resetOverlay">
+    <div class="confirm-box">
+      <h3>Endurstilla reiknivél?</h3>
+      <p>Þessi aðgerð mun <strong>eyða öllum gögnum</strong> í reiknivélinni — öllum hliðum, magni og upplýsingum um viðskiptavin.<br><br>Þetta er <strong>óafturkræft</strong>. Ertu viss?</p>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-cancel-btn" id="resetCancelBtn">Hætta við</button>
+        <button type="button" class="confirm-delete-btn" id="resetConfirmBtn">Já, endurstilla</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm delete dialog -->
+  <div class="confirm-overlay no-print" id="confirmOverlay">
+    <div class="confirm-box">
+      <h3>Eyða hlið?</h3>
+      <p>Ertu viss um að þú viljir eyða <span class="confirm-name" id="confirmWallName"></span>?<br>Þessa aðgerð er ekki hægt að afturkalla.</p>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-cancel-btn" id="confirmCancelBtn">Hætta við</button>
+        <button type="button" class="confirm-delete-btn" id="confirmDeleteBtn">Eyða</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Constants: item catalogue ─────────────────────────────────────────────────
+
+const ALL_ITEMS = [
+  "Rammar 2,0m", "Rammar 0,7m", "12cm hækkun f/ramma",
+  "Gólfborð 1,8m", "Stigapallar 1,8m",
+  "Stigar 2,0m", "Stigar 2,7m", "Framlenging á 2m stiga",
+  "Lappir 50cm", "Lappir 100cm",
+  "Tvöföld handrið", "Handriðastoðir",
+  "Veggfestingar 50cm", "Veggfestingar 100cm",
+  "Endalokur", "Stálrör 1,2m", "Klemmur", "Snúklemmur",
+  "Splitti",
+  "Burðarbitar 3,6m", "Burðarbitar 5,4m",
+  "Rekkar fyrir ramma 50 stk.", "Rekkar fyrir gólf 40 stk.", "Rekki f/tvöföld handrið 40 stk.",
+  "Fylgihlutagrind"
+];
+
+// Daily rental prices in kr (with VAT)
+const PRICES = {
+  "Rammar 2,0m":             19,
+  "Rammar 0,7m":             15,
+  "12cm hækkun f/ramma":      2,
+  "Gólfborð 1,8m":           12,
+  "Stigapallar 1,8m":        50,
+  "Stigar 2,0m":             17,
+  "Stigar 2,7m":             25,
+  "Framlenging á 2m stiga":        3,
+  "Lappir 50cm":              6,
+  "Lappir 100cm":             8,
+  "Tvöföld handrið":         15,
+  "Handriðastoðir":           7,
+  "Veggfestingar 50cm":       3,
+  "Veggfestingar 100cm":      6,
+  "Endalokur":                9,
+  "Stálrör 1,2m":             5,
+  "Klemmur":                  3,
+  "Snúklemmur":               3,
+  "Splitti":                0.5,
+  "Burðarbitar 3,6m":       148,
+  "Burðarbitar 5,4m":       163,
+  "Rekkar fyrir ramma 50 stk.":      81,
+  "Rekkar fyrir gólf 40 stk.":       64,
+  "Rekki f/tvöföld handrið 40 stk.":  64,
+  "Fylgihlutagrind":        100
+};
+
+// Weights in kg per unit
+const WEIGHTS = {
+  "Rammar 2,0m":            18.6,
+  "Rammar 0,7m":             7.52,
+  "12cm hækkun f/ramma":     0.6,
+  "Gólfborð 1,8m":          13.9,
+  "Stigapallar 1,8m":       17,
+  "Stigar 2,0m":             8,
+  "Stigar 2,7m":            11.5,
+  "Framlenging á 2m stiga":       4,
+  "Lappir 50cm":             3.1,
+  "Lappir 100cm":            4.5,
+  "Tvöföld handrið":         8.8,
+  "Handriðastoðir":          3.4,
+  "Veggfestingar 50cm":      3.0,
+  "Veggfestingar 100cm":     3.4,
+  "Endalokur":               1.2,
+  "Stálrör 1,2m":            4,
+  "Klemmur":                 1.3,
+  "Snúklemmur":              1.4,
+  "Splitti":                 0.08,
+  "Burðarbitar 3,6m":        0,
+  "Burðarbitar 5,4m":        0,
+  "Rekkar fyrir ramma 50 stk.":     65,
+  "Rekkar fyrir gólf 40 stk.":      43,
+  "Rekki f/tvöföld handrið 40 stk.": 20,
+  "Fylgihlutagrind":        30
+};
+
+// Sales prices per unit in kr (with VAT)
+const SALE_PRICES = {
+  "Rammar 2,0m":             23895,
+  "Rammar 0,7m":             12867,
+  "12cm hækkun f/ramma":      1717,
+  "Gólfborð 1,8m":           15995,
+  "Stigapallar 1,8m":        40531,
+  "Stigar 2,0m":             12026,
+  "Stigar 2,7m":             18175,
+  "Framlenging á 2m stiga":   4150,
+  "Lappir 50cm":              4995,
+  "Lappir 100cm":             6995,
+  "Tvöföld handrið":         14097,
+  "Handriðastoðir":           8807,
+  "Veggfestingar 50cm":       3695,
+  "Veggfestingar 100cm":      4688,
+  "Endalokur":                4348,
+  "Stálrör 1,2m":             2995,
+  "Klemmur":                  1695,
+  "Snúklemmur":               1896,
+  "Splitti":                   320,
+  "Burðarbitar 3,6m":       235857,
+  "Burðarbitar 5,4m":       274135,
+  "Rekkar fyrir ramma 50 stk.":      81700,
+  "Rekkar fyrir gólf 40 stk.":       40517,
+  "Rekki f/tvöföld handrið 40 stk.":  38095,
+  "Fylgihlutagrind":            0
+};
+
+// Scaffold geometry & rack capacity limits
+const BOARD_LENGTH_M        = 1.8;
+const WALL_ANCHOR_AREA_M2   = 15;
+const RACK_SLOTS            = 50;  // total slots per rack
+const SLOTS_PER_FRAME_2M    = 1;   // 2.0m frame takes 1 slot (standing)
+const SLOTS_PER_FRAME_07M   = 0.5; // 0.7m frame takes 0.5 slot (stacked in pairs)
+const BOARDS_PER_RACK       = 40;
+
+// Rack & grid dimensions [L, W, H] in meters
+const DIMENSIONS = {
+  "Rekkar fyrir ramma 50 stk.":       { l: 2.2,  w: 1.25, h: 2.2  },
+  "Rekkar fyrir gólf 40 stk.":        { l: 2.1,  w: 1.1,  h: 1.25 },
+  "Rekki f/tvöföld handrið 40 stk.":   { l: 1.9,  w: 1.1,  h: 1.25 },
+  "Fylgihlutagrind":          { l: 1.2,  w: 0.8,  h: 0.8  },
+};
+const HANDRAILS_PER_RACK    = 38;
+const SMALL_ITEMS_PER_GRID  = 100;
+
+// Sale numbers (Sölunr.) from product catalog
+const SALE_NOS = {
+  "Rammar 2,0m":             "97100000",
+  "Rammar 0,7m":             "97100001",
+  "12cm hækkun f/ramma":     "97100083",
+  "Gólfborð 1,8m":           "97100002",
+  "Stigapallar 1,8m":        "97100003",
+  "Stigar 2,0m":             "97100004",
+  "Stigar 2,7m":             "97100005",
+  "Framlenging á 2m stiga":  "97100084",
+  "Lappir 50cm":             "97100006",
+  "Lappir 100cm":            "97100007",
+  "Tvöföld handrið":         "971000101",
+  "Handriðastoðir":          "97100011",
+  "Veggfestingar 50cm":      "97100012",
+  "Veggfestingar 100cm":     "971000121",
+  "Endalokur":               "97100017",
+  "Stálrör 1,2m":            "97100013",
+  "Klemmur":                 "97100015",
+  "Snúklemmur":              "97100016",
+  "Splitti":                 "97100020",
+  "Burðarbitar 3,6m":        "97100090",
+  "Burðarbitar 5,4m":        "971000901",
+  "Rekkar fyrir ramma 50 stk.":      "97100021",
+  "Rekkar fyrir gólf 40 stk.":       "97100077",
+  "Rekki f/tvöföld handrið 40 stk.":  "971000109",
+  "Fylgihlutagrind":         "HA548482"
+};
+
+// Rental numbers (Leigunr.) from product catalog
+const RENTAL_NOS = {
+  "Rammar 2,0m":             "01-PAL-VP01-000",
+  "Rammar 0,7m":             "01-PAL-VP01-001",
+  "12cm hækkun f/ramma":     "01-PAL-VP01-083",
+  "Gólfborð 1,8m":           "01-PAL-VP01-002",
+  "Stigapallar 1,8m":        "01-PAL-VP01-003",
+  "Stigar 2,0m":             "01-PAL-VP01-004",
+  "Stigar 2,7m":             "01-PAL-VP01-005",
+  "Framlenging á 2m stiga":  "01-PAL-VP01-084",
+  "Lappir 50cm":             "01-PAL-VP01-006",
+  "Lappir 100cm":            "01-PAL-VP01-007",
+  "Tvöföld handrið":         "01-PAL-VP01-0101",
+  "Handriðastoðir":          "01-PAL-VP01-011",
+  "Veggfestingar 50cm":      "01-PAL-VP01-012",
+  "Veggfestingar 100cm":     "01-PAL-VP01-047",
+  "Endalokur":               "01-PAL-VP01-017",
+  "Stálrör 1,2m":            "01-PAL-VP01-013",
+  "Klemmur":                 "01-PAL-VP01-015",
+  "Snúklemmur":              "01-PAL-VP01-016",
+  "Splitti":                 "01-PAL-VP01-020",
+  "Burðarbitar 3,6m":        "01-PAL-VP01-090",
+  "Burðarbitar 5,4m":        "01-PAL-VP01-091",
+  "Rekkar fyrir ramma 50 stk.":      "01-PAL-VP01-021",
+  "Rekkar fyrir gólf 40 stk.":       "01-PAL-VP01-077",
+  "Rekki f/tvöföld handrið 40 stk.":  "01-PAL-VP01-0109",
+  "Fylgihlutagrind":         "01-MÓT-AH21-046"
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+
+let nextFacadeId     = 1;
+let extrasByFacade   = {};  // { facadeId: { itemName: quantity } }
+let legSplitByFacade = {};  // { facadeId: { 50: qty, 100: qty } }
+let overridesByFacade = {}; // { facadeId: { itemName: qty | null } }
+
+// ── Utility helpers ───────────────────────────────────────────────────────────
+
+/** Clamp a value between min and max. */
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+/** Parse a DOM input element to a number, defaulting to 0. */
+function parseInput(inputEl) {
+  var val = (inputEl?.value || '').replace(',', '.');
+  return parseFloat(val) || 0;
+}
+
+/**
+ * Format a number as kr currency with dot-separated thousands, 0 decimals.
+ * Example: 1234567 => "1.234.567 kr"
+ */
+function formatKr(value) {
+  var num = Number(value) || 0;
+  var fixed = num.toFixed(2);
+  var parts = fixed.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return parts[0] + ',' + parts[1] + ' kr';
+}
+
+/** Format a number with a fixed number of decimal places. */
+function formatNum(value, decimals) {
+  var num = Number(value) || 0;
+  var fixed = num.toFixed(decimals);
+  var parts = fixed.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  if (parts[1]) {
+    return parts[0] + ',' + parts[1];
+  }
+  return parts[0];
+}
+
+// ── HTML template functions ───────────────────────────────────────────────────
+
+var UNIT_LENGTH = 1.8;
+
+/** Switch between Lengd (m) and Einingar mode for a facade length input */
+function switchLengthMode(btn, mode) {
+  var toggle = btn.parentElement;
+  var col = toggle.parentElement;
+  var input = col.querySelector('.facade-length');
+  var hint = col.querySelector('.length-hint');
+
+  toggle.querySelectorAll('button').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+
+  var val = parseFloat((input.value || '').replace(',', '.')) || 0;
+  var oldMode = input.dataset.mode || 'lengd';
+
+  if (mode === 'einingar' && oldMode === 'lengd') {
+    var units = Math.ceil(val / UNIT_LENGTH) || 0;
+    input.value = units || '';
+    input.dataset.mode = 'einingar';
+    input.inputMode = 'numeric';
+    input.pattern = '[0-9]*';
+    hint.textContent = units ? '= ' + (units * UNIT_LENGTH).toFixed(1).replace('.', ',') + ' m' : '';
+  } else if (mode === 'lengd' && oldMode === 'einingar') {
+    var meters = val * UNIT_LENGTH;
+    input.value = meters ? meters.toFixed(1).replace('.', ',') : '';
+    input.dataset.mode = 'lengd';
+    input.inputMode = 'decimal';
+    input.pattern = '[0-9]*[.,]?[0-9]*';
+    hint.textContent = meters ? '= ' + Math.ceil(meters / UNIT_LENGTH) + ' ein.' : '';
+  }
+
+  recalcAll();
+}
+
+/** Update the length hint below the input */
+function updateLengthHint(input) {
+  var col = input.closest('.facade-length-col');
+  if (!col) return;
+  var hint = col.querySelector('.length-hint');
+  if (!hint) return;
+  var val = parseFloat((input.value || '').replace(',', '.')) || 0;
+  var mode = input.dataset.mode || 'lengd';
+
+  if (!val) { hint.textContent = ''; return; }
+
+  if (mode === 'einingar') {
+    hint.textContent = '= ' + (val * UNIT_LENGTH).toFixed(1).replace('.', ',') + ' m';
+  } else {
+    var units = val / UNIT_LENGTH;
+    var rounded = Math.ceil(units);
+    if (Math.abs(units - rounded) < 0.01) {
+      hint.textContent = '= ' + rounded + ' ein.';
+    } else {
+      hint.textContent = '\u2248 ' + units.toFixed(1).replace('.', ',') + ' ein. (\u2192 ' + rounded + ')';
+    }
+  }
+}
+
+/** Get the actual length in meters from a facade-length input (regardless of mode) */
+function getFacadeLengthMeters(input) {
+  var val = parseFloat((input.value || '').replace(',', '.')) || 0;
+  var mode = input.dataset.mode || 'lengd';
+  if (mode === 'einingar') return val * UNIT_LENGTH;
+  return val;
+}
+
+/** Build the extras table body rows for all items. */
+function createExtrasRowsHTML() {
+  return ALL_ITEMS.map(function(item) {
+    return '<tr><td>' + item + '</td><td><input type="number" class="quantity-input" min="0" value="0" data-item="' + item + '"></td></tr>';
+  }).join('');
+}
+
+/** Calculate optimal frame levels from a target height.
+ *  Leg actual height contribution:
+ *    50cm lappir  → +0.34 m
+ *   100cm lappir  → +0.69 m
+ */
+function calculateLevelsFromHeight(targetHeight) {
+  // nominal → actual height added
+  var LEG_OPTIONS = [
+    { nominal: 0.5, actual: 0.34 },
+    { nominal: 1.0, actual: 0.69 }
+  ];
+  var bestSolution = null;
+  var minError = Infinity;
+  for (var li = 0; li < LEG_OPTIONS.length; li++) {
+    var leg = LEG_OPTIONS[li];
+    for (var l2 = 0; l2 <= Math.ceil(targetHeight / 2); l2++) {
+      for (var l07 = 0; l07 <= 3; l07++) {
+        var height = (l2 * 2) + (l07 * 0.7) + leg.actual;
+        var error = Math.abs(height - targetHeight);
+        var complexityPenalty = l07 * 0.01;
+        var totalError = error + complexityPenalty;
+        if (totalError < minError && height >= targetHeight - 0.2) {
+          minError = totalError;
+          bestSolution = {
+            levels2m: l2,
+            levels07m: l07,
+            legs50cm: leg.nominal === 0.5 ? 1 : 0,
+            legs100cm: leg.nominal === 1.0 ? 1 : 0,
+            actualHeight: height,
+            error: error
+          };
+        }
+      }
+    }
+  }
+  return bestSolution;
+}
+
+/** Build the complete HTML for a new facade card. */
+function createFacadeHTML(id) {
+  var rows = createExtrasRowsHTML();
+  return [
+    '<div class="facade-title-row">',
+      '<input type="text" class="facade-name-input" value="Hlið #' + id + '" placeholder="Nafn hliðar">',
+    '</div>',
+    '<div class="facade-grid">',
+      '<div class="facade-length-col">',
+        '<div class="length-toggle">',
+          '<button type="button" class="ltog-lengd active" onclick="switchLengthMode(this,\'lengd\')">Lengd (m)</button>',
+          '<button type="button" class="ltog-einingar" onclick="switchLengthMode(this,\'einingar\')">Einingar</button>',
+        '</div>',
+        '<input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" class="facade-length" placeholder="0" data-mode="lengd">',
+        '<div class="length-hint"></div>',
+      '</div>',
+      '<label>Fjöldi hæða 2,0m',
+        '<input type="number" min="0" class="facade-levels2m">',
+      '</label>',
+      '<label>Fjöldi hæða 0,7m',
+        '<input type="number" min="0" class="facade-levels07m">',
+      '</label>',
+      '<label>Fjöldi endalokana',
+        '<input type="number" min="0" class="facade-endcaps" value="2">',
+      '</label>',
+      '<button type="button" class="remove-btn">Fjarlægja</button>',
+    '</div>',
+
+    '<div class="height-helper">',
+      '<label>Standhæð (m)',
+        '<input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" class="height-target-input" placeholder="t.d. 6,5">',
+      '</label>',
+      '<button type="button" class="height-apply-btn" disabled>Reikna</button>',
+      '<span class="height-result"></span>',
+    '</div>',
+
+    '<div class="action-row">',
+      '<button type="button" class="toggle-extras-btn">Að auki</button>',
+      '<button type="button" class="toggle-legs-btn">Lappir – skipting</button>',
+      '<button type="button" class="toggle-summary-btn">Sýna efni (hlið)</button>',
+      '<button type="button" class="edit-btn toggle-edit-btn">✏️ Breyta magni</button>',
+    '</div>',
+
+    '<div class="panel hidden edit-panel">',
+      '<strong>Breyta magni</strong>',
+      '<p class="help-text" style="margin-top:4px;">Sjálfgefinð magn er reiknað sjálfvirkt. Þú getur hnekkt hverri línu. Smelltu á × til að endurstilla.</p>',
+      '<table>',
+        '<thead><tr><th>Heiti</th><th>Sjálfvirkt</th><th>Hnekking</th><th></th></tr></thead>',
+        '<tbody class="edit-body"></tbody>',
+      '</table>',
+    '</div>',
+
+    '<div class="panel hidden extras-panel">',
+      '<strong>Að auki (viðbætur)</strong>',
+      '<table>',
+        '<thead><tr><th>Heiti</th><th>Viðbót (stk)</th></tr></thead>',
+        '<tbody class="extras-body">' + rows + '</tbody>',
+      '</table>',
+    '</div>',
+
+    '<div class="panel hidden legs-panel">',
+      '<strong>Lappir – skipting</strong>',
+      '<div class="help-text">Samtals lappir (auto): <span class="legs-total-display">0</span></div>',
+      '<div>',
+        'Lappir 100cm:',
+        '<input type="number" class="quantity-input legs-100-input" min="0" value="0">',
+        '&nbsp; Lappir 50cm:',
+        '<input type="number" class="quantity-input legs-50-display" readonly>',
+      '</div>',
+    '</div>',
+
+    '<div class="panel hidden facade-summary-panel">',
+      '<strong class="facade-summary-title">Efni fyrir hlið #' + id + '</strong>',
+      '<table>',
+        '<thead><tr>',
+          '<th>Sölunr.</th>',
+          '<th>Leigunr.</th>',
+          '<th>Heiti</th>',
+          '<th>Magn</th>',
+          '<th>Leiguverð</th>',
+          '<th>Söluverð</th>',
+          '<th>Þyngd (kg/stk)</th>',
+          '<th>Samtals kg</th>',
+        '</tr></thead>',
+        '<tbody class="facade-summary-body"></tbody>',
+      '</table>',
+    '</div>'
+  ].join('');
+}
+
+// ── Calculation functions ─────────────────────────────────────────────────────
+
+/**
+ * Calculate required scaffold materials for one facade wall.
+ * @param {number} length    - Wall length in meters
+ * @param {number} levels2m  - Number of 2.0m work levels
+ * @param {number} levels07m - Number of 0.7m work levels
+ * @param {number} endcaps   - Number of end closures
+ * @returns {Object} Map of item name to quantity (includes internal LEGS_TOTAL key)
+ */
+function calculateFacadeMaterials(length, levels2m, levels07m, endcaps, isFirst) {
+  var bays           = Math.ceil(length / BOARD_LENGTH_M);
+  var framesPerLevel = bays + 1;
+  var pairedLevels   = Math.min(levels2m, levels07m);
+  var onlyLevels2m   = levels2m - pairedLevels;
+
+  var frames2m         = framesPerLevel * levels2m;
+  var frames07m        = framesPerLevel * levels07m;
+  var stairBoards      = isFirst ? levels2m : 0;
+  var floorBoards      = (levels2m * 2 * bays) - stairBoards;
+  var handrails        = (levels2m + 1) * bays;
+  var handrailSupports = (bays + 1) + endcaps;
+
+  var wallHeight  = (levels2m * 2) + (levels07m * 0.7) + 2.0;
+  var wallArea    = length * wallHeight;
+  var anchors50cm = levels2m <= 1 ? 0 : Math.round(wallArea / WALL_ANCHOR_AREA_M2);
+
+  var endClosures = endcaps * levels2m * 2;
+  var splitPins   = (frames2m + frames07m) * 2;
+  var legsTotal   = (bays + 1) * 2;
+
+  var result = {};
+  result["Rammar 2,0m"]        = frames2m;
+  result["Rammar 0,7m"]        = frames07m;
+  result["Gólfborð 1,8m"]      = floorBoards;
+  result["Stigapallar 1,8m"]   = isFirst ? stairBoards : 0;
+  result["Stigar 2,7m"]        = isFirst ? pairedLevels : 0;
+  result["Stigar 2,0m"]        = isFirst ? onlyLevels2m : 0;
+  result["Tvöföld handrið"]    = handrails;
+  result["Handriðastoðir"]     = handrailSupports;
+  result["Veggfestingar 50cm"] = anchors50cm;
+  result["Endalokur"]          = endClosures;
+  result["Klemmur"]            = anchors50cm;
+  result["Splitti"]            = splitPins;
+  result["LEGS_TOTAL"]         = legsTotal;
+  return result;
+}
+
+/** Derive rack quantities from combined material totals (modifies object in place).
+ *  Rekkar f/ramma: 1 per 50 frames (2.0m + 0.7m combined qty)
+ *  Rekkar f/gólf:  1 per 40 boards (gólfborð + stigapallar combined qty)
+ *  Rekki f/tvöf. handrið: 1 per 40 handrails
+ */
+function calculateRacks(combined) {
+  // Each rack has 50 slots: 2.0m frame = 1 slot, 0.7m frame = 0.5 slot (stacked in pairs)
+  var slotsUsed = (combined["Rammar 2,0m"] || 0) * SLOTS_PER_FRAME_2M
+                + (combined["Rammar 0,7m"] || 0) * SLOTS_PER_FRAME_07M;
+  combined["Rekkar fyrir ramma 50 stk."] = Math.ceil(slotsUsed / RACK_SLOTS);
+  combined["Rekkar fyrir gólf 40 stk."] = Math.ceil(
+    ((combined["Gólfborð 1,8m"] || 0) + (combined["Stigapallar 1,8m"] || 0)) / BOARDS_PER_RACK
+  );
+  combined["Rekki f/tvöföld handrið 40 stk."] = Math.ceil(
+    (combined["Tvöföld handrið"] || 0) / HANDRAILS_PER_RACK
+  );
+}
+
+/** Calculate how many accessory grids are needed from small-item counts.
+ *  Rule: always 1 for first facade, then +1 per every 100 items of:
+ *  LAPPIR 50CM + LAPPIR 100CM + VEGGFESTINGAR 50CM + VEGGFESTINGAR 100CM + ENDALOKUR + STÁLRÖR 1,2M
+ */
+function calculateAccessoryGrids(combined, hasFacades) {
+  var smallItemKeys = [
+    "Lappir 50cm", "Lappir 100cm",
+    "Veggfestingar 50cm", "Veggfestingar 100cm",
+    "Endalokur", "Stálrör 1,2m", "Handriðastoðir"
+  ];
+  var total = smallItemKeys.reduce(function(sum, key) { return sum + (combined[key] || 0); }, 0);
+  // Only add fylgihlutagrind if there are actual items (i.e. data has been entered)
+  if (!hasFacades || total === 0) {
+    combined["Fylgihlutagrind"] = 0;
+    return;
+  }
+  combined["Fylgihlutagrind"] = Math.max(1, Math.ceil(total / SMALL_ITEMS_PER_GRID));
+}
+
+// ── Render functions ──────────────────────────────────────────────────────────
+
+/** Render per-facade material summary table (only when the panel is visible). */
+function renderFacadeSummary(facadeEl, perFacade, facadeId) {
+  var panel = facadeEl.querySelector('.facade-summary-panel');
+  if (!panel) return;
+  if (panel.classList.contains('hidden') && !panel.classList.contains('print-show-panel')) return;
+
+  var extras = extrasByFacade[facadeId] || {};
+  facadeEl.querySelector('.facade-summary-body').innerHTML = ALL_ITEMS.map(function(key) {
+    var qty    = (perFacade[key] || 0) + (extras[key] || 0);
+    var price  = PRICES[key]  || 0;
+    var salePrice = SALE_PRICES[key] || 0;
+    var weight = WEIGHTS[key] || 0;
+    var saleNo    = SALE_NOS[key] || '';
+    var rentalNo  = RENTAL_NOS[key] || '';
+    return '<tr><td>' + saleNo + '</td><td>' + rentalNo + '</td><td>' + key + '</td><td style="text-align:center">' + qty + '</td><td style="text-align:center">' + formatKr(price) + '</td><td style="text-align:center">' + formatKr(salePrice) + '</td><td style="text-align:center">' + formatNum(weight, 1) + '</td><td style="text-align:center">' + formatNum(weight * qty, 1) + '</td></tr>';
+  }).join('');
+}
+
+/** Render the global results table and all summary boxes. */
+function renderGlobalResults(combined) {
+  var totalPrice  = 0;
+  var totalWeight = 0;
+
+  document.getElementById('results').innerHTML = ALL_ITEMS.map(function(key) {
+    var qty       = combined[key] || 0;
+    var price     = PRICES[key]  || 0;
+    var salePrice = SALE_PRICES[key] || 0;
+    var weight    = WEIGHTS[key] || 0;
+    var saleNo    = SALE_NOS[key] || '';
+    var rentalNo  = RENTAL_NOS[key] || '';
+    var rowPrice  = price  * qty;
+    var rowWeight = weight * qty;
+    totalPrice  += rowPrice;
+    totalWeight += rowWeight;
+    return '<tr><td>' + saleNo + '</td><td>' + rentalNo + '</td><td>' + key + '</td><td style="text-align:center">' + qty + '</td><td style="text-align:center">' + formatKr(price) + '</td><td style="text-align:center">' + formatKr(salePrice) + '</td><td style="text-align:center">' + formatNum(weight, 1) + '</td><td style="text-align:center">' + formatNum(rowWeight, 1) + '</td></tr>';
+  }).join('');
+
+  var discount       = clamp(parseInput(document.getElementById('discountInput')), 0, 100);
+  var discountFactor = 1 - discount / 100;
+  var rentalDays     = Math.max(1, parseInput(document.getElementById('rentalDays')) || 30);
+  var rentalTotal    = totalPrice * rentalDays;
+
+  // Update dynamic labels
+  var daysLabel = document.getElementById('monthlyDiscountedLabel');
+  if (daysLabel) daysLabel.textContent = 'Samtals leiga (' + rentalDays + 'd) með afslætti (með VSK)';
+
+  // Calculate total m2/m3 — with and without stacking
+  var DG = DIMENSIONS['Rekkar fyrir gólf 40 stk.'];
+  var DH = DIMENSIONS['Rekki f/tvöföld handrið 40 stk.'];
+  var DF = DIMENSIONS['Fylgihlutagrind'];
+  var DR = DIMENSIONS['Rekkar fyrir ramma 50 stk.'];
+  var qGolf  = combined['Rekkar fyrir gólf 40 stk.'] || 0;
+  var qHand  = combined['Rekki f/tvöföld handrið 40 stk.'] || 0;
+  var qFylgi = combined['Fylgihlutagrind'] || 0;
+  var qRamma = combined['Rekkar fyrir ramma 50 stk.'] || 0;
+
+  // m2/m3 WITHOUT stacking (each item takes its own floor space)
+  var totalM2NoStack = qGolf  * DG.l * DG.w
+                     + qHand  * DH.l * DH.w
+                     + qFylgi * DF.l * DF.w
+                     + qRamma * DR.l * DR.w;
+  var totalM3 = qGolf  * DG.l * DG.w * DG.h
+              + qHand  * DH.l * DH.w * DH.h
+              + qFylgi * DF.l * DF.w * DF.h
+              + qRamma * DR.l * DR.w * DR.h;
+
+  // m2 WITH stacking
+  var golfPairs    = Math.floor(qGolf / 2);
+  var golfLeftover = qGolf % 2;
+  var handPairs    = Math.floor(qHand / 2);
+  var handLeftover = qHand % 2;
+  var mixed = 0;
+  if (golfLeftover === 1 && handLeftover === 1) { mixed = 1; golfLeftover = 0; handLeftover = 0; }
+  var fylgiTrips = Math.floor(qFylgi / 3);
+  var fylgiLeft  = qFylgi % 3;
+
+  var totalM2 = (golfPairs + golfLeftover + mixed) * DG.l * DG.w
+              + (handPairs + handLeftover) * DH.l * DH.w
+              + (fylgiTrips + (fylgiLeft > 0 ? 1 : 0)) * DF.l * DF.w
+              + qRamma * DR.l * DR.w;
+
+  // m3 WITH stacking
+  totalM3 = (golfPairs * DG.l * DG.w * DG.h * 2) + (golfLeftover * DG.l * DG.w * DG.h)
+          + (handPairs * DH.l * DH.w * DH.h * 2) + (handLeftover * DH.l * DH.w * DH.h)
+          + (mixed * DG.l * DG.w * (DG.h + DH.h))
+          + (fylgiTrips * DF.l * DF.w * DF.h * 3) + (fylgiLeft > 0 ? fylgiLeft * DF.l * DF.w * DF.h : 0)
+          + qRamma * DR.l * DR.w * DR.h;
+
+  // Max stack height
+  var heights = [];
+  if (qGolf > 0)  heights.push(qGolf  >= 2 ? DG.h * 2 : DG.h);
+  if (qHand > 0)  heights.push(qHand  >= 2 ? DH.h * 2 : DH.h);
+  if (qFylgi > 0) heights.push(qFylgi >= 3 ? DF.h * 3 : qFylgi >= 2 ? DF.h * 2 : DF.h);
+  if (qRamma > 0) heights.push(DR.h);
+  if (qGolf % 2 === 1 && qHand % 2 === 1) heights.push(DG.h + DH.h);
+  var maxHeight = heights.length > 0 ? Math.max.apply(null, heights) : 0;
+
+  document.getElementById('totalWeight').textContent       = formatNum(totalWeight, 0) + ' kg';
+  document.getElementById('totalM2').textContent           = formatNum(totalM2, 1) + ' m²';
+  document.getElementById('totalM3').textContent           = formatNum(totalM3, 1) + ' m³';
+  document.getElementById('totalMaxHeight').textContent    = maxHeight > 0 ? formatNum(maxHeight, 2) + ' m' : '–';
+  // Update tooltip
+  var tooltipH = document.getElementById('tooltipHeight');
+  var tooltipM2 = document.getElementById('tooltipM2NoStack');
+  if (tooltipH)  tooltipH.textContent  = maxHeight > 0 ? formatNum(maxHeight, 2) + ' m' : '–';
+  if (tooltipM2) tooltipM2.textContent = formatNum(totalM2NoStack, 1) + ' m²';
+  document.getElementById('dailyTotal').textContent        = formatKr(totalPrice);
+  document.getElementById('monthlyTotal').textContent      = formatKr(rentalTotal);
+  document.getElementById('dailyDiscounted').textContent   = formatKr(totalPrice  * discountFactor);
+  document.getElementById('monthlyDiscounted').textContent = formatKr(rentalTotal * discountFactor);
+}
+
+
+/** Render the edit panel table showing auto quantities with override inputs. */
+function renderEditPanel(facadeEl, perFacade, facadeId) {
+  var panel = facadeEl.querySelector('.edit-panel');
+  if (!panel || panel.classList.contains('hidden')) return;
+
+  var overrides = overridesByFacade[facadeId] || {};
+  var tbody = panel.querySelector('.edit-body');
+
+  // If rows already exist, just update the auto-qty cells (preserve focus on override inputs)
+  var existingRows = tbody.querySelectorAll('tr');
+  if (existingRows.length === ALL_ITEMS.length) {
+    ALL_ITEMS.forEach(function(key, idx) {
+      var autoQty = perFacade[key] || 0;
+      var row = existingRows[idx];
+      var qtyCell = row.querySelector('.qty-auto');
+      if (qtyCell) qtyCell.textContent = autoQty;
+    });
+    return;
+  }
+
+  // First render: build full table
+  tbody.innerHTML = '';
+
+  ALL_ITEMS.forEach(function(key) {
+    var autoQty = perFacade[key] || 0;
+    var hasOverride = overrides[key] !== null && overrides[key] !== undefined;
+    var overrideVal = hasOverride ? overrides[key] : '';
+
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + key + '</td>' +
+      '<td class="qty-auto" style="color:var(--color-muted);text-align:right;">' + autoQty + '</td>' +
+      '<td><input type="number" class="override-input' + (hasOverride ? ' is-overridden' : '') + '" ' +
+        'min="0" value="' + overrideVal + '" placeholder="–" data-item="' + key + '"></td>' +
+      '<td><button type="button" class="reset-override-btn" data-item="' + key + '" ' +
+        'title="Endurstilla">' + (hasOverride ? '×' : '') + '</button></td>';
+    tbody.appendChild(tr);
+  });
+
+  // Override input events
+  tbody.querySelectorAll('.override-input').forEach(function(input) {
+    input.addEventListener('input', function() {
+      var item = input.dataset.item;
+      var val = input.value.trim();
+      overridesByFacade[facadeId][item] = val !== '' ? +val : null;
+      input.classList.toggle('is-overridden', val !== '');
+      var resetBtn = input.closest('tr').querySelector('.reset-override-btn');
+      if (resetBtn) resetBtn.textContent = val !== '' ? '×' : '';
+      recalcAll();
+    });
+  });
+
+  // Reset buttons
+  tbody.querySelectorAll('.reset-override-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var item = btn.dataset.item;
+      overridesByFacade[facadeId][item] = null;
+      // Force full re-render after reset by clearing rows
+      tbody.innerHTML = '';
+      recalcAll();
+    });
+  });
+}
+
+// ── Core recalculation ────────────────────────────────────────────────────────
+
+/** Recalculate all facades and refresh the entire UI. */
+function recalcAll() {
+  var combined = {};
+  ALL_ITEMS.forEach(function(key) { combined[key] = 0; });
+
+  document.querySelectorAll('.facade').forEach(function(facadeEl) {
+    var facadeId  = +facadeEl.dataset.id;
+    var length    = getFacadeLengthMeters(facadeEl.querySelector('.facade-length'));
+    var levels2m  = parseInput(facadeEl.querySelector('.facade-levels2m'));
+    var levels07m = parseInput(facadeEl.querySelector('.facade-levels07m'));
+    var endcaps   = parseInput(facadeEl.querySelector('.facade-endcaps'));
+
+    // Skip facades with no meaningful input — but still update legs UI
+    if (length === 0 && levels2m === 0 && levels07m === 0) {
+      var legsTotalEl = facadeEl.querySelector('.legs-total-display');
+      var legs50El    = facadeEl.querySelector('.legs-50-display');
+      var legs100El   = facadeEl.querySelector('.legs-100-input');
+      if (legsTotalEl) legsTotalEl.textContent = 0;
+      if (legs50El)    legs50El.value = 0;
+      if (legs100El)   legs100El.value = 0;
+      return;
+    }
+
+    var facadeIndex = Array.from(document.querySelectorAll('#facades article.facade')).indexOf(facadeEl);
+    var isFirst    = facadeIndex === 0;
+    var auto      = calculateFacadeMaterials(length, levels2m, levels07m, endcaps, isFirst);
+    var legsTotal = auto["LEGS_TOTAL"];
+
+    var legsTotalEl = facadeEl.querySelector('.legs-total-display');
+    var legs50El    = facadeEl.querySelector('.legs-50-display');
+    var legs100El   = facadeEl.querySelector('.legs-100-input');
+
+    // Read legs100 directly from DOM — user input is the source of truth
+    var legs100 = clamp(parseInput(legs100El), 0, legsTotal);
+    var legs50  = legsTotal - legs100;
+    legSplitByFacade[facadeId] = { 50: legs50, 100: legs100 };
+
+    if (legsTotalEl) legsTotalEl.textContent = legsTotal;
+    if (legs50El)    legs50El.value           = legs50;
+    // Do NOT overwrite legs100El — user is typing into it
+
+    var perFacade = Object.assign({}, auto);
+    perFacade["Lappir 50cm"]  = legs50;
+    perFacade["Lappir 100cm"] = legs100;
+    delete perFacade["LEGS_TOTAL"];
+
+    // Apply manual overrides
+    var overrides = overridesByFacade[facadeId] || {};
+    ALL_ITEMS.forEach(function(key) {
+      if (overrides[key] !== null && overrides[key] !== undefined) {
+        perFacade[key] = overrides[key];
+      }
+    });
+
+    var extras = extrasByFacade[facadeId] || {};
+    ALL_ITEMS.forEach(function(key) {
+      combined[key] += (perFacade[key] || 0) + (extras[key] || 0);
+    });
+
+    renderFacadeSummary(facadeEl, perFacade, facadeId);
+    renderEditPanel(facadeEl, Object.assign({}, auto, {"Lappir 50cm": legs50, "Lappir 100cm": legs100}), facadeId);
+  });
+
+  calculateRacks(combined);
+  calculateAccessoryGrids(combined, document.querySelectorAll('article.facade').length > 0);
+  renderGlobalResults(combined);
+}
+
+// ── Facade management ─────────────────────────────────────────────────────────
+
+/** Add a new facade card and wire up all its event listeners. */
+function addFacade() {
+  var id = nextFacadeId++;
+  extrasByFacade[id]   = {};
+  ALL_ITEMS.forEach(function(key) { extrasByFacade[id][key] = 0; });
+  overridesByFacade[id] = {};
+  legSplitByFacade[id] = { 50: 0, 100: 0 };
+
+  var facadeEl = document.createElement('article');
+  facadeEl.className  = 'facade';
+  facadeEl.dataset.id = id;
+  facadeEl.innerHTML  = createFacadeHTML(id);
+  document.getElementById('facades').appendChild(facadeEl);
+
+  // Main dimension inputs
+  facadeEl.querySelectorAll('.facade-length, .facade-levels2m, .facade-levels07m, .facade-endcaps')
+    .forEach(function(input) { input.addEventListener('input', recalcAll); });
+
+  // Length hint update
+  facadeEl.querySelector('.facade-length').addEventListener('input', function() {
+    updateLengthHint(this);
+  });
+
+  // Height helper
+  var heightInput  = facadeEl.querySelector('.height-target-input');
+  var heightBtn    = facadeEl.querySelector('.height-apply-btn');
+  var heightResult = facadeEl.querySelector('.height-result');
+
+  heightInput.addEventListener('input', function() {
+    var val = parseFloat(heightInput.value.replace(',', '.')) || 0;
+    var sol = val > 0 ? calculateLevelsFromHeight(val) : null;
+    if (sol) {
+      heightBtn.disabled = false;
+      var legLabel = sol.legs100cm ? '100cm lappir' : '50cm lappir';
+      heightResult.innerHTML =
+        '<b>' + formatNum(sol.actualHeight, 1) + ' m</b> &nbsp;\u2192&nbsp; ' +
+        sol.levels2m + '\u00d7 2,0m' +
+        (sol.levels07m ? ' + ' + sol.levels07m + '\u00d7 0,7m' : '') +
+        ' + ' + legLabel;
+    } else {
+      heightBtn.disabled = true;
+      heightResult.innerHTML = '';
+    }
+    heightInput._solution = sol;
+  });
+
+  heightBtn.addEventListener('click', function() {
+    var sol = heightInput._solution;
+    if (!sol) return;
+    facadeEl.querySelector('.facade-levels2m').value  = sol.levels2m;
+    facadeEl.querySelector('.facade-levels07m').value = sol.levels07m;
+    // Set preferred leg split
+    var legs100Input = facadeEl.querySelector('.legs-100-input');
+    if (legs100Input) legs100Input.value = sol.legs100cm;
+    recalcAll();
+    // Visual feedback
+    heightBtn.textContent = '\u2713 Sett!';
+    setTimeout(function() { heightBtn.textContent = 'Reikna'; }, 1200);
+  });
+
+  // Panel toggles
+  facadeEl.querySelector('.toggle-extras-btn').addEventListener('click', function() {
+    facadeEl.querySelector('.extras-panel').classList.toggle('hidden');
+  });
+  facadeEl.querySelector('.toggle-legs-btn').addEventListener('click', function() {
+    facadeEl.querySelector('.legs-panel').classList.toggle('hidden');
+  });
+  facadeEl.querySelector('.toggle-summary-btn').addEventListener('click', function() {
+    facadeEl.querySelector('.facade-summary-panel').classList.toggle('hidden');
+    recalcAll();
+  });
+
+  facadeEl.querySelector('.toggle-edit-btn').addEventListener('click', function() {
+    facadeEl.querySelector('.edit-panel').classList.toggle('hidden');
+    recalcAll();
+  });
+
+  // Remove button — show confirm dialog
+  facadeEl.querySelector('.remove-btn').addEventListener('click', function() {
+    var wallName = facadeEl.querySelector('.facade-name-input').value.trim() || 'Hlið #' + id;
+    document.getElementById('confirmWallName').textContent = wallName;
+    var overlay = document.getElementById('confirmOverlay');
+    overlay.classList.add('visible');
+    // Set up confirm button
+    var confirmBtn = document.getElementById('confirmDeleteBtn');
+    var cancelBtn  = document.getElementById('confirmCancelBtn');
+    function doDelete() {
+      overlay.classList.remove('visible');
+      removeFacade(id);
+      cleanup();
+    }
+    function doCancel() {
+      overlay.classList.remove('visible');
+      cleanup();
+    }
+    function cleanup() {
+      confirmBtn.removeEventListener('click', doDelete);
+      cancelBtn.removeEventListener('click', doCancel);
+    }
+    confirmBtn.addEventListener('click', doDelete);
+    cancelBtn.addEventListener('click',  doCancel);
+  });
+
+  // Facade name input — sync to summary panel title
+  facadeEl.querySelector('.facade-name-input').addEventListener('input', function(e) {
+    var titleEl = facadeEl.querySelector('.facade-summary-title');
+    if (titleEl) titleEl.textContent = 'Efni fyrir: ' + (e.target.value.trim() || 'Hlið #' + id);
+  });
+
+  // Extras inputs via event delegation
+  facadeEl.querySelector('.extras-body').addEventListener('input', function(e) {
+    var itemName = e.target.dataset.item;
+    if (itemName) {
+      extrasByFacade[id][itemName] = +e.target.value || 0;
+      recalcAll();
+    }
+  });
+
+  // Legs 100cm input
+  facadeEl.querySelector('.legs-100-input').addEventListener('input', function(e) {
+    var facadeIndex = Array.from(document.querySelectorAll('#facades article.facade')).indexOf(facadeEl);
+    var legsTotal = calculateFacadeMaterials(
+      getFacadeLengthMeters(facadeEl.querySelector('.facade-length')),
+      parseInput(facadeEl.querySelector('.facade-levels2m')),
+      parseInput(facadeEl.querySelector('.facade-levels07m')),
+      parseInput(facadeEl.querySelector('.facade-endcaps')),
+      facadeIndex === 0
+    )["LEGS_TOTAL"];
+    var legs100 = clamp(+e.target.value || 0, 0, legsTotal);
+    var legs50  = legsTotal - legs100;
+    legSplitByFacade[id] = { 50: legs50, 100: legs100 };
+    // Update 50cm display immediately without waiting for recalcAll
+    var legs50El = facadeEl.querySelector('.legs-50-display');
+    if (legs50El) legs50El.value = legs50;
+    recalcAll();
+  });
+
+  recalcAll();
+}
+
+/** Remove a facade card by ID and clean up state. */
+function removeFacade(facadeId) {
+  var el = document.querySelector('.facade[data-id="' + facadeId + '"]');
+  if (el) el.remove();
+  delete extrasByFacade[facadeId];
+  delete legSplitByFacade[facadeId];
+  delete overridesByFacade[facadeId];
+  recalcAll();
+}
+
+/** Reset the entire calculator to its initial empty state. */
+function resetCalculator() {
+  document.getElementById('facades').innerHTML = '';
+  document.getElementById('results').innerHTML = '';
+  nextFacadeId     = 1;
+  extrasByFacade    = {};
+  legSplitByFacade  = {};
+  overridesByFacade = {};
+  document.getElementById('discountInput').value           = 0;
+  document.getElementById('totalWeight').textContent       = '0,00 kg';
+  document.getElementById('dailyTotal').textContent        = '0 kr';
+  document.getElementById('monthlyTotal').textContent      = '0 kr';
+  document.getElementById('dailyDiscounted').textContent   = '0 kr';
+  document.getElementById('monthlyDiscounted').textContent = '0 kr';
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+// Close confirm dialog on overlay background click
+// ── Stacking info modal ───────────────────────────────────────────────────────
+document.getElementById('stackCloseBtn').addEventListener('click', function() {
+  document.getElementById('stackOverlay').classList.remove('visible');
+});
+document.getElementById('stackOverlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('visible');
+});
+
+document.getElementById('stackInfoBtn').addEventListener('click', function() {
+  // Update no-stack m2 in note
+  var noteM2 = document.getElementById('stackNoteM2NoStack');
+  var tooltipM2el = document.getElementById('tooltipM2NoStack');
+  if (noteM2 && tooltipM2el) noteM2.textContent = tooltipM2el.textContent;
+
+  document.getElementById('stackOverlay').classList.add('visible');
+});;
+
+document.getElementById('resetOverlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('visible');
+});
+
+document.getElementById('confirmOverlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('visible');
+});
+
+document.getElementById('addFacadeBtn').addEventListener('click', addFacade);
+document.getElementById('resetBtn').addEventListener('click', function() {
+  var overlay = document.getElementById('resetOverlay');
+  overlay.classList.add('visible');
+  function doReset() {
+    overlay.classList.remove('visible');
+    resetCalculator();
+    cleanup();
+  }
+  function doCancel() {
+    overlay.classList.remove('visible');
+    cleanup();
+  }
+  function cleanup() {
+    document.getElementById('resetConfirmBtn').removeEventListener('click', doReset);
+    document.getElementById('resetCancelBtn').removeEventListener('click', doCancel);
+  }
+  document.getElementById('resetConfirmBtn').addEventListener('click', doReset);
+  document.getElementById('resetCancelBtn').addEventListener('click', doCancel);
+});
+document.getElementById('discountInput').addEventListener('input', recalcAll);
+// ── Rental period date logic ─────────────────────────────
+function calculateDaysBetween(startDate, endDate) {
+  var start = new Date(startDate + 'T12:00:00');
+  var end   = new Date(endDate   + 'T12:00:00');
+  return Math.max(1, Math.round((end - start) / 86400000) + 1);
+}
+
+function initializeDates() {
+  var today = new Date();
+  var end   = new Date(today);
+  end.setDate(today.getDate() + 29);   // 30 days inclusive
+  document.getElementById('startDate').value = today.toISOString().split('T')[0];
+  document.getElementById('endDate').value   = end.toISOString().split('T')[0];
+  updateRentalDays();
+}
+
+function updateRentalDays() {
+  var s = document.getElementById('startDate').value;
+  var e = document.getElementById('endDate').value;
+  if (!s || !e) return;
+  var days = calculateDaysBetween(s, e);
+  document.getElementById('rentalDays').value = days;
+  recalcAll();
+}
+
+function updateEndDateFromDays() {
+  var s    = document.getElementById('startDate').value;
+  var days = parseInt(document.getElementById('rentalDays').value, 10);
+  if (!s || isNaN(days) || days < 1) return;
+  var start = new Date(s + 'T12:00:00');
+  start.setDate(start.getDate() + days - 1);
+  document.getElementById('endDate').value = start.toISOString().split('T')[0];
+  recalcAll();
+}
+
+initializeDates();
+document.getElementById('startDate').addEventListener('change', updateRentalDays);
+document.getElementById('endDate').addEventListener('change', updateRentalDays);
+document.getElementById('rentalDays').addEventListener('input', updateEndDateFromDays);
+
+// Set today's date as default
+document.getElementById('clientDate').valueAsDate = new Date();
+
+// Add first facade automatically on load
+addFacade();
+
+// Auto-format kennitala as DDMMYY-NNNN
+document.getElementById('clientKennitala').addEventListener('input', function(e) {
+  var digits = e.target.value.replace(/\D/g, '');
+  if (digits.length > 6) {
+    e.target.value = digits.slice(0, 6) + '-' + digits.slice(6, 10);
+  } else {
+    e.target.value = digits;
+  }
+});
+
+// Auto-format phone number as xxx-xxxx
+document.getElementById('clientPhone').addEventListener('input', function(e) {
+  var digits = e.target.value.replace(/\D/g, '');
+  if (digits.length > 3) {
+    e.target.value = digits.slice(0, 3) + '-' + digits.slice(3, 7);
+  } else {
+    e.target.value = digits;
+  }
+});
+
+// ── Excel Export ──────────────────────────────────────────────────────────────
+document.getElementById('excelBtn').addEventListener('click', function() {
+  if (typeof XLSX === 'undefined') {
+    alert('Villa: XLSX.js tókst ekki að hlaðast. Athugaðu nettengingu og endurhladdu síðuna.');
+    return;
+  }
+
+  var wb = XLSX.utils.book_new();
+
+  // ── Helper: format kr number without HTML ──
+  function numVal(el) {
+    if (!el) return '';
+    var t = el.textContent || '';
+    return t.replace(/[^0-9,.\-]/g, '').replace(/\./g, '').replace(',', '.');
+  }
+
+  // ── Sheet 1: Client info ──
+  var name      = (document.getElementById('clientName').value || '').trim();
+  var company   = (document.getElementById('clientCompany').value || '').trim();
+  var kennitala = (document.getElementById('clientKennitala').value || '').trim();
+  var phone     = (document.getElementById('clientPhone').value || '').trim();
+  var email     = (document.getElementById('clientEmail').value || '').trim();
+  var address   = (document.getElementById('clientAddress').value || '').trim();
+  var dateVal   = document.getElementById('clientDate').value;
+  var dateStr   = dateVal ? new Date(dateVal).toLocaleDateString('is-IS', {day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+  var days      = document.getElementById('rentalDays').value || '30';
+  var discount  = (document.getElementById('discountInput').value || '0');
+
+  var infoData = [
+    ['BYKO Leiga — Vinnupalla tilboð'],
+    [],
+    ['Viðskiptavinur', name],
+    ['Fyrirtæki', company],
+    ['Kennitala', kennitala],
+    ['Sími', phone],
+    ['Netfang', email],
+    ['Heimilisfang / Verkefni', address],
+    ['Dagsetning', dateStr],
+    ['Leigutímabil (dagar)', +days],
+    ['Afsláttur (%)', +discount],
+    [],
+    ['Dagleiga (m/VSK)', numVal(document.getElementById('dailyTotal'))],
+    ['Samtals leiga (' + days + 'd)', numVal(document.getElementById('monthlyTotal'))],
+    ['Dagleiga m/afslætti', numVal(document.getElementById('dailyDiscounted'))],
+    ['Samtals m/afslætti (' + days + 'd)', numVal(document.getElementById('monthlyDiscounted'))],
+    [],
+    ['Heildarþyngd (kg)', numVal(document.getElementById('totalWeight'))],
+    ['Flatarmál pakka (m²)', numVal(document.getElementById('totalM2'))],
+    ['Rúmmál pakka (m³)', numVal(document.getElementById('totalM3'))],
+    ['Hámarkshæð farms', numVal(document.getElementById('totalMaxHeight'))],
+  ];
+  var wsInfo = XLSX.utils.aoa_to_sheet(infoData);
+  wsInfo['!cols'] = [{wch: 28}, {wch: 30}];
+  XLSX.utils.book_append_sheet(wb, wsInfo, 'Upplýsingar');
+
+  // ── Sheet 2: Total materials list ──
+  var matHeader = ['Sölunr.', 'Leigunr.', 'Heiti', 'Magn', 'Leiguverð', 'Söluverð', 'Þyngd (kg/stk)', 'Samtals kg'];
+  var matRows = [matHeader];
+  document.querySelectorAll('#results tr').forEach(function(tr) {
+    var cells = tr.querySelectorAll('td');
+    if (cells.length < 6) return;
+    var row = [];
+    for (var i = 0; i < cells.length; i++) {
+      var txt = cells[i].textContent.trim();
+      // Try to parse numbers (columns 3+)
+      if (i >= 3) {
+        var n = parseFloat(txt.replace(/\./g, '').replace(',', '.'));
+        row.push(isNaN(n) ? txt : n);
+      } else {
+        row.push(txt);
+      }
+    }
+    matRows.push(row);
+  });
+  var wsMat = XLSX.utils.aoa_to_sheet(matRows);
+  wsMat['!cols'] = [{wch:14},{wch:14},{wch:30},{wch:8},{wch:12},{wch:12},{wch:14},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, wsMat, 'Efnislisti');
+
+  // ── Sheets 3+: Per-wall materials ──
+  document.querySelectorAll('#facades article.facade').forEach(function(facadeEl, idx) {
+    var fid = facadeEl.dataset.id;
+    var nameInput = facadeEl.querySelector('.facade-name-input');
+    var wallName = nameInput ? nameInput.value.trim() : ('Hlið #' + (idx + 1));
+
+    var lengthInput = facadeEl.querySelector('.facade-length');
+    var length = lengthInput ? getFacadeLengthMeters(lengthInput) : 0;
+    var einingar = Math.ceil(length / UNIT_LENGTH) || 0;
+    var lev2Input = facadeEl.querySelector('.facade-levels2m');
+    var lev2 = lev2Input ? (parseInt(lev2Input.value) || 0) : 0;
+    var lev07Input = facadeEl.querySelector('.facade-levels07m');
+    var lev07 = lev07Input ? (parseInt(lev07Input.value) || 0) : 0;
+    var endsInput = facadeEl.querySelector('.facade-endcaps');
+    var ends = endsInput ? (parseInt(endsInput.value) || 0) : 0;
+
+    var lengthDisplay = length ? (length % 1 === 0 ? length : length.toFixed(1).replace('.', ',')) + ' m (' + einingar + ' ein.)' : '0 m';
+    var wallRows = [
+      [wallName],
+      ['Lengd (m)', lengthDisplay],
+      ['Hæðir 2,0m', lev2],
+      ['Hæðir 0,7m', lev07],
+      ['Endalokur', ends],
+      [],
+      matHeader
+    ];
+
+    var summaryBody = facadeEl.querySelector('.facade-summary-body');
+    if (summaryBody) {
+      summaryBody.querySelectorAll('tr').forEach(function(tr) {
+        var cells = tr.querySelectorAll('td');
+        if (cells.length < 6) return;
+        var row = [];
+        for (var i = 0; i < cells.length; i++) {
+          var txt = cells[i].textContent.trim();
+          if (i >= 3) {
+            var n = parseFloat(txt.replace(/\./g, '').replace(',', '.'));
+            row.push(isNaN(n) ? txt : n);
+          } else {
+            row.push(txt);
+          }
+        }
+        wallRows.push(row);
+      });
+    }
+
+    // Sheet name max 31 chars, no special chars
+    var sheetName = wallName.replace(/[\\\/\?\*\[\]]/g, '').substring(0, 31) || 'Hlið ' + (idx + 1);
+    // Ensure unique sheet name
+    var existingNames = wb.SheetNames;
+    var baseName = sheetName;
+    var counter = 2;
+    while (existingNames.indexOf(sheetName) !== -1) {
+      sheetName = baseName.substring(0, 28) + ' (' + counter + ')';
+      counter++;
+    }
+
+    var wsWall = XLSX.utils.aoa_to_sheet(wallRows);
+    wsWall['!cols'] = [{wch:14},{wch:14},{wch:30},{wch:8},{wch:12},{wch:12},{wch:14},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, wsWall, sheetName);
+  });
+
+  // ── Build filename & download ──
+  var fileParts = ['Tilbod'];
+  var _c = company;
+  var _n = name;
+  if (_c) fileParts.push(_c.replace(/[\\/:*?"<>|]/g, ''));
+  else if (_n) fileParts.push(_n.replace(/[\\/:*?"<>|]/g, ''));
+  if (dateVal) fileParts.push(dateVal);
+  var fileName = fileParts.join('-') + '.xlsx';
+
+  XLSX.writeFile(wb, fileName);
+});
+
+/** Generate PDF via browser print dialog. */
+// PDF overlay init
+document.getElementById('pdfCancelBtn').addEventListener('click', function() {
+  document.getElementById('pdfOverlay').classList.remove('visible');
+});
+document.getElementById('pdfOverlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('visible');
+});
+
+// Open PDF options dialog
+document.getElementById('pdfBtn').addEventListener('click', function() {
+  // Build wall checkboxes dynamically from DOM
+  var facadeEls = document.querySelectorAll('#facades article.facade');
+  var checksContainer = document.getElementById('pdfWallChecks');
+  checksContainer.innerHTML = '';
+  facadeEls.forEach(function(facadeEl) {
+    var fid = facadeEl.dataset.id;
+    var wallName = facadeEl.querySelector('.facade-name-input').value.trim() || 'Hlið #' + fid;
+    var label = document.createElement('label');
+    label.className = 'pdf-check-row';
+    label.innerHTML =
+      '<input type="checkbox" class="pdf-wall-check" data-facade-id="' + fid + '">' +
+      wallName;
+    checksContainer.appendChild(label);
+  });
+
+  // If no walls added yet
+  if (facadeEls.length === 0) {
+    checksContainer.innerHTML = '<p style="font-size:13px;color:var(--color-muted);margin:4px 10px;">Engir hliðar hafa verið bætt við.</p>';
+  }
+
+  document.getElementById('pdfOverlay').classList.add('visible');
+});
+
+// Confirm PDF print
+document.getElementById('pdfConfirmBtn').addEventListener('click', async function() {
+  document.getElementById('pdfOverlay').classList.remove('visible');
+
+  // Gather selections
+  var selectedWalls = [];
+  document.querySelectorAll('.pdf-wall-check:checked').forEach(function(cb) {
+    selectedWalls.push(+cb.dataset.facadeId);
+  });
+  var showTotal = document.getElementById('pdfCheckTotal').checked;
+  var showZeroQty = document.getElementById('pdfCheckShowZero').checked;
+
+  // Fill client info in print header
+  var name      = document.getElementById('clientName').value.trim();
+  var company   = document.getElementById('clientCompany').value.trim();
+  var kennitala = document.getElementById('clientKennitala').value.trim();
+  var phone     = document.getElementById('clientPhone').value.trim();
+  var email     = document.getElementById('clientEmail').value.trim();
+  var address   = document.getElementById('clientAddress').value.trim();
+  var date      = document.getElementById('clientDate').value;
+  var days      = document.getElementById('rentalDays').value;
+  var dateFormatted = date
+    ? new Date(date).toLocaleDateString('is-IS', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : '';
+  document.getElementById('printClient').textContent    = name      || '–';
+  document.getElementById('printCompany').textContent   = company   || '–';
+  document.getElementById('printKennitala').textContent = kennitala || '–';
+  document.getElementById('printPhone').textContent     = phone     || '–';
+  document.getElementById('printEmail').textContent     = email     || '–';
+  document.getElementById('printAddress').textContent   = address   || '–';
+  document.getElementById('printDate').textContent      = dateFormatted || '–';
+  var pm = document.getElementById('printMeta');
+  if (pm) {
+    var metaParts = [];
+    if (name)      metaParts.push(name);
+    if (company)   metaParts.push(company);
+    if (dateFormatted) metaParts.push(dateFormatted);
+    pm.textContent = metaParts.join('  ·  ');
+  }
+  var sigName = document.getElementById('printSignatureName');
+  if (sigName) sigName.textContent = name || '';
+
+  // Show/hide wall summary panels based on selection
+  document.querySelectorAll('#facades article.facade').forEach(function(facadeEl) {
+    var sp = facadeEl.querySelector('.facade-summary-panel');
+    if (sp && !sp.classList.contains('hidden')) sp.classList.add('was-visible');
+  });
+  document.querySelectorAll('#facades article.facade').forEach(function(facadeEl) {
+    var fid = +facadeEl.dataset.id;
+    var summaryPanel = facadeEl.querySelector('.facade-summary-panel');
+    if (!summaryPanel) return;
+    if (selectedWalls.indexOf(fid) !== -1) {
+      summaryPanel.classList.remove('hidden');
+      // Force re-render of summary content
+      var toggleBtn = facadeEl.querySelector('.toggle-summary-btn');
+      if (toggleBtn) toggleBtn.dispatchEvent(new Event('click-render'));
+      summaryPanel.classList.add('print-show-panel');
+    } else {
+      summaryPanel.classList.add('print-hide-panel');
+    }
+  });
+
+  // Show/hide global summary
+  var globalSummary = document.getElementById('globalSummary');
+  if (globalSummary) {
+    globalSummary.classList.toggle('print-force-hide', !showTotal);
+  }
+
+  // Force re-render summary panels for selected walls
+  document.querySelectorAll('#facades article.facade').forEach(function(facadeEl) {
+    var fid = +facadeEl.dataset.id;
+    if (selectedWalls.indexOf(fid) !== -1) {
+      // Force show panel temporarily so it gets rendered
+      var panel = facadeEl.querySelector('.facade-summary-panel');
+      if (panel) {
+        panel.classList.remove('hidden');
+        panel.classList.add('print-show-panel');
+      }
+      recalcAll();
+    }
+  });
+
+  // Copy logo src to PDF header logo (logo removed from PDF)
+  // var srcLogo = document.querySelector('.calc-logo');
+  // var pdfLogo = document.getElementById('pdfHeaderLogo');
+  // if (srcLogo && pdfLogo) pdfLogo.src = srcLogo.src;
+
+  // ── Fill PDF print block ──────────────────────────────────────
+  (function() {
+    // Client meta in header
+    var name     = document.getElementById('clientName').value.trim();
+    var company  = document.getElementById('clientCompany').value.trim();
+    var dateVal  = document.getElementById('clientDate').value;
+    var dateStr  = dateVal ? new Date(dateVal).toLocaleDateString('is-IS', {day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+    var metaArr  = [name, company, dateStr].filter(Boolean);
+
+    var pdfMeta = document.getElementById('pdfClientMeta');
+    if (pdfMeta) pdfMeta.textContent = metaArr.join('  ·  ') || '–';
+
+    // Client grid
+    var fields = {
+      'pdf-c-name':      name,
+      'pdf-c-company':   company,
+      'pdf-c-kennitala': document.getElementById('clientKennitala').value.trim(),
+      'pdf-c-phone':     document.getElementById('clientPhone').value.trim(),
+      'pdf-c-email':     document.getElementById('clientEmail').value.trim(),
+      'pdf-c-address':   document.getElementById('clientAddress').value.trim(),
+      'pdf-c-date':      dateStr,
+    };
+    Object.keys(fields).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = fields[id] || '–';
+    });
+
+    // Hliðar table
+    var tbody = document.getElementById('pdfHlidarBody');
+    var hlidarBox = document.getElementById('pdfHlidarBox');
+    if (tbody) {
+      tbody.innerHTML = '';
+      document.querySelectorAll('#facades article.facade').forEach(function(facadeEl, idx) {
+        var fid = +facadeEl.dataset.id;
+        if (selectedWalls.indexOf(fid) === -1) return; // Skip unselected walls
+        var nameInput = facadeEl.querySelector('.facade-name-input');
+        var label  = nameInput ? nameInput.value.trim() : ('Hlið #' + (idx + 1));
+        var lengthInput = facadeEl.querySelector('.facade-length');
+        var length = lengthInput ? getFacadeLengthMeters(lengthInput) : 0;
+        var einingar = Math.ceil(length / UNIT_LENGTH) || 0;
+        var lev2Input = facadeEl.querySelector('.facade-levels2m');
+        var lev2   = lev2Input ? (parseInt(lev2Input.value) || 0) : 0;
+        var lev07Input = facadeEl.querySelector('.facade-levels07m');
+        var lev07  = lev07Input ? (parseInt(lev07Input.value) || 0) : 0;
+        var endsInput = facadeEl.querySelector('.facade-endcaps');
+        var ends   = endsInput ? (parseInt(endsInput.value) || 0) : 0;
+        var lengthStr = length ? (length % 1 === 0 ? length : length.toFixed(1).replace('.', ',')) + ' m (' + einingar + ' ein.)' : '0 m';
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + label + '</td><td>' + lengthStr + '</td><td>' + lev2 + '</td><td>' + lev07 + '</td><td>' + ends + '</td>';
+        tbody.appendChild(tr);
+      });
+      // Show/hide HLIÐAR box based on selection
+      if (hlidarBox) {
+        hlidarBox.style.display = selectedWalls.length > 0 ? '' : 'none';
+      }
+    }
+
+    // Per-wall materials tables
+    var wallMatContainer = document.getElementById('pdfWallMaterialsContainer');
+    if (wallMatContainer) {
+      wallMatContainer.innerHTML = '';
+      document.querySelectorAll('#facades article.facade').forEach(function(facadeEl, idx) {
+        var fid = +facadeEl.dataset.id;
+        if (selectedWalls.indexOf(fid) === -1) return; // Skip unselected walls
+        
+        var nameInput = facadeEl.querySelector('.facade-name-input');
+        var wallName = nameInput ? nameInput.value.trim() : ('Hlið #' + (idx + 1));
+        
+        // Get wall dimensions
+        var lengthInput = facadeEl.querySelector('.facade-length');
+        var length = lengthInput ? getFacadeLengthMeters(lengthInput) : 0;
+        var einingar = Math.ceil(length / UNIT_LENGTH) || 0;
+        var lengthDisplay = length ? (length % 1 === 0 ? length : length.toFixed(1).replace('.', ',')) + ' m (' + einingar + ' ein.)' : '0 m';
+        var lev2Input = facadeEl.querySelector('.facade-levels2m');
+        var lev2 = lev2Input ? (parseInt(lev2Input.value) || 0) : 0;
+        var lev07Input = facadeEl.querySelector('.facade-levels07m');
+        var lev07 = lev07Input ? (parseInt(lev07Input.value) || 0) : 0;
+        var endsInput = facadeEl.querySelector('.facade-endcaps');
+        var ends = endsInput ? (parseInt(endsInput.value) || 0) : 0;
+        
+        // Get materials from facade-summary-body
+        var summaryBody = facadeEl.querySelector('.facade-summary-body');
+        if (!summaryBody) return;
+        
+        // Create page container with page-break-before
+        var pageDiv = document.createElement('div');
+        pageDiv.style.cssText = 'page-break-before:always;';
+        
+        // Create header with wall name and dimensions
+        var headerDiv = document.createElement('div');
+        headerDiv.style.cssText = 'margin-bottom:10px; padding:10px 14px; border:1px solid #e2e8f0; border-radius:4px;';
+        headerDiv.innerHTML = '<div style="font-size:16px; font-weight:700; margin-bottom:8px;">' + wallName + '</div>' +
+          '<table style="font-size:12px; border-collapse:collapse;">' +
+          '<tr><td style="padding:2px 12px 2px 0; color:#64748b;">Lengd:</td><td style="font-weight:600;">' + lengthDisplay + '</td></tr>' +
+          '<tr><td style="padding:2px 12px 2px 0; color:#64748b;">Hæðir 2,0m:</td><td style="font-weight:600;">' + lev2 + '</td></tr>' +
+          '<tr><td style="padding:2px 12px 2px 0; color:#64748b;">Hæðir 0,7m:</td><td style="font-weight:600;">' + lev07 + '</td></tr>' +
+          '<tr><td style="padding:2px 12px 2px 0; color:#64748b;">Endalokur:</td><td style="font-weight:600;">' + ends + '</td></tr>' +
+          '</table>';
+        pageDiv.appendChild(headerDiv);
+        
+        // Create materials table for this wall
+        var wallDiv = document.createElement('div');
+        wallDiv.style.cssText = 'margin-bottom:8px; padding:8px 12px; width:100%; box-sizing:border-box; border:1px solid #e2e8f0; border-radius:4px;';
+        
+        var title = document.createElement('div');
+        title.className = 'pdf-box-title';
+        title.textContent = 'Efnislisti';
+        wallDiv.appendChild(title);
+        
+        var table = document.createElement('table');
+        table.style.cssText = 'width:100%; border-collapse:collapse; font-size:11px;';
+        table.innerHTML = '<thead><tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">' +
+          '<th style="text-align:left; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Sölunr.</th>' +
+          '<th style="text-align:left; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Leigunr.</th>' +
+          '<th style="text-align:left; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Heiti</th>' +
+          '<th style="text-align:center; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Magn</th>' +
+          '<th style="text-align:center; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Leiguverð</th>' +
+          '<th style="text-align:center; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Söluverð</th>' +
+          '<th style="text-align:center; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Þyngd/stk</th>' +
+          '<th style="text-align:center; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Samtals kg</th>' +
+          '</tr></thead>';
+        
+        var tbody = document.createElement('tbody');
+        summaryBody.querySelectorAll('tr').forEach(function(srcRow) {
+          var cells = srcRow.querySelectorAll('td');
+          if (cells.length < 6) return;
+          var qty = parseInt(cells[3].textContent) || 0;
+          if (!showZeroQty && qty === 0) return;
+          var tr = document.createElement('tr');
+          var rowColor = qty === 0 ? 'color:#c0c0c0;' : '';
+          tr.style.borderBottom = '1px solid #f1f5f9';
+          tr.innerHTML = '<td style="padding:3px 6px; white-space:nowrap;' + rowColor + '">' + cells[0].textContent + '</td>' +
+            '<td style="padding:3px 6px; white-space:nowrap;' + rowColor + '">' + cells[1].textContent + '</td>' +
+            '<td style="padding:3px 6px; white-space:nowrap;' + rowColor + '">' + cells[2].textContent + '</td>' +
+            '<td style="text-align:center; padding:3px 6px; white-space:nowrap;' + rowColor + '">' + cells[3].textContent + '</td>' +
+            '<td style="text-align:center; padding:3px 6px; white-space:nowrap;' + rowColor + '">' + cells[4].textContent + '</td>' +
+            '<td style="text-align:center; padding:3px 6px; white-space:nowrap;' + rowColor + '">' + cells[5].textContent + '</td>' +
+            '<td style="text-align:center; padding:3px 6px; white-space:nowrap;' + rowColor + '">' + (cells[6] ? cells[6].textContent : '') + '</td>' +
+            '<td style="text-align:center; padding:3px 6px; white-space:nowrap;' + rowColor + '">' + (cells[7] ? cells[7].textContent : '') + '</td>';;
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        wallDiv.appendChild(table);
+        pageDiv.appendChild(wallDiv);
+        wallMatContainer.appendChild(pageDiv);
+      });
+    }
+
+    // Materials table
+    var matBody = document.getElementById('pdfMatBody');
+    if (matBody) {
+      matBody.innerHTML = '';
+      document.querySelectorAll('#results tr').forEach(function(srcRow) {
+        var cells = srcRow.querySelectorAll('td');
+        if (cells.length < 6) return;
+        var qty = parseInt(cells[3].textContent) || 0;
+        if (!showZeroQty && qty === 0) return;
+        var tr  = document.createElement('tr');
+        var rowColor = qty === 0 ? 'color:#c0c0c0;' : '';
+        tr.style.borderBottom = '1px solid #f1f5f9';
+        tr.innerHTML = '<td style="padding:3px 6px; white-space:nowrap;' + rowColor + '">' + cells[0].textContent + '</td>'
+          + '<td style="padding:3px 6px; white-space:nowrap;' + rowColor + '">' + cells[1].textContent + '</td>'
+          + '<td style="padding:3px 6px; white-space:nowrap;' + rowColor + '">' + cells[2].textContent + '</td>'
+          + '<td style="text-align:center; padding:3px 6px; white-space:nowrap;' + rowColor + '">' + cells[3].textContent + '</td>'
+          + '<td style="text-align:center; padding:3px 6px; white-space:nowrap;' + rowColor + '">' + cells[4].textContent + '</td>'
+          + '<td style="text-align:center; padding:3px 6px; white-space:nowrap;' + rowColor + '">' + cells[5].textContent + '</td>'
+          + '<td style="text-align:center; padding:3px 6px; white-space:nowrap;' + rowColor + '">' + (cells[6] ? cells[6].textContent : '') + '</td>'
+          + '<td style="text-align:center; padding:3px 6px; white-space:nowrap;' + rowColor + '">' + (cells[7] ? cells[7].textContent : '') + '</td>';;
+        matBody.appendChild(tr);
+      });
+    }
+
+    // Summary boxes
+    var copy = function(srcId, dstId) {
+      var src = document.getElementById(srcId);
+      var dst = document.getElementById(dstId);
+      if (src && dst) dst.textContent = src.textContent;
+    };
+    copy('totalWeight',   'pdf-s-weight');
+    copy('totalM2',       'pdf-s-m2');
+    copy('totalM3',       'pdf-s-m3');
+    copy('totalMaxHeight','pdf-s-height');
+    copy('dailyTotal',    'pdf-s-daily');
+    copy('monthlyTotal',  'pdf-s-total');
+    copy('dailyDiscounted',   'pdf-s-daily-disc');
+    copy('monthlyDiscounted', 'pdf-s-total-disc');
+
+    // Days label
+    var days = document.getElementById('rentalDays');
+    var lbl1 = document.getElementById('pdf-s-total-lbl');
+    var lbl2 = document.getElementById('pdf-s-total-disc-lbl');
+    if (days && lbl1) lbl1.textContent = 'Samtals leiga (' + (days.value || 30) + 'd)';
+    if (days && lbl2) lbl2.textContent = 'Samtals m/ afslætti (' + (days.value || 30) + 'd)';
+
+    // Discount value
+    var discountInput = document.getElementById('discountInput');
+    var pdfDiscountVal = document.getElementById('pdf-discount-val');
+    if (discountInput && pdfDiscountVal) {
+      pdfDiscountVal.textContent = (discountInput.value || 0) + '%';
+    }
+
+    // Signature name
+    var sigName = document.getElementById('pdf-sig-name');
+    if (sigName) sigName.textContent = name || '';
+  })();
+
+  // Build filename
+  var pdfParts = ['Tilbod'];
+  var _n = (document.getElementById('clientName').value || '').trim();
+  var _c = (document.getElementById('clientCompany').value || '').trim();
+  if (_c) pdfParts.push(_c.replace(/[\\/:*?"<>|]/g, ''));
+  else if (_n) pdfParts.push(_n.replace(/[\\/:*?"<>|]/g, ''));
+  var _d = document.getElementById('clientDate').value;
+  if (_d) pdfParts.push(_d);
+  var pdfFilename = pdfParts.join('-') + '.pdf';
+
+  // Make the pdf-print-block visible for printing
+  var pdfBlock = document.getElementById('pdf-print-block');
+  pdfBlock.style.display = 'block';
+
+  function pdfCleanup() {
+    pdfBlock.style.display = 'none';
+    document.querySelectorAll('#facades article.facade').forEach(function(facadeEl) {
+      var summaryPanel = facadeEl.querySelector('.facade-summary-panel');
+      if (summaryPanel) {
+        summaryPanel.classList.remove('print-show-panel');
+        summaryPanel.classList.remove('print-hide-panel');
+        if (!summaryPanel.classList.contains('was-visible')) {
+          summaryPanel.classList.add('hidden');
+        }
+        summaryPanel.classList.remove('was-visible');
+      }
+    });
+    if (globalSummary) globalSummary.classList.remove('print-force-hide');
+  }
+
+  // Wait for fonts, then open print dialog
+  try {
+    await document.fonts.ready;
+    await new Promise(function(resolve) { requestAnimationFrame(function() { requestAnimationFrame(resolve); }); });
+    window.print();
+    pdfCleanup();
+  } catch (err) {
+    console.error('Print error:', err);
+    pdfCleanup();
+  }
+});</script>
+
+<!-- ═══════════════════════════════════════════════════════
+     DEDICATED PDF PRINT BLOCK - only visible when printing
+     ═══════════════════════════════════════════════════════ -->
+<div id="pdf-print-block">
+
+  <!-- Branded header -->
+  <div class="pdf-hdr" style="display:flex;align-items:stretch;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;margin-bottom:12px;">
+    <div style="width:100%;background:#1e293b;padding:16px 20px;display:flex;flex-direction:column;justify-content:center;">
+      <h2 style="font-size:18px;font-weight:700;color:#fff;margin:0 0 4px;">Leigutilboð á vinnupalla</h2>
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:3px;">BYKO Leiga &nbsp;·&nbsp; Villalta vinnupallakerfi</div>
+      <div id="pdfClientMeta" style="font-size:11px;color:#cbd5e1;">–</div>
+    </div>
+  </div>
+
+  <!-- Client info + Hliðar -->
+  <div class="pdf-top-row" style="width:100%; box-sizing:border-box;">
+    <div class="pdf-box" style="flex:1;">
+      <div class="pdf-box-title">Upplýsingar um viðskiptavin</div>
+      <div class="pdf-client-grid">
+        <span class="cl">Viðskiptavinur</span><span class="cv" id="pdf-c-name">–</span>
+        <span class="cl">Fyrirtæki</span><span class="cv" id="pdf-c-company">–</span>
+        <span class="cl">Kennitala</span><span class="cv" id="pdf-c-kennitala">–</span>
+        <span class="cl">Sími</span><span class="cv" id="pdf-c-phone">–</span>
+        <span class="cl">Netfang</span><span class="cv" id="pdf-c-email">–</span>
+        <span class="cl">Heimilisfang</span><span class="cv" id="pdf-c-address">–</span>
+        <span class="cl">Dagsetning</span><span class="cv" id="pdf-c-date">–</span>
+      </div>
+    </div>
+    <div class="pdf-box" style="flex:1;" id="pdfHlidarBox">
+      <div class="pdf-box-title">Hliðar</div>
+      <table class="pdf-hlid-table">
+        <thead>
+          <tr><th>Hlið</th><th>Lengd</th><th>Hæðir 2,0m</th><th>Hæðir 0,7m</th><th>Endalokur</th></tr>
+        </thead>
+        <tbody id="pdfHlidarBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Materials table -->
+  <div style="margin-bottom:10px; padding:10px 14px; width:100%; box-sizing:border-box; border:1px solid #e2e8f0; border-radius:4px;">
+    <div class="pdf-box-title">Heildaryfirlit efna</div>
+    <table style="width:100%; border-collapse:collapse; font-size:11px;">
+      <thead>
+        <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+          <th style="text-align:left; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Sölunr.</th>
+          <th style="text-align:left; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Leigunr.</th>
+          <th style="text-align:left; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Heiti</th>
+          <th style="text-align:center; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Magn</th>
+          <th style="text-align:center; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Leiguverð</th>
+          <th style="text-align:center; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Söluverð</th>
+          <th style="text-align:center; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Þyngd/stk</th>
+          <th style="text-align:center; padding:4px 6px; font-size:9px; font-weight:700; text-transform:uppercase; color:#64748b; white-space:nowrap;">Samtals kg</th>
+        </tr>
+      </thead>
+      <tbody id="pdfMatBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Summary boxes - Row 1 -->
+  <div class="pdf-sum-row" style="width:100%; box-sizing:border-box;">
+    <div class="pdf-sum-box"><div class="pdf-sum-lbl">Heildarþyngd</div><div class="pdf-sum-val" id="pdf-s-weight">–</div></div>
+    <div class="pdf-sum-box"><div class="pdf-sum-lbl">Flatarmál pakka</div><div class="pdf-sum-val" id="pdf-s-m2">–</div></div>
+    <div class="pdf-sum-box"><div class="pdf-sum-lbl">Rúmmál pakka</div><div class="pdf-sum-val" id="pdf-s-m3">–</div></div>
+    <div class="pdf-sum-box"><div class="pdf-sum-lbl">Hámarkshæð farms</div><div class="pdf-sum-val" id="pdf-s-height">–</div></div>
+  </div>
+  <!-- Summary boxes - Row 2 -->
+  <div class="pdf-sum-row" id="pdfSumRow" style="width:100%; box-sizing:border-box;">
+    <div class="pdf-sum-box"><div class="pdf-sum-lbl">Dagleiga (með VSK)</div><div class="pdf-sum-val" id="pdf-s-daily">–</div></div>
+    <div class="pdf-sum-box"><div class="pdf-sum-lbl" id="pdf-s-total-lbl">Samtals leiga</div><div class="pdf-sum-val" id="pdf-s-total">–</div></div>
+    <div class="pdf-sum-box"><div class="pdf-sum-lbl">Dagleiga m/ afslætti</div><div class="pdf-sum-val" id="pdf-s-daily-disc">–</div></div>
+    <div class="pdf-sum-box accent"><div class="pdf-sum-lbl" id="pdf-s-total-disc-lbl">Samtals m/ afslætti</div><div class="pdf-sum-val" id="pdf-s-total-disc">–</div></div>
+  </div>
+
+  <!-- Discount line -->
+  <div class="pdf-discount-line" style="margin: 6px 0 10px 0;">
+    <span style="font-weight:600; color:#64748b;">AFSLÁTTUR</span>&nbsp;&nbsp;<span id="pdf-discount-val" style="font-weight:700;">0%</span>
+  </div>
+
+  <!-- Signatures - shifted right like in target PDF -->
+  <!-- Signatures - 2 kolumny przesunięte w prawo -->
+  <div style="display: flex; justify-content: flex-end;">
+    <div class="pdf-sig-section" style="display:grid; grid-template-columns: 1fr 1fr; gap:24px; width: 50%; padding-top:12px; border-top:1px solid #e2e8f0;">
+      <div>
+        <div class="pdf-sig-lbl">Dagsetning / Staður</div>
+        <div class="pdf-sig-line"></div>
+      </div>
+      <div>
+        <div class="pdf-sig-lbl">Undirskrift viðskiptavinar</div>
+        <div class="pdf-sig-line"></div>
+        <div class="pdf-sig-name" id="pdf-sig-name"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-wall materials tables (dynamically filled) - each on separate page -->
+  <div id="pdfWallMaterialsContainer"></div>
+
+</div><!-- /pdf-print-block -->
+<!-- Leiðbeiningar modal -->
+<div class="lb-overlay" id="lbModal" onclick="if(event.target===this)this.classList.remove('lb-open')">
+<div class="lb-modal">
+<div class="lb-modal-header">
+  <h2>📖 Leiðbeiningar fyrir vinnupallareiknivelinn</h2>
+  <button class="lb-modal-close" onclick="document.getElementById('lbModal').classList.remove('lb-open')">&times;</button>
+</div>
+<div class="lb-modal-body">
+
+<h2>Áður en byrjað er &ndash; hvað þarf að vita frá viðskiptavininum</h2>
+<p>Eftirfarandi grunnupplýsingar þarf að fá frá viðskiptavininum:</p>
+<p>1. <strong>Hversu langan vinnupall þarf hann?</strong> &ndash; t.d. &bdquo;veggurinn er 12 metrar&ldquo;</p>
+<p>2. <strong>Í hvaða hæð vill hann STANDA?</strong> &ndash; t.d. &bdquo;ég vil standa í 4 metra hæð&ldquo;</p>
+<p>3. <strong>Hversu margar hliðar nær verkið yfir?</strong> &ndash; t.d. &bdquo;bara ein úthlið&ldquo; eða &bdquo;þrjár hliðar hússins&ldquo;</p>
+<div class="lb-important">Mikilvægt: Spyrja skal sérstaklega um standhæð, ekki um hæð glugga eða þaks. Viðskiptavinurinn veit best úr hvaða hæð er auðveldast að vinna.</div>
+
+<hr>
+<h2>Skref 1: Umreikningur standhæðar í fjölda hæða</h2>
+<p>Vinnupallurinn samanstendur af hæðum. Hver hæð er <strong>2 metrar á hæð</strong>. Ein samsetningareining vinnupalls er <strong>1,8 m á lengd</strong> &ndash; reiknivélin reiknar sjálfkrafa út hversu margar samsetningareiningar þarf fyrir gefna lengd vinnupalls og námundar niðurstöðuna upp. Gott að vita: hægt er að reisa 2,7 m hæðir í stað 2,0 m ef það hentar betur.</p>
+
+<p><strong>Þrír þættir mynda heildarhæðina:</strong></p>
+<table>
+<tr><th>Þáttur</th><th>Hæð</th><th>Lýsing</th></tr>
+<tr><td>Rammar 2,0 m</td><td>2 metrar</td><td>Aðal-&bdquo;hæðir&ldquo; vinnupallsins</td></tr>
+<tr><td>Rammar 0,7 m</td><td>70 cm</td><td>Viðbótarhæðir til nákvæmrar aðlögunar</td></tr>
+<tr><td>Lappir (stillanlegir fætur)</td><td>50 cm eða 100 cm</td><td>Stillanlegir fætur neðst á vinnupallinum</td></tr>
+</table>
+
+<p><strong>Hvernig á að reikna hæðina:</strong></p>
+<p>1. Heildarstandhæðin (hæðin sem viðskiptavinurinn vill standa í) skal deila með 2 → það gefur fjölda hæða 2,0 m</p>
+<p>2. Ef útkoman er ekki heil tala → bæta skal við hæð 0,7 m og/eða lappir 100 cm</p>
+
+<p><strong>Dæmi:</strong></p>
+<table>
+<tr><th>Viðskiptavinur vill standa í:</th><th>Hæðir 2,0 m</th><th>Hæðir 0,7 m</th><th>Lappir</th><th>Samtals</th></tr>
+<tr><td>4 m</td><td>2</td><td>0</td><td>50 cm (staðal)</td><td>4 m</td></tr>
+<tr><td>4,7 m</td><td>2</td><td>1</td><td>50 cm (staðal)</td><td>4,7 m</td></tr>
+<tr><td>5 m</td><td>2</td><td>1</td><td>100 cm (still. ~30 cm)</td><td>5 m</td></tr>
+<tr><td>5,4 m</td><td>2</td><td>2</td><td>50 cm (staðal)</td><td>5,4 m</td></tr>
+<tr><td>6 m</td><td>3</td><td>0</td><td>50 cm (staðal)</td><td>6 m</td></tr>
+<tr><td>8,7 m</td><td>4</td><td>1</td><td>50 cm (staðal)</td><td>8,7 m</td></tr>
+<tr><td>9 m</td><td>4</td><td>1</td><td>100 cm (still. ~30 cm)</td><td>9 m</td></tr>
+</table>
+
+<p><strong>Lappir 50 cm</strong> er staðall &ndash; notaðir alltaf. <strong>Lappir 100 cm</strong> eru valdir þegar þörf er á aukinni hæðarstillingu eða þegar landslagsbreytingar eru á ákveðnu svæði.</p>
+<div class="lb-tip">💡 <strong>Hvernig á að breyta skiptingu lappa í reiknivélinni?</strong> Við hverja hlið er hnappur sem heitir <strong>&bdquo;Lappir &ndash; skipting&ldquo;</strong>. Þegar smellt er á hann opnast viðbótarvalmynd þar sem hægt er að slá inn hversu margir eiga að vera 100 cm útgáfan. Fjöldi 50 cm lappa uppfærist sjálfkrafa.</div>
+
+<hr>
+<h2>Skref 2: Útfylling reiknivélarinnar</h2>
+
+<h3>Upplýsingar um viðskiptavin (efri hluti)</h3>
+<p>Fylla skal út upplýsingar um viðskiptavininn:</p>
+<table>
+<tr><th>Reitur</th><th>Lýsing</th></tr>
+<tr><td>Nafn viðskiptavinar</td><td>Nafn viðskiptavinar</td></tr>
+<tr><td>Fyrirtæki</td><td>Nafn fyrirtækis</td></tr>
+<tr><td>Kennitala</td><td>Kennitala</td></tr>
+<tr><td>Símanúmer</td><td>Símanúmer</td></tr>
+<tr><td>Netfang</td><td>Netfang</td></tr>
+<tr><td>Heimilisfang / Verkefni</td><td>Heimilisfang eða heiti verkefnis</td></tr>
+<tr><td>Dagsetning</td><td>Dagsetning tilboðs</td></tr>
+</table>
+
+<h3>Upplýsingar um úthlið (vegg)</h3>
+<p>Fyrsta hliðin er þegar sýnileg þegar reiknivélin er opnuð. Ef þörf er á fleiri hliðum skal smella á <strong>&bdquo;+ Bæta við hlið&ldquo;</strong>.</p>
+<p>Fylla skal út eftirfarandi fyrir hverja hlið:</p>
+<table>
+<tr><th>Reitur í reiknivélinni</th><th>Hvað á að slá inn</th></tr>
+<tr><td>Nafn hliðar</td><td>Heiti hliðar, t.d. &bdquo;Norðurhlið&ldquo; &ndash; gagnlegt þegar fleiri hliðar eru skráðar.</td></tr>
+<tr><td>Lengd (m) / Einingar</td><td>Hægt er að velja á milli metra og eininga (1 eining = 1,8 m). Smelltu á hnappinn til að skipta. Reiknivélin umreiknar sjálfkrafa.</td></tr>
+<tr><td>Fjöldi hæða 2,0 m</td><td>Fjöldi hæða &ndash; sjá töflu í Skrefi 1</td></tr>
+<tr><td>Fjöldi hæða 0,7 m</td><td>Venjulega skal skilja eftir 0 (sjá skýringu hér að neðan)</td></tr>
+<tr><td>Fjöldi endalokana</td><td>Skal skilja eftir 2 (endalokanir á báðum endum). Ef verkið nær yfir fleiri en eina hlið skal athuga hvort hliðarnar tengist &ndash; sameiginleg horn geta krafist breytinga á þessari tölu.</td></tr>
+</table>
+
+<p><strong>Hvenær á að nota hæðir 0,7 m og lappa?</strong></p>
+<p>Sjá töflu í Skrefi 1. Þau eru notuð þegar hæðin kemur ekki &bdquo;jafnt&ldquo; út eingöngu með hæðum 2,0 m.</p>
+
+<hr>
+<h2>Skref 3: Stilling leiguskilmála</h2>
+<p>Neðst í reiknivélinni eru eftirfarandi reitir:</p>
+<table>
+<tr><th>Reitur</th><th>Hvað á að slá inn</th></tr>
+<tr><td>Fjöldi daga</td><td>Fjöldi leigudaga (sjálfgefið 30, lágmark 10 dagar)</td></tr>
+<tr><td>Afsláttur (%)</td><td>Afsláttur í % &ndash; samkvæmt afsláttarkjörum</td></tr>
+</table>
+
+<hr>
+<h2>Skref 4: Gerð PDF-tilboðs</h2>
+<p>1. Ganga skal úr skugga um að allar upplýsingar séu réttar</p>
+<p>2. Smella skal á bláa hnappinn <strong>&bdquo;⬇ Búa til PDF&ldquo;</strong></p>
+<p>3. Velja skal hvað PDF-skjalið á að innihalda</p>
+<p>4. Smella skal á <strong>&bdquo;Prenta PDF&ldquo;</strong></p>
+
+<hr>
+<h2>Raunverulegt dæmi</h2>
+<p><strong>Viðskiptavinur hringir og segir:</strong></p>
+<div class="lb-quote">&bdquo;Ég þarf vinnupall. Veggurinn er 8 metrar á lengd og ég þarf að standa í 4 metra hæð.&ldquo;</div>
+
+<p><strong>Hvað á að slá inn:</strong></p>
+<table>
+<tr><th>Reitur</th><th>Gildi</th></tr>
+<tr><td>Lengd (m) / Einingar</td><td>8 m (eða 5 einingar í einingaham)</td></tr>
+<tr><td>Fjöldi hæða 2,0 m</td><td>2 (því 2 × 2 m = 4 m ✓)</td></tr>
+<tr><td>Fjöldi hæða 0,7 m</td><td>0</td></tr>
+<tr><td>Fjöldi endalokana</td><td>2</td></tr>
+</table>
+<p>Reiknivélin reiknar sjálfkrafa út alla nauðsynlega hluta og verðið!</p>
+
+<hr>
+<h2>Hvað reiknar reiknivélin sjálfkrafa</h2>
+<p>Ekki þarf að reikna neitt meira. Reiknivélin reiknar sjálf út:</p>
+<p>✓ Fjölda ramma</p>
+<p>✓ Fjölda gólfborða</p>
+<p>✓ Fjölda tvöfaldra handriða &ndash; tvöfalt handrið er sett á hverja hæð, einnig þá efstu, sem er öryggiskrafa</p>
+<p>✓ Fjölda veggfestinga &ndash; veggfestingar festa vinnupallinn við vegg byggingarinnar og tryggja stöðugleika</p>
+<p>✓ Stiga og stigapalla</p>
+<p>✓ Alla smáhluti</p>
+<p>✓ Daglegt verð og heildarverð</p>
+<p>✓ Heildarþyngd búnaðarins</p>
+
+<div class="lb-tip">💡 <strong>Hnappurinn &bdquo;Að auki&ldquo;</strong> &ndash; við hverja hlið er hnappurinn &bdquo;Að auki&ldquo;. Þegar smellt er á hann birtist heildarlisti eininga þar sem hægt er að velja viðbótaraukahluti &ndash; t.d. ef viðskiptavinurinn vill fá fleiri stiga og stigapalla.</div>
+
+<div class="lb-tip">💡 <strong>Hámarksálag á gólfborð</strong> er 300 kg/m² &ndash; nóg fyrir dæmigerðar byggingarframkvæmdir, en viðskiptavininn skal upplýstur um að geyma ekki of mikið efni á vinnupallinum.</div>
+
+<hr>
+<h2>Algengustu mistökin &ndash; hvað þarf að varast!</h2>
+<p class="lb-error">❌ <strong>Spyrja skal viðskiptavininn alltaf beint um standhæð</strong> &ndash; ekki má ætla hana út frá hæð glugga eða þaks.</p>
+<p class="lb-error">❌ <strong>Fylla skal út alla reiti</strong> &ndash; slá inn 0 ef einhvers er ekki þörf.</p>
+<p class="lb-error">❌ <strong>Vinnupallur hærri en 20 metrar krefst verkfræðihönnunar</strong> &ndash; ef viðskiptavinur þarf meiri hæð skal ráðfæra sig við yfirmann.</p>
+<p class="lb-error">❌ <strong>Fjarlægð vinnupalls frá vegg má ekki vera meiri en 30 cm</strong> &ndash; ef viðskiptavinur hefur t.d. útstæða þætti á úthlið og þarf meira bil þarf sérlausn.</p>
+
+<hr>
+<h2>Viðbótargögn</h2>
+<p>Ítarleg tæknileg fylgiskjöl Villalta-kerfisins innihalda nánari upplýsingar um samsetningu, einstaka hluti, leyfilegt álag og öryggisreglur.</p>
+<p>🔗 <a href="https://asset.productmarketingcloud.com/api/assetstorage/174_b1c2a37a-3392-4fc1-a8f2-c38620699e48" target="_blank" style="color:#2980b9">Tæknileg notendahandbók Villalta</a></p>
+
+</div>
+</div>
+</div>
+
+
+</body>
+</html>
