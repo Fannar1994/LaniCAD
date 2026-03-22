@@ -39,13 +39,29 @@ export function exportDxf(objects: CadObject[], layers: CadLayer[]): string {
         w('31'); w('0')
         break
       case 'rect': {
-        const { origin: o, width: rw, height: rh } = geo
+        const { origin: o, width: rw, height: rh, rotation: rot } = geo
+        // If rotated, compute actual corner positions
+        const corners = [
+          { x: o.x, y: o.y },
+          { x: o.x + rw, y: o.y },
+          { x: o.x + rw, y: o.y + rh },
+          { x: o.x, y: o.y + rh },
+        ]
+        let pts = corners
+        if (rot) {
+          const cx = o.x + rw / 2, cy = o.y + rh / 2
+          const rad = rot * Math.PI / 180
+          const cosA = Math.cos(rad), sinA = Math.sin(rad)
+          pts = corners.map(p => ({
+            x: cx + (p.x - cx) * cosA - (p.y - cy) * sinA,
+            y: cy + (p.x - cx) * sinA + (p.y - cy) * cosA,
+          }))
+        }
         w('0'); w('LWPOLYLINE'); w('8'); w(layerName)
         w('70'); w('1'); w('90'); w('4')
-        w('10'); w(String(o.x)); w('20'); w(String(-o.y))
-        w('10'); w(String(o.x + rw)); w('20'); w(String(-o.y))
-        w('10'); w(String(o.x + rw)); w('20'); w(String(-(o.y + rh)))
-        w('10'); w(String(o.x)); w('20'); w(String(-(o.y + rh)))
+        for (const p of pts) {
+          w('10'); w(String(p.x)); w('20'); w(String(-p.y))
+        }
         break
       }
       case 'circle':
@@ -91,6 +107,48 @@ export function exportDxf(objects: CadObject[], layers: CadLayer[]): string {
         w('0'); w('TEXT'); w('8'); w(layerName)
         w('10'); w(String(mx)); w('20'); w(String(-my + geo.offset)); w('30'); w('0')
         w('40'); w('10'); w('1'); w(length.toFixed(1))
+        break
+      }
+      case 'ellipse': {
+        // DXF ELLIPSE entity
+        w('0'); w('ELLIPSE'); w('8'); w(layerName)
+        // Center point
+        w('10'); w(String(geo.center.x))
+        w('20'); w(String(-geo.center.y))
+        w('30'); w('0')
+        // Endpoint of major axis (relative to center)
+        const rot = (geo.rotation || 0) * Math.PI / 180
+        const majorR = Math.max(geo.rx, geo.ry)
+        const minorR = Math.min(geo.rx, geo.ry)
+        const majAngle = geo.rx >= geo.ry ? rot : rot + Math.PI / 2
+        w('11'); w(String(majorR * Math.cos(majAngle)))
+        w('21'); w(String(-majorR * Math.sin(majAngle)))
+        w('31'); w('0')
+        // Ratio of minor to major axis
+        w('40'); w(String(minorR / majorR))
+        // Start/end parameters (full ellipse)
+        w('41'); w('0')
+        w('42'); w(String(Math.PI * 2))
+        break
+      }
+      case 'polygon': {
+        // Export as closed LWPOLYLINE
+        const sides = geo.sides
+        const pts: { x: number; y: number }[] = []
+        for (let i = 0; i < sides; i++) {
+          const angle = ((geo.rotation || 0) * Math.PI / 180) + (2 * Math.PI * i) / sides
+          pts.push({
+            x: geo.center.x + geo.radius * Math.cos(angle),
+            y: geo.center.y + geo.radius * Math.sin(angle),
+          })
+        }
+        w('0'); w('LWPOLYLINE'); w('8'); w(layerName)
+        w('70'); w('1') // closed
+        w('90'); w(String(sides))
+        for (const p of pts) {
+          w('10'); w(String(p.x))
+          w('20'); w(String(-p.y))
+        }
         break
       }
     }

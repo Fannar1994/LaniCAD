@@ -44,6 +44,14 @@ export function CadToolbar({ cad, onExportSvg, onExportDxf, onExportPdf, onImpor
       <div className="flex items-center gap-0.5 mr-3">
         <ToolbarToggle icon={<Grid3X3 size={16} />} label="Hnit (G)" active={cad.grid.enabled} onClick={() => cad.setGrid(g => ({ ...g, enabled: !g.enabled }))} />
         <ToolbarToggle icon={<Crosshair size={16} />} label="Snap" active={cad.grid.snap} onClick={() => cad.setGrid(g => ({ ...g, snap: !g.snap }))} />
+        <select value={cad.grid.size} onChange={e => cad.setGrid(g => ({ ...g, size: Number(e.target.value) }))}
+          className="bg-transparent text-white text-xs border border-gray-500 rounded px-1 py-0.5 h-7"
+          title="Hnitstærð">
+          <option value={10} className="text-black">10</option>
+          <option value={25} className="text-black">25</option>
+          <option value={50} className="text-black">50</option>
+          <option value={100} className="text-black">100</option>
+        </select>
       </div>
       <div className="flex-1" />
       <div className="flex items-center gap-0.5 mr-3">

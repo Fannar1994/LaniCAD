@@ -160,11 +160,59 @@ function entityToGeometry(ent: DxfEntity): CadGeometry | null {
     }
 
     case 'INSERT':
-    case 'SPLINE':
-    case 'ELLIPSE':
-    case 'DIMENSION':
-      // Unsupported entity types — skip silently
-      return null
+    case 'SPLINE': {
+      // Import SPLINE as polyline using control points
+      const xs = ent.pairs.get(10) ?? []
+      const ys = ent.pairs.get(20) ?? []
+      if (xs.length < 2) return null
+      const points = xs.map((x, i) => ({
+        x: parseFloat(x),
+        y: -(parseFloat(ys[i] ?? '0')),
+      }))
+      const closed = (parseInt(ent.pairs.get(70)?.[0] ?? '0') & 1) === 1
+      return { type: 'polyline', points, closed }
+    }
+
+    case 'ELLIPSE': {
+      // DXF ELLIPSE: center (10,20), major axis endpoint relative (11,21), minor/major ratio (40)
+      const cx = getNum(ent, 10), cy = -getNum(ent, 20)
+      const majorDx = getNum(ent, 11), majorDy = -getNum(ent, 21)
+      const ratio = getNum(ent, 40) || 0.5
+      const majorLen = Math.sqrt(majorDx * majorDx + majorDy * majorDy)
+      const minorLen = majorLen * ratio
+      const rotation = Math.atan2(majorDy, majorDx) * 180 / Math.PI
+      return {
+        type: 'ellipse',
+        center: { x: cx, y: cy },
+        rx: majorLen,
+        ry: minorLen,
+        rotation,
+      }
+    }
+
+    case 'DIMENSION': {
+      // Import dimension as a simple line dimension
+      // DXF dimensions have definition points at code 13/23 and 14/24
+      const sx = getNum(ent, 13), sy = -getNum(ent, 23)
+      const ex = getNum(ent, 14), ey = -getNum(ent, 24)
+      // Dimension line point (10,20)
+      const dimX = getNum(ent, 10), dimY = -getNum(ent, 20)
+      // Calculate offset from midpoint
+      const mx = (sx + ex) / 2, my = (sy + ey) / 2
+      const ddx = ex - sx, ddy = ey - sy
+      const ln = Math.sqrt(ddx * ddx + ddy * ddy)
+      let offset = 20
+      if (ln > 0.1) {
+        const nx = -ddy / ln, ny = ddx / ln
+        offset = (dimX - mx) * nx + (dimY - my) * ny
+      }
+      return {
+        type: 'dimension',
+        start: { x: sx, y: sy },
+        end: { x: ex, y: ey },
+        offset: Math.abs(offset) < 1 ? 20 : offset,
+      }
+    }
 
     default:
       return null

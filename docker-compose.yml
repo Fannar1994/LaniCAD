@@ -1,0 +1,19 @@
+# LániCAD — Docker Compose for PostgreSQL
+# Usage: docker compose up -d
+
+services:
+  db:
+    image: postgres:latest
+    container_name: lanicad-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lanicad
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Snaedis_alda23}
+    ports:
+      - "54937:5432"
+    volumes:
+      - lanicad_data:/var/lib/postgresql/data
+      - ./server/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+
+volumes:
+  lanicad_data:

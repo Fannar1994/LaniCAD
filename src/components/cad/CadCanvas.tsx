@@ -232,7 +232,12 @@ export function CadCanvas({ cad, equipmentSvg, onCursorChange, onStatusChange }:
           onStatusChange?.('Smelltu á endapunkt til að mæla')
         } else {
           const d = dist(phase.start, world)
-          onStatusChange?.(`Fjarlægð: ${d.toFixed(1)} einingar`)
+          // Create a persistent dimension annotation
+          const ddx = world.x - phase.start.x, ddy = world.y - phase.start.y
+          const ln = Math.sqrt(ddx * ddx + ddy * ddy)
+          const offset = ln > 0 ? Math.max(15 * pixelScale, ln * 0.15) : 20
+          cad.addObject({ type: 'dimension', start: phase.start, end: world, offset })
+          onStatusChange?.(`Fjarlægð: ${d.toFixed(1)} einingar — mál vistað`)
           setPhase(null)
         }
         break
@@ -265,18 +270,22 @@ export function CadCanvas({ cad, equipmentSvg, onCursorChange, onStatusChange }:
         break
       case 'offset': {
         const hit = hitTest(world)
-        if (hit) {
+        if (hit && (!phase || phase.tool !== 'offset' || !phase.sourceId)) {
           cad.setSelectedIds([hit.id])
-          onStatusChange?.('Smelltu til að setja offset-fjarlægð')
+          onStatusChange?.('Smelltu til að setja offset-fjarlægð (fjarlægð frá hlut)')
           setPhase({ tool: 'offset', sourceId: hit.id })
         } else if (phase?.tool === 'offset' && phase.sourceId) {
           const source = cad.objects.find(o => o.id === phase.sourceId)
           if (source) {
             const bb = getBoundingBox(source)
             const cx = (bb.minX + bb.maxX) / 2, cy = (bb.minY + bb.maxY) / 2
-            const d = dist({ x: cx, y: cy }, world) - dist({ x: cx, y: cy }, { x: bb.maxX, y: cy })
+            // Distance from cursor to object center determines offset magnitude
+            // Direction from center to cursor determines offset direction (outward = positive)
+            const distToCenter = dist({ x: cx, y: cy }, world)
+            const halfDiag = dist({ x: cx, y: cy }, { x: bb.maxX, y: bb.maxY })
+            const offsetDist = distToCenter - halfDiag
             cad.setSelectedIds([phase.sourceId])
-            cad.offsetSelected(d > 0 ? Math.abs(d) : -Math.abs(d))
+            cad.offsetSelected(offsetDist > 0 ? Math.max(5, offsetDist) : Math.min(-5, offsetDist))
           }
           setPhase(null)
           onStatusChange?.('Offset búið til')
@@ -500,8 +509,11 @@ function CadObjectSvg({ object, selected, pixelScale }: { object: CadObject; sel
   switch (geo.type) {
     case 'line':
       return <line x1={geo.start.x} y1={geo.start.y} x2={geo.end.x} y2={geo.end.y} {...common} />
-    case 'rect':
-      return <rect x={geo.origin.x} y={geo.origin.y} width={geo.width} height={geo.height} {...common} />
+    case 'rect': {
+      const cx = geo.origin.x + geo.width / 2, cy = geo.origin.y + geo.height / 2
+      return <rect x={geo.origin.x} y={geo.origin.y} width={geo.width} height={geo.height}
+        transform={geo.rotation ? `rotate(${geo.rotation} ${cx} ${cy})` : undefined} {...common} />
+    }
     case 'circle':
       return <circle cx={geo.center.x} cy={geo.center.y} r={geo.radius} {...common} />
     case 'arc': {

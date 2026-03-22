@@ -102,6 +102,27 @@ CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log(created_at DESC
 
 
 -- ══════════════════════════════════════════
+-- 6. REQUEST QUEUE (offline request queueing)
+-- ══════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS request_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  method TEXT NOT NULL CHECK (method IN ('GET', 'POST', 'PUT', 'DELETE')),
+  path TEXT NOT NULL,
+  headers JSONB NOT NULL DEFAULT '{}',
+  body JSONB NOT NULL DEFAULT '{}',
+  source_ip TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed')),
+  response_code INTEGER,
+  response_body JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  processed_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_request_queue_status ON request_queue(status);
+CREATE INDEX IF NOT EXISTS idx_request_queue_created_at ON request_queue(created_at DESC);
+
+
+-- ══════════════════════════════════════════
 -- Auto-update updated_at trigger
 -- ══════════════════════════════════════════
 CREATE OR REPLACE FUNCTION update_updated_at()

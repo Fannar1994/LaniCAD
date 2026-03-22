@@ -199,6 +199,12 @@ export function useCadState() {
     if (activeLayerId === layerId) setActiveLayerId('annotation')
   }, [activeLayerId, setObjects])
 
+  const updateObjectGeometry = useCallback((objectId: string, geometry: CadGeometry) => {
+    setObjects(prev => prev.map(obj =>
+      obj.id === objectId ? { ...obj, geometry } : obj
+    ))
+  }, [setObjects])
+
   const updateObjectStyle = useCallback((objectId: string, style: Partial<CadObject['style']>) => {
     setObjects(prev => prev.map(obj =>
       obj.id === objectId ? { ...obj, style: { ...obj.style, ...style } } : obj
@@ -239,7 +245,7 @@ export function useCadState() {
     clipboard,
     undo, redo, canUndo, canRedo,
     toggleLayerVisibility, toggleLayerLock, addLayer, renameLayer, deleteLayer,
-    updateObjectStyle, updateObjectLayer,
+    updateObjectGeometry, updateObjectStyle, updateObjectLayer,
     importObjects,
   }
 }
