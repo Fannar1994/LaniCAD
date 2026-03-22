@@ -2,13 +2,17 @@ import { useState, useMemo, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
 import { FORMWORK_SYSTEMS, MANTO_HEIGHTS, TIE_BAR_OPTIONS } from '@/data/formwork'
+import type { ID15Combo } from '@/data/formwork'
 import {
   calculateModeA,
   calculateModeB,
   calculateModeC,
+  calculateModeD,
+  findID15Towers,
   calcFormworkTotal,
   calcFormworkItemCost,
   type BoQItem,
+  type ID15TowerOption,
 } from '@/lib/calculations/formwork'
 import { formatKr } from '@/lib/format'
 import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
@@ -22,7 +26,7 @@ import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
-type SystemKey = 'manto' | 'rasto' | 'alufort'
+type SystemKey = 'manto' | 'rasto' | 'alufort' | 'id15'
 
 export function FormworkCalculator() {
   const location = useLocation()
@@ -65,17 +69,37 @@ export function FormworkCalculator() {
   const [cSpacingW, setCSpacingW] = useState(1.5)
   const [cUseID, setCUseID] = useState(false)
 
+  // Mode D (ID-15)
+  const [dHeight, setDHeight] = useState(initData.dHeight as number ?? 3.0)
+  const [dSelectedIdx, setDSelectedIdx] = useState<number>(initData.dSelectedIdx as number ?? -1)
+  const [dTowerQty, setDTowerQty] = useState(initData.dTowerQty as number ?? 1)
+  const [dRackQty, setDRackQty] = useState(initData.dRackQty as number ?? 0)
+
+  const dTowerOptions = useMemo<ID15TowerOption[]>(() => {
+    if (system !== 'id15') return []
+    if (dHeight < 1.42 || dHeight > 20.10) return []
+    return findID15Towers(dHeight)
+  }, [system, dHeight])
+
+  const dSelectedCombo = useMemo<ID15Combo | null>(() => {
+    if (dSelectedIdx < 0 || dSelectedIdx >= dTowerOptions.length) return null
+    return dTowerOptions[dSelectedIdx].combo
+  }, [dSelectedIdx, dTowerOptions])
+
   const result = useMemo(() => {
     if (system === 'rasto') {
       return calculateModeA(aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar)
     } else if (system === 'manto') {
       return calculateModeB(bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar)
+    } else if (system === 'id15') {
+      return calculateModeD(dSelectedCombo, dTowerQty, dRackQty)
     } else {
       return calculateModeC(cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID)
     }
   }, [system, aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
       bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
-      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID])
+      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
+      dSelectedCombo, dTowerQty, dRackQty])
 
   const totalCost = calcFormworkTotal(result.boq, rentalDays, discount)
 
@@ -124,6 +148,7 @@ export function FormworkCalculator() {
       aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
       bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
       cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
+      dHeight, dSelectedIdx, dTowerQty, dRackQty,
     }
     try {
       setSaving(true)
@@ -143,7 +168,8 @@ export function FormworkCalculator() {
   }, [client, result.boq, rentalDays, system, discount, startDate, endDate,
       aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
       bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
-      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID, projectId])
+      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
+      dHeight, dSelectedIdx, dTowerQty, dRackQty, projectId])
 
   const handleSaveTemplate = useCallback(async () => {
     const name = prompt('Heiti sniðmáts:', `Steypumót — ${system}`)
@@ -153,6 +179,7 @@ export function FormworkCalculator() {
       aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
       bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
       cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
+      dHeight, dSelectedIdx, dTowerQty, dRackQty,
     }
     try {
       setSavingTemplate(true)
@@ -166,7 +193,8 @@ export function FormworkCalculator() {
   }, [system, rentalDays, discount, startDate, endDate,
       aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
       bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
-      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID])
+      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
+      dHeight, dSelectedIdx, dTowerQty, dRackQty])
 
   return (
     <div className="space-y-6">
@@ -363,6 +391,94 @@ export function FormworkCalculator() {
               </label>
             </>
           )}
+
+          {/* MODE D: ID-15 Towers */}
+          {system === 'id15' && (
+            <>
+              <h2 className="font-condensed text-lg font-semibold text-brand-dark">ID-15 Turnareiknivél</h2>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Turnhæð (m)</label>
+                <input
+                  type="number"
+                  min={1.42}
+                  max={20.1}
+                  step={0.01}
+                  value={dHeight}
+                  onChange={e => {
+                    setDHeight(Number(e.target.value))
+                    setDSelectedIdx(-1)
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+                  title="Turnhæð"
+                />
+                <p className="mt-1 text-xs text-gray-400">Bil: 1,42 – 20,10 m</p>
+              </div>
+
+              {dTowerOptions.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Veldu samsetningu</label>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {dTowerOptions.map((opt, i) => (
+                      <button
+                        key={opt.idx}
+                        onClick={() => setDSelectedIdx(i)}
+                        className={`rounded-lg border-2 p-3 text-left transition ${
+                          dSelectedIdx === i
+                            ? 'border-brand-accent bg-brand-accent/10'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="text-sm font-semibold text-brand-dark">{opt.label}</div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          {opt.combo[0].toFixed(2).replace('.', ',')} – {opt.combo[1].toFixed(2).replace('.', ',')} m
+                        </div>
+                        <div className="mt-0.5 text-xs text-gray-400">
+                          Þyngd: {opt.combo[10].toFixed(1).replace('.', ',')} kg
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {dTowerOptions.length === 0 && dHeight >= 1.42 && dHeight <= 20.1 && (
+                <p className="text-sm text-amber-600">Engin samsetning finnst fyrir þessa hæð.</p>
+              )}
+
+              {dSelectedIdx >= 0 && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Fjöldi turna</label>
+                    <div className="mt-1 flex items-center gap-3">
+                      <button
+                        onClick={() => setDTowerQty(q => Math.max(1, q - 1))}
+                        className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 text-lg font-bold hover:border-brand-accent"
+                      >−</button>
+                      <span className="min-w-[2rem] text-center text-lg font-bold">{dTowerQty}</span>
+                      <button
+                        onClick={() => setDTowerQty(q => q + 1)}
+                        className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 text-lg font-bold hover:border-brand-accent"
+                      >+</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Fylgihlutagrindir</label>
+                    <div className="mt-1 flex items-center gap-3">
+                      <button
+                        onClick={() => setDRackQty(q => Math.max(0, q - 1))}
+                        className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 text-lg font-bold hover:border-brand-accent"
+                      >−</button>
+                      <span className="min-w-[2rem] text-center text-lg font-bold">{dRackQty}</span>
+                      <button
+                        onClick={() => setDRackQty(q => q + 1)}
+                        className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 text-lg font-bold hover:border-brand-accent"
+                      >+</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Summary */}
@@ -401,7 +517,7 @@ export function FormworkCalculator() {
       </div>
 
       {/* 2D/3D Viewer */}
-      {system !== 'alufort' && (
+      {system !== 'alufort' && system !== 'id15' && (
         <ViewerPanel
           svgContent={createFormworkDrawing({
             wallLength: system === 'rasto' ? aWallLength : bWallLength,

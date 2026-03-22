@@ -1,8 +1,9 @@
 // Formwork calculation logic — ported from original HTML calculator
 import {
   HM01, HM02, HM21, KM01, KM21, LM02, LM22, LM81, LM51, LM71, AH21,
+  ID15_COMBOS, ID15_PART_MAP,
   type FormworkPanel, type FormworkAccessory, type FormworkProp, type FormworkBeam,
-  type FormworkIDFrame,
+  type FormworkIDFrame, type ID15Combo,
 } from '@/data/formwork'
 
 export interface BoQItem {
@@ -375,6 +376,85 @@ export function calculateModeC(
   pushBoQ(boq, LM22.find(a => a.id === '01-MÓT-LM22-992'), screws, 'Festingar')
 
   return { boq, modeLabel: 'ALUFORT Loft' }
+}
+
+// ---- ID-15 Tower Helpers ----
+export interface ID15TowerOption {
+  idx: number
+  combo: ID15Combo
+  label: string
+}
+
+export function findID15Towers(heightM: number): ID15TowerOption[] {
+  const h = heightM
+  const matches: ID15TowerOption[] = []
+  for (let i = 0; i < ID15_COMBOS.length; i++) {
+    const c = ID15_COMBOS[i]
+    if (h >= c[0] && h <= c[1]) {
+      matches.push({ idx: i, combo: c, label: 'Besti valkostur' })
+    }
+  }
+
+  if (matches.length === 0) {
+    const sorted = ID15_COMBOS.map((c, idx) => ({
+      idx,
+      combo: c,
+      dist: Math.abs(h - (c[0] + c[1]) / 2),
+    })).sort((a, b) => a.dist - b.dist)
+    for (let j = 0; j < Math.min(3, sorted.length); j++) {
+      matches.push({ idx: sorted[j].idx, combo: sorted[j].combo, label: '' })
+    }
+  }
+
+  if (matches.length >= 3) {
+    matches[0].label = 'Lægri'
+    matches[1].label = 'Besti valkostur'
+    matches[2].label = 'Hærri'
+  } else if (matches.length === 2) {
+    matches[0].label = 'Valkostur 1'
+    matches[1].label = 'Valkostur 2'
+  } else if (matches.length === 1) {
+    matches[0].label = 'Besti valkostur'
+  }
+
+  return matches
+}
+
+// ---- Mode D: ID-15 Shoring Towers ----
+export function calculateModeD(
+  selectedCombo: ID15Combo | null,
+  towerQty: number,
+  rackQty: number,
+): FormworkResult {
+  const boq: BoQItem[] = []
+  if (!selectedCombo || towerQty < 1) return { boq, modeLabel: 'ID-15 Turnar' }
+
+  const partKeys: Array<{ key: string; comboIdx: number }> = [
+    { key: 'head_jack', comboIdx: 2 },
+    { key: 'base_jack', comboIdx: 3 },
+    { key: 'frame133', comboIdx: 4 },
+    { key: 'frame100', comboIdx: 5 },
+    { key: 'end_frame', comboIdx: 6 },
+    { key: 'diagonal', comboIdx: 7 },
+  ]
+
+  for (const { key, comboIdx } of partKeys) {
+    const perTower = selectedCombo[comboIdx]
+    if (perTower <= 0) continue
+    const partInfo = ID15_PART_MAP[key]
+    const lm81Item = LM81.find(f => f.id === partInfo.lm81Id)
+    if (lm81Item) {
+      pushBoQ(boq, lm81Item, perTower * towerQty, 'ID-15 hlutar')
+    }
+  }
+
+  if (rackQty > 0) {
+    const rackItem = LM81.find(f => f.id === ID15_PART_MAP.rack.lm81Id)
+    pushBoQ(boq, rackItem, rackQty, 'Fylgihlutir')
+  }
+
+  const heightLabel = `${selectedCombo[0].toFixed(2).replace('.', ',')} – ${selectedCombo[1].toFixed(2).replace('.', ',')} m`
+  return { boq, modeLabel: `ID-15 Turnar (${heightLabel})` }
 }
 
 // ---- Rental cost for a BoQ ----
