@@ -1,0 +1,10 @@
+{
+  "extends": ["development"],
+  "hints": {
+    "axe/inline-style-disabled": "off",
+    "axe/button-name": "off",
+    "axe/label": "off",
+    "axe/select-name": "off",
+    "compat-api/css": "off"
+  }
+}
