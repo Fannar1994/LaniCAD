@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { Menu, LogOut, User, Settings, ChevronDown, Search } from 'lucide-react'
+import { Menu, LogOut, User, Settings, ChevronDown, Search, Wifi, WifiOff } from 'lucide-react'
 import { useLocation, Link } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
+import { getApiUrl } from '@/lib/api-config'
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Yfirlit',
@@ -27,6 +28,31 @@ export function Header({ onMenuToggle }: HeaderProps) {
   const location = useLocation()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // API connection status
+  const [apiStatus, setApiStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking')
+  useEffect(() => {
+    let cancelled = false
+    async function checkApi() {
+      const url = getApiUrl()
+      if (!url) {
+        setApiStatus('disconnected')
+        return
+      }
+      try {
+        const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(5000) })
+        if (!cancelled) {
+          const data = await res.json().catch(() => ({}))
+          setApiStatus(res.ok && data.status === 'ok' ? 'connected' : 'disconnected')
+        }
+      } catch {
+        if (!cancelled) setApiStatus('disconnected')
+      }
+    }
+    checkApi()
+    const interval = setInterval(checkApi, 30000) // re-check every 30s
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [location.pathname]) // re-check on navigation
 
   const pageTitle = PAGE_TITLES[location.pathname] || ''
 
@@ -68,6 +94,28 @@ export function Header({ onMenuToggle }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
+        {/* API connection status */}
+        <Link
+          to="/settings"
+          className={`flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition ${
+            apiStatus === 'connected'
+              ? 'border-green-200 bg-green-50 text-green-700'
+              : apiStatus === 'disconnected'
+              ? 'border-red-200 bg-red-50 text-red-600'
+              : 'border-gray-200 bg-gray-50 text-gray-400'
+          }`}
+          title={apiStatus === 'connected' ? 'API tengd' : apiStatus === 'disconnected' ? 'API ekki tengd — smelltu til að stilla' : 'Athuga tengingu...'}
+        >
+          {apiStatus === 'connected' ? (
+            <Wifi className="h-3.5 w-3.5" />
+          ) : (
+            <WifiOff className="h-3.5 w-3.5" />
+          )}
+          <span className="hidden md:inline">
+            {apiStatus === 'connected' ? 'Tengd' : apiStatus === 'disconnected' ? 'Ótengd' : '...'}
+          </span>
+        </Link>
+
         {/* Global search trigger */}
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))}

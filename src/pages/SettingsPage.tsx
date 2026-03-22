@@ -88,6 +88,38 @@ function GeneralSettings() {
   const [testing, setTesting] = useState(false)
   const isCustom = hasCustomApiUrl()
 
+  // Auto-test connection on mount if URL is configured
+  useEffect(() => {
+    const url = getApiUrl()
+    if (!url) {
+      setApiMsg({ ok: false, text: 'Enginn API þjónn stilltur. Sláðu inn slóð og smelltu á "Prófa og vista".' })
+      return
+    }
+    let cancelled = false
+    async function autoTest() {
+      try {
+        const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(5000) })
+        if (cancelled) return
+        if (!res.ok) {
+          setApiMsg({ ok: false, text: `Þjónn svaraði með villu (${res.status}). Athugaðu slóðina.` })
+          return
+        }
+        const data = await res.json()
+        if (data.status === 'ok') {
+          setApiMsg({ ok: true, text: `Tenging virkar! DB: ${data.db}` })
+        } else {
+          setApiMsg({ ok: false, text: 'API svaraði en staða er ekki "ok"' })
+        }
+      } catch {
+        if (!cancelled) {
+          setApiMsg({ ok: false, text: 'Ekki tókst að tengjast þjóni. Endurræstu þjóninn eða uppfærðu slóðina.' })
+        }
+      }
+    }
+    autoTest()
+    return () => { cancelled = true }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleTestAndSave = async () => {
     const url = apiUrlInput.trim().replace(/\/+$/, '')
     if (!url) {
@@ -214,6 +246,14 @@ function GeneralSettings() {
         <h2 className="font-condensed text-lg font-semibold text-brand-dark flex items-center gap-2">
           <Globe className="h-5 w-5" />
           API þjónn
+          {apiMsg && (
+            <span className={`ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+              apiMsg.ok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            }`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${apiMsg.ok ? 'bg-green-500' : 'bg-red-500'}`} />
+              {apiMsg.ok ? 'Tengd' : 'Ótengd'}
+            </span>
+          )}
         </h2>
         <p className="mt-1 text-xs text-gray-500">
           Slóð á bakenda þjón (Cloudflare Tunnel eða localhost). Breytist í hvert skipti sem þjónninn endurræsist.

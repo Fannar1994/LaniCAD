@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { MessageCircle, X, Send, Bot, User, Loader2 } from 'lucide-react'
 import { getLocalReply, type ChatMessage } from '@/lib/chat-engine'
 import { sendChatMessage } from '@/lib/db'
+import { isApiReady } from '@/lib/api-config'
 import { cn } from '@/lib/utils'
 
 export function ChatPanel() {
@@ -37,10 +38,17 @@ export function ChatPanel() {
     setLoading(true)
 
     try {
-      const reply = await sendChatMessage(updated)
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      if (isApiReady()) {
+        // Try server-side AI when API is configured
+        const reply = await sendChatMessage(updated)
+        setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      } else {
+        // Use local engine directly — instant, no network needed
+        const reply = getLocalReply(updated)
+        setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      }
     } catch {
-      // Server unavailable — fall back to local engine
+      // Server error — fall back to local engine
       const reply = getLocalReply(updated)
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } finally {
@@ -79,7 +87,9 @@ export function ChatPanel() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-white">LániCAD AI</h3>
-                <p className="text-[10px] text-gray-300">Aðstoðarmaður</p>
+                <p className="text-[10px] text-gray-300">
+                  {isApiReady() ? 'Tengd við þjón' : 'Staðbundin vél'}
+                </p>
               </div>
             </div>
             <button

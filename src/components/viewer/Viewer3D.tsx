@@ -1,7 +1,8 @@
-import { Component, Suspense } from 'react'
+import { Component, Suspense, useState } from 'react'
 import type { ReactNode, ErrorInfo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Grid } from '@react-three/drei'
+import { Move3d, RotateCw, ZoomIn } from 'lucide-react'
 
 // ── Error Boundary for WebGL / Three.js crashes ──
 interface EBProps { children: ReactNode }
@@ -49,9 +50,27 @@ interface Viewer3DProps {
  * Generic 3D viewer canvas with orbit controls, grid, and lighting
  */
 export function Viewer3D({ children, cameraPosition = [8, 6, 8], className = '' }: Viewer3DProps) {
+  const [showHints, setShowHints] = useState(true)
+
   return (
     <Viewer3DErrorBoundary>
-    <div className={`h-[500px] border rounded-lg bg-gray-50 ${className}`}>
+    <div className={`relative h-[500px] border rounded-lg bg-gray-50 ${className}`}>
+      {/* Interaction hints overlay */}
+      {showHints && (
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-black/30 cursor-pointer"
+          onClick={() => setShowHints(false)}
+        >
+          <div className="rounded-xl bg-white/95 px-6 py-4 shadow-lg text-center space-y-2 pointer-events-none">
+            <p className="font-condensed text-sm font-semibold text-brand-dark">3D sýning — smelltu til að byrja</p>
+            <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
+              <span className="flex items-center gap-1"><RotateCw className="h-3.5 w-3.5" /> Draga = snúa</span>
+              <span className="flex items-center gap-1"><ZoomIn className="h-3.5 w-3.5" /> Skrolla = aðdráttur</span>
+              <span className="flex items-center gap-1"><Move3d className="h-3.5 w-3.5" /> Hægri-smella = færa</span>
+            </div>
+          </div>
+        </div>
+      )}
       <Canvas
         camera={{ position: cameraPosition, fov: 50 }}
         shadows

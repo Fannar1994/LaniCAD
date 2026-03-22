@@ -85,21 +85,36 @@ function Outrigger({ position, direction }: {
   position: [number, number, number]
   direction: [number, number]
 }) {
-  const len = 0.6
+  const len = 0.8
+  const attachH = 0.6 // attach to frame at ~0.6m height
   return (
     <group position={position}>
-      {/* Diagonal strut */}
+      {/* Vertical post from base to attachment */}
       <Tube
-        start={[0, 0.2, 0]}
+        start={[0, 0.17, 0]}
+        end={[0, attachH, 0]}
+        radius={BRACE_R}
+        color="#666"
+      />
+      {/* Diagonal strut from attachment to foot */}
+      <Tube
+        start={[0, attachH, 0]}
         end={[direction[0] * len, 0.01, direction[1] * len]}
         radius={BRACE_R}
         color="#666"
       />
       {/* Foot plate */}
       <mesh position={[direction[0] * len, 0.005, direction[1] * len]}>
-        <boxGeometry args={[0.12, 0.01, 0.12]} />
+        <boxGeometry args={[0.15, 0.012, 0.15]} />
         <meshStandardMaterial color="#555" metalness={0.5} />
       </mesh>
+      {/* Adjustable screw jack */}
+      <Tube
+        start={[direction[0] * len, 0.01, direction[1] * len]}
+        end={[direction[0] * len, 0.08, direction[1] * len]}
+        radius={0.012}
+        color="#777"
+      />
     </group>
   )
 }
@@ -117,7 +132,12 @@ export function RollingScaffoldModel3D({ height, width }: RollingScaffoldModel3D
   const hl = baseL / 2
 
   const corners: [number, number][] = [[-hw, -hl], [hw, -hl], [hw, hl], [-hw, hl]]
-  const needOutriggers = height > 4.0
+  const needOutriggers = height > 2.5
+  // Intermediate deck levels (every frameH, excluding the top platform)
+  const intermediateLevels = Array.from(
+    { length: numFrames - 1 },
+    (_, i) => 0.2 + (i + 1) * frameH
+  ).filter(y => y < height - 0.1)
 
   return (
     <group ref={groupRef}>
@@ -165,6 +185,20 @@ export function RollingScaffoldModel3D({ height, width }: RollingScaffoldModel3D
           </group>
         )
       })}
+
+      {/* === INTERMEDIATE PLATFORM DECKS === */}
+      {intermediateLevels.map((y, i) => (
+        <group key={`ideck_${i}`}>
+          {/* Deck boards */}
+          <mesh position={[0, y, 0]}>
+            <boxGeometry args={[baseW + 0.04, 0.03, baseL + 0.04]} />
+            <meshStandardMaterial color="#b5a060" roughness={0.6} />
+          </mesh>
+          {/* Deck frame cross-members */}
+          <Tube start={[-hw, y - 0.02, -hl]} end={[hw, y - 0.02, -hl]} radius={BRACE_R} color="#777" />
+          <Tube start={[-hw, y - 0.02, hl]} end={[hw, y - 0.02, hl]} radius={BRACE_R} color="#777" />
+        </group>
+      ))}
 
       {/* === PLATFORM with trapdoor === */}
       <group>
