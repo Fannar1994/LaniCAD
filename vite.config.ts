@@ -19,9 +19,9 @@ export default defineConfig({
         start_url: '/LaniCAD/',
         scope: '/LaniCAD/',
         icons: [
-          { src: 'pwa-192.png', sizes: '192x192', type: 'image/svg+xml' },
-          { src: 'pwa-512.png', sizes: '512x512', type: 'image/svg+xml' },
-          { src: 'pwa-512.png', sizes: '512x512', type: 'image/svg+xml', purpose: 'maskable' },
+          { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
