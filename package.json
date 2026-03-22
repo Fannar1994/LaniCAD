@@ -15,6 +15,7 @@
     "@react-three/drei": "^10.0.0",
     "@react-three/fiber": "^9.0.0",
     "clsx": "^2.1.1",
+    "dompurify": "^3.3.3",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "lucide-react": "^0.468.0",
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@tailwindcss/forms": "^0.5.9",
+    "@types/dompurify": "^3.0.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/three": "^0.172.0",

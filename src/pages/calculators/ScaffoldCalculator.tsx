@@ -9,6 +9,9 @@ import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/ca
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
 import { createProject, updateProject, createTemplate } from '@/lib/db'
+import { ViewerPanel } from '@/components/viewer/ViewerPanel'
+import { createScaffoldDrawing } from '@/components/viewer/drawings/ScaffoldDrawing2D'
+import { ScaffoldModel3D } from '@/components/viewer/models/ScaffoldModel3D'
 import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
@@ -85,6 +88,8 @@ export function ScaffoldCalculator() {
 
   const totalRental = lineItems.reduce((s, l) => s + l.rentalCost, 0)
   const totalWeight = lineItems.reduce((s, l) => s + l.weight, 0)
+
+  const primaryLevels = useMemo(() => calculateLevelsFromHeight(facades[0].height), [facades])
 
   const getExportData = useCallback(() => ({
     title: 'Vinnupallareiknivél',
@@ -257,6 +262,26 @@ export function ScaffoldCalculator() {
           </div>
         </div>
       </div>
+
+      {/* 2D/3D Viewer */}
+      <ViewerPanel
+        svgContent={createScaffoldDrawing({
+          length: facades[0].length,
+          levels2m: primaryLevels.levels2m,
+          levels07m: primaryLevels.levels07m,
+          legType: primaryLevels.legType,
+          endcaps: facades[0].endcaps,
+        })}
+        model3D={
+          <ScaffoldModel3D
+            length={facades[0].length}
+            levels2m={primaryLevels.levels2m}
+            levels07m={primaryLevels.levels07m}
+            legType={primaryLevels.legType}
+          />
+        }
+        cameraPosition={[facades[0].length / 2, facades[0].height, facades[0].length]}
+      />
 
       {/* Materials table */}
       <div className="rounded-lg border border-gray-200 bg-white">

@@ -9,6 +9,9 @@ import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/ca
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
 import { createProject, updateProject, createTemplate } from '@/lib/db'
+import { ViewerPanel } from '@/components/viewer/ViewerPanel'
+import { createFenceDrawing } from '@/components/viewer/drawings/FenceDrawing2D'
+import { FenceModel3D } from '@/components/viewer/models/FenceModel3D'
 import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
@@ -393,6 +396,26 @@ export function FenceCalculator() {
           </div>
         </div>
       </div>
+
+      {/* 2D/3D Viewer */}
+      <ViewerPanel
+        svgContent={createFenceDrawing({
+          panels: geometry.panels,
+          panelWidth: fenceType.fenceLength,
+          panelHeight: fenceType.key === 'standard-low' ? 1.2 : fenceType.key === 'queue' ? 1.1 : 2.0,
+          stones: geometry.stones,
+          clamps: geometry.clamps,
+          includeGate,
+        })}
+        model3D={
+          <FenceModel3D
+            panels={geometry.panels}
+            panelWidth={fenceType.fenceLength}
+            panelHeight={fenceType.key === 'standard-low' ? 1.2 : fenceType.key === 'queue' ? 1.1 : 2.0}
+            includeGate={includeGate}
+          />
+        }
+      />
 
       {/* Materials table */}
       <div className="rounded-lg border border-gray-200 bg-white">

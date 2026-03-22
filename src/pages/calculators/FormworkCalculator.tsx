@@ -15,6 +15,9 @@ import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/ca
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
 import { createProject, updateProject, createTemplate } from '@/lib/db'
+import { ViewerPanel } from '@/components/viewer/ViewerPanel'
+import { createFormworkDrawing } from '@/components/viewer/drawings/FormworkDrawing2D'
+import { FormworkModel3D } from '@/components/viewer/models/FormworkModel3D'
 import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
@@ -396,6 +399,24 @@ export function FormworkCalculator() {
           </div>
         </div>
       </div>
+
+      {/* 2D/3D Viewer */}
+      {system !== 'alufort' && (
+        <ViewerPanel
+          svgContent={createFormworkDrawing({
+            wallLength: system === 'rasto' ? aWallLength : bWallLength,
+            wallHeight: system === 'rasto' ? (aSubSystem === 'rasto' ? 3.0 : 1.2) : bHeight / 100,
+            system: system === 'rasto' ? (aSubSystem === 'rasto' ? 'Rasto' : 'Takko') : 'Manto',
+          })}
+          model3D={
+            <FormworkModel3D
+              wallLength={system === 'rasto' ? aWallLength : bWallLength}
+              wallHeight={system === 'rasto' ? (aSubSystem === 'rasto' ? 3.0 : 1.2) : bHeight / 100}
+              system={system === 'rasto' ? (aSubSystem === 'rasto' ? 'Rasto' : 'Takko') : 'Manto'}
+            />
+          }
+        />
+      )}
 
       {/* BoQ table */}
       <div className="rounded-lg border border-gray-200 bg-white">

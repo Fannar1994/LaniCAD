@@ -12,6 +12,9 @@ import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/ca
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
 import { createProject, updateProject, createTemplate } from '@/lib/db'
+import { ViewerPanel } from '@/components/viewer/ViewerPanel'
+import { createRollingScaffoldDrawing } from '@/components/viewer/drawings/RollingScaffoldDrawing2D'
+import { RollingScaffoldModel3D } from '@/components/viewer/models/RollingScaffoldModel3D'
 import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
@@ -236,6 +239,21 @@ export function RollingScaffoldCalculator() {
           </div>
         </div>
       </div>
+
+      {/* 2D/3D Viewer */}
+      <ViewerPanel
+        svgContent={createRollingScaffoldDrawing({
+          height: parseFloat(height),
+          width: scaffoldType === 'wide' ? 'wide' : 'narrow',
+        })}
+        model3D={
+          <RollingScaffoldModel3D
+            height={parseFloat(height)}
+            width={scaffoldType === 'wide' ? 'wide' : 'narrow'}
+          />
+        }
+        cameraPosition={[3, parseFloat(height) / 2, 5]}
+      />
 
       {/* Component breakdown (narrow scaffolds only) */}
       {components.length > 0 && (

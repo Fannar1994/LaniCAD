@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import DOMPurify from 'dompurify'
 
 interface Viewer2DProps {
   svgContent: string
@@ -12,8 +13,9 @@ export function Viewer2D({ svgContent, className = '' }: Viewer2DProps) {
   const processedSvg = useMemo(() => {
     if (!svgContent) return ''
     // Ensure the SVG fills the container responsively
-    return svgContent
+    const styled = svgContent
       .replace(/<svg /, '<svg style="width:100%;height:auto;max-height:700px;display:block;margin:0 auto" ')
+    return DOMPurify.sanitize(styled, { USE_PROFILES: { svg: true, svgFilters: true }, ADD_TAGS: ['style'] })
   }, [svgContent])
 
   if (!svgContent) {

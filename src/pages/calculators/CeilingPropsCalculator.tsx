@@ -8,6 +8,9 @@ import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/ca
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
 import { createProject, updateProject, createTemplate } from '@/lib/db'
+import { ViewerPanel } from '@/components/viewer/ViewerPanel'
+import { createCeilingPropsDrawing } from '@/components/viewer/drawings/CeilingPropsDrawing2D'
+import { CeilingPropsModel3D } from '@/components/viewer/models/CeilingPropsModel3D'
 import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
@@ -309,6 +312,24 @@ export function CeilingPropsCalculator() {
           </div>
         </div>
       </div>
+
+      {/* 2D/3D Viewer */}
+      <ViewerPanel
+        svgContent={createCeilingPropsDrawing({
+          propCount: propQty,
+          propHeight: (selectedProp.minHeight + selectedProp.maxHeight) / 2,
+          beamCount: beamQty,
+          roomWidth: Math.max(4, propQty * 1.2),
+        })}
+        model3D={
+          <CeilingPropsModel3D
+            propCount={propQty}
+            propHeight={(selectedProp.minHeight + selectedProp.maxHeight) / 2}
+            beamCount={beamQty}
+            roomWidth={Math.max(4, propQty * 1.2)}
+          />
+        }
+      />
 
       {/* Materials table */}
       <div className="rounded-lg border border-gray-200 bg-white">
