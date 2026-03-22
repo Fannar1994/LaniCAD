@@ -95,12 +95,12 @@ export function calculateFacadeMaterials(
     'Stigapallar 1,8m': isFirst ? stairBoards : 0,
     'Stigar 2,7m': isFirst ? pairedLevels : 0,
     'Stigar 2,0m': isFirst ? onlyLevels2m : 0,
-    'Tvöföld handrið': (levels2m + 1) * bays,
+    'Tvöföld handrið 1,8m': (levels2m + 1) * bays,
     'Handriðastoðir': (bays + 1) + endcaps,
     'Veggfestingar 50cm': anchors50cm,
-    'Endalokur': endClosures,
-    'Klemmur': anchors50cm,
-    'Splitti': splitPins,
+    'Endahandrið': endClosures,
+    'Klemmur fastar': anchors50cm,
+    'Splitti f/ramma': splitPins,
     'LEGS_TOTAL': legsTotal,
   }
 }
@@ -117,12 +117,12 @@ export function calculateRacks(combined: Record<string, number>): void {
 
   const slotsUsed = (combined['Rammar 2,0m'] || 0) * SLOTS_PER_FRAME_2M
                   + (combined['Rammar 0,7m'] || 0) * SLOTS_PER_FRAME_07M
-  combined['Rekkar fyrir ramma 50 stk.'] = Math.ceil(slotsUsed / RACK_SLOTS)
-  combined['Rekkar fyrir gólf 40 stk.'] = Math.ceil(
+  combined['Rekkar fyrir ramma'] = Math.ceil(slotsUsed / RACK_SLOTS)
+  combined['Rekkar fyrir gólf'] = Math.ceil(
     ((combined['Gólfborð 1,8m'] || 0) + (combined['Stigapallar 1,8m'] || 0)) / BOARDS_PER_RACK
   )
-  combined['Rekki f/tvöföld handrið 40 stk.'] = Math.ceil(
-    (combined['Tvöföld handrið'] || 0) / HANDRAILS_PER_RACK
+  combined['Rekki f/tvöföld handrið'] = Math.ceil(
+    (combined['Tvöföld handrið 1,8m'] || 0) / HANDRAILS_PER_RACK
   )
 }
 
@@ -133,8 +133,8 @@ export function calculateAccessoryGrids(combined: Record<string, number>, hasFac
   const SMALL_ITEMS_PER_GRID = 100
   const smallItemKeys = [
     'Lappir 50cm', 'Lappir 100cm',
-    'Veggfestingar 50cm', 'Veggfestingar 100cm',
-    'Endalokur', 'Stálrör 1,2m', 'Handriðastoðir',
+    'Veggfestingar 50cm', 'Veggfestingar 80cm',
+    'Endahandrið', 'Stálrör 1,2m', 'Handriðastoðir',
   ]
   const total = smallItemKeys.reduce((sum, key) => sum + (combined[key] || 0), 0)
   if (!hasFacades || total === 0) {

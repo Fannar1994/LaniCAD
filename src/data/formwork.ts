@@ -51,7 +51,7 @@ export interface FormworkBeam {
   weekRate: number
 }
 
-export type FormworkSystem = 'manto' | 'rasto' | 'takko' | 'alufort' | 'id15'
+export type FormworkSystem = 'manto' | 'rasto' | 'takko' | 'alufort' | 'id15' | 'robusto' | 'column'
 
 // ---- HM01: Rasto panels ----
 export const HM01: FormworkPanel[] = [
@@ -185,6 +185,58 @@ export const KM21: FormworkAccessory[] = [
   { id: '01-MÓT-KM21-754', desc: 'Manto Center Tube 140', qty: 0, dayRate: 8.06, weekRate: 56.45, cat: 'tube' },
   { id: '01-MÓT-KM21-765', desc: 'Manto Center Tube 170', qty: -12, dayRate: 9.68, weekRate: 67.74, cat: 'tube' },
   { id: '01-MÓT-KM21-165', desc: 'Manto Pouring Platform', qty: 1, dayRate: 0.00, weekRate: 0.00, cat: 'platform' },
+]
+
+// ---- KM02: Robusto panels ----
+export const KM02: FormworkPanel[] = [
+  { id: '01-MÓT-KM02-030', desc: 'Robusto Mótafleki 30×300', w: 30, h: 300, qty: 0, dayRate: 77.34, weekRate: 541.39 },
+  { id: '01-MÓT-KM02-045', desc: 'Robusto Mótafleki 45×300', w: 45, h: 300, qty: 0, dayRate: 85.46, weekRate: 598.19 },
+  { id: '01-MÓT-KM02-060', desc: 'Robusto Mótafleki 60×300', w: 60, h: 300, qty: 0, dayRate: 93.59, weekRate: 655.16 },
+  { id: '01-MÓT-KM02-072', desc: 'Robusto Mótafleki 72×300', w: 72, h: 300, qty: 0, dayRate: 105.80, weekRate: 740.62 },
+  { id: '01-MÓT-KM02-090', desc: 'Robusto Mótafleki 90×300', w: 90, h: 300, qty: 0, dayRate: 110.55, weekRate: 773.85 },
+  { id: '01-MÓT-KM02-120', desc: 'Robusto Mótafleki 120×300', w: 120, h: 300, qty: 0, dayRate: 209.57, weekRate: 1467.00 },
+  { id: '01-MÓT-KM02-240', desc: 'Robusto Mótafleki 240×300', w: 240, h: 300, qty: 0, dayRate: 444.91, weekRate: 3114.40 },
+  { id: '01-MÓT-KM02-600', desc: 'Robusto Innhorn 30/300', w: 30, h: 300, qty: 0, dayRate: 137.00, weekRate: 959.01, corner: 'inside' },
+]
+
+// ---- KM22: Robusto accessories ----
+export const KM22: FormworkAccessory[] = [
+  { id: '01-MÓT-KM22-024', desc: 'Robusto Fleygur f/Dregarafestingu', qty: 0, dayRate: 0.20, weekRate: 1.39, cat: 'wedge' },
+  { id: '01-MÓT-KM22-027', desc: 'Robusto Dregarafesting (Án Dregara)', qty: 0, dayRate: 3.35, weekRate: 23.48, cat: 'tie-attach' },
+  { id: '01-MÓT-KM22-044', desc: 'Robusto Plata 20×20×8', qty: 0, dayRate: 2.29, weekRate: 16.06, cat: 'plate' },
+  { id: '01-MÓT-KM22-054', desc: 'Robusto Stillanleg Réttskeiðaklemma', qty: 0, dayRate: 7.85, weekRate: 54.98, cat: 'clamp' },
+  { id: '01-MÓT-KM22-138', desc: 'Faresin Mótaró DW 140mm', qty: 0, dayRate: 1.22, weekRate: 8.55, cat: 'tierod' },
+  { id: '01-MÓT-KM22-157', desc: 'Robusto Stillanlegir Dregarar (Par)', qty: 0, dayRate: 13.04, weekRate: 91.31, cat: 'stringer' },
+  { id: '01-MÓT-KM22-179', desc: 'Robusta Kranakrókur 1,5T', qty: 0, dayRate: 44.76, weekRate: 313.34, cat: 'crane' },
+  { id: '01-MÓT-KM22-221', desc: 'Robusto Stillanleg Innhorn 33×300', qty: 0, dayRate: 129.29, weekRate: 905.03, cat: 'corner' },
+  { id: '01-MÓT-KM22-223', desc: 'Robusto Stillanleg Úthorn 10×300', qty: 0, dayRate: 115.16, weekRate: 806.14, cat: 'corner' },
+  { id: '01-MÓT-KM22-277', desc: 'Vinnupallaknekti m/áföstum Handriðspósti', qty: 0, dayRate: 18.72, weekRate: 131.03, cat: 'platform' },
+  { id: '01-MÓT-KM22-281', desc: 'Robusto Hornastillir/Gelding 3×300', qty: 0, dayRate: 14.92, weekRate: 104.45, cat: 'comp' },
+  { id: '01-MÓT-KM22-295', desc: 'Faresin Tvöfaldar Mótaskástífur', qty: 0, dayRate: 35.40, weekRate: 247.82, cat: 'brace' },
+  { id: '01-MÓT-KM22-750', desc: 'Faresin Mótateinn 75cm', qty: 0, dayRate: 0.85, weekRate: 5.92, cat: 'tie' },
+  { id: '01-MÓT-KM22-875', desc: 'Faresin Lítill Dregari', qty: 0, dayRate: 0.93, weekRate: 6.53, cat: 'stringer' },
+]
+
+// ---- SM01: Column formwork ----
+export interface FormworkColumnPanel {
+  id: string
+  desc: string
+  colW: number
+  colH: number
+  qty: number
+  dayRate: number
+  weekRate: number
+}
+
+export const SM01: FormworkColumnPanel[] = [
+  { id: '01-MÓT-SM01-301', desc: 'Súlumót 70×300', colW: 70, colH: 300, qty: 0, dayRate: 967.74, weekRate: 6774.19 },
+  { id: '01-MÓT-SM01-302', desc: 'Súlumót 70×75', colW: 70, colH: 75, qty: 0, dayRate: 290.32, weekRate: 2032.26 },
+  { id: '01-MÓT-SM01-303', desc: 'Súlumót 60×300', colW: 60, colH: 300, qty: 0, dayRate: 967.74, weekRate: 6774.19 },
+  { id: '01-MÓT-SM01-304', desc: 'Súlumót 60×75', colW: 60, colH: 75, qty: 0, dayRate: 290.32, weekRate: 2032.26 },
+]
+
+export const SM01_ACC: FormworkAccessory[] = [
+  { id: '01-MÓT-SM01-001', desc: 'Samtengivinklar', qty: 0, dayRate: 1.15, weekRate: 8.06, cat: 'connector' },
 ]
 
 // ---- LM02: Alufort slab panels ----
@@ -342,6 +394,8 @@ export const MANTO_HEIGHTS = [
 export const FORMWORK_SYSTEMS = [
   { key: 'manto' as const, brand: 'Hünnebeck', name: 'Kranamót', sub: 'Manto' },
   { key: 'rasto' as const, brand: 'Hünnebeck', name: 'Handflekamót', sub: 'Rasto / Takko' },
+  { key: 'robusto' as const, brand: 'Faresin', name: 'Veggmót', sub: 'Robusto' },
   { key: 'alufort' as const, brand: '', name: 'Bitamót / Loftamót', sub: 'Alufort' },
   { key: 'id15' as const, brand: 'Hünnebeck', name: 'Turnakerfi', sub: 'ID-15' },
+  { key: 'column' as const, brand: '', name: 'Súlumót', sub: 'Súlumót' },
 ]

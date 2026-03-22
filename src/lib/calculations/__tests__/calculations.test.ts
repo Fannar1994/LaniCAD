@@ -251,7 +251,7 @@ describe('calcScaffoldingRental', () => {
   })
 
   it('floor boards: 30 days × 48 qty', () => {
-    const floorBoard = SCAFFOLD_ITEMS[3] // dailyRate: 12
+    const floorBoard = SCAFFOLD_ITEMS[4] // dailyRate: 12 (Gólfborð 1,8m)
     expect(calcScaffoldingRental(floorBoard.dailyRate, 30, 48)).toBe(17280)
   })
 
@@ -387,12 +387,12 @@ describe('calculateFacadeMaterials', () => {
     expect(mats['Stigar 2,7m']).toBe(0) // pairedLevels = 0
     expect(mats['Stigar 2,0m']).toBe(3) // onlyLevels2m = 3
     expect(mats['Gólfborð 1,8m']).toBe(3 * 2 * 12 - 3) // 72 - 3 = 69
-    expect(mats['Tvöföld handrið']).toBe((3 + 1) * 12) // 48
+    expect(mats['Tvöföld handrið 1,8m']).toBe((3 + 1) * 12) // 48
     expect(mats['Handriðastoðir']).toBe(13 + 2) // bays+1 + endcaps
     expect(mats['Veggfestingar 50cm']).toBe(11) // all anchors go to 50cm
-    expect(mats['Klemmur']).toBe(11) // same as anchors
-    expect(mats['Endalokur']).toBe(2 * 3 * 2) // 12
-    expect(mats['Splitti']).toBe((13 * 3 + 13 * 0) * 2) // 78
+    expect(mats['Klemmur fastar']).toBe(11) // same as anchors
+    expect(mats['Endahandrið']).toBe(2 * 3 * 2) // 12
+    expect(mats['Splitti f/ramma']).toBe((13 * 3 + 13 * 0) * 2) // 78
     expect(mats['LEGS_TOTAL']).toBe(13 * 2) // 26
   })
 
@@ -417,7 +417,7 @@ describe('calculateFacadeMaterials', () => {
   it('1-level scaffold: no wall anchors', () => {
     const mats = calculateFacadeMaterials(10, 1, 0, 0, true)
     expect(mats['Veggfestingar 50cm']).toBe(0)
-    expect(mats['Klemmur']).toBe(0)
+    expect(mats['Klemmur fastar']).toBe(0)
   })
 
   it('multi-level scaffold: has wall anchors and klemmur', () => {
@@ -426,7 +426,7 @@ describe('calculateFacadeMaterials', () => {
     // wallArea = 20 * 8 = 160
     // anchors = round(160/15) = round(10.67) = 11
     expect(mats['Veggfestingar 50cm']).toBe(11) // all anchors go to 50cm
-    expect(mats['Klemmur']).toBe(11) // equal to anchors
+    expect(mats['Klemmur fastar']).toBe(11) // equal to anchors
   })
 
   it('with 0.7m levels', () => {
@@ -434,7 +434,7 @@ describe('calculateFacadeMaterials', () => {
     // bays = ceil(10/1.8) = 6, framesPerLevel = 7
     expect(mats['Rammar 2,0m']).toBe(7 * 2) // 14
     expect(mats['Rammar 0,7m']).toBe(7 * 1) // 7
-    expect(mats['Splitti']).toBe((7 * 2 + 7 * 1) * 2) // 42
+    expect(mats['Splitti f/ramma']).toBe((7 * 2 + 7 * 1) * 2) // 42
   })
 })
 
@@ -449,23 +449,23 @@ describe('calculateRacks', () => {
       'Rammar 0,7m': 7,
       'Gólfborð 1,8m': 69,
       'Stigapallar 1,8m': 3,
-      'Tvöföld handrið': 48,
+      'Tvöföld handrið 1,8m': 48,
     }
     calculateRacks(combined)
     // frameSlots = 39*1 + 7*0.5 = 42.5 → ceil(42.5/50) = 1
-    expect(combined['Rekkar fyrir ramma 50 stk.']).toBe(1)
+    expect(combined['Rekkar fyrir ramma']).toBe(1)
     // boards = (69 + 3) / 40 = 1.8 → ceil = 2
-    expect(combined['Rekkar fyrir gólf 40 stk.']).toBe(2)
+    expect(combined['Rekkar fyrir gólf']).toBe(2)
     // handrails = 48/38 = 1.26 → ceil = 2
-    expect(combined['Rekki f/tvöföld handrið 40 stk.']).toBe(2)
+    expect(combined['Rekki f/tvöföld handrið']).toBe(2)
   })
 
   it('zero quantities produce zero racks', () => {
     const combined: Record<string, number> = {}
     calculateRacks(combined)
-    expect(combined['Rekkar fyrir ramma 50 stk.']).toBe(0)
-    expect(combined['Rekkar fyrir gólf 40 stk.']).toBe(0)
-    expect(combined['Rekki f/tvöföld handrið 40 stk.']).toBe(0)
+    expect(combined['Rekkar fyrir ramma']).toBe(0)
+    expect(combined['Rekkar fyrir gólf']).toBe(0)
+    expect(combined['Rekki f/tvöföld handrið']).toBe(0)
   })
 })
 

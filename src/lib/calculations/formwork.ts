@@ -1,6 +1,6 @@
 // Formwork calculation logic — ported from original HTML calculator
 import {
-  HM01, HM02, HM21, KM01, KM21, LM02, LM22, LM81, LM51, LM71, AH21,
+  HM01, HM02, HM21, KM01, KM21, KM02, KM22, SM01, SM01_ACC, LM02, LM22, LM81, LM51, LM71, AH21,
   ID15_COMBOS, ID15_PART_MAP,
   type FormworkPanel, type FormworkAccessory, type FormworkProp, type FormworkBeam,
   type FormworkIDFrame, type ID15Combo,
@@ -455,6 +455,97 @@ export function calculateModeD(
 
   const heightLabel = `${selectedCombo[0].toFixed(2).replace('.', ',')} – ${selectedCombo[1].toFixed(2).replace('.', ',')} m`
   return { boq, modeLabel: `ID-15 Turnar (${heightLabel})` }
+}
+
+// ---- Mode E: Robusto Wall Formwork ----
+export function calculateModeE(
+  wallLengthM: number,
+  insideCorners: number,
+  outsideCorners: number,
+  _openEnds: number,
+): FormworkResult {
+  const wallLength = wallLengthM * 100
+  const panels = KM02
+  const accessories = KM22
+  const netLength = Math.max(30, wallLength)
+  const { used } = packPanels(netLength, panels)
+  const boq: BoQItem[] = []
+
+  for (const [id, count] of used) {
+    const p = panels.find(x => x.id === id)!
+    boq.push({ id: p.id, desc: p.desc, qty: count * 2, dayRate: p.dayRate, weekRate: p.weekRate, cat: 'Mótaflekar' })
+  }
+
+  const totalPanelsOneFace = Array.from(used.values()).reduce((s, n) => s + n, 0)
+
+  if (insideCorners > 0) {
+    const ic = accessories.find(a => a.id === '01-MÓT-KM22-221')
+    if (ic) boq.push({ id: ic.id, desc: ic.desc, qty: insideCorners * 2, dayRate: ic.dayRate, weekRate: ic.weekRate, cat: 'Horn' })
+  }
+  if (outsideCorners > 0) {
+    const oc = accessories.find(a => a.id === '01-MÓT-KM22-223')
+    if (oc) boq.push({ id: oc.id, desc: oc.desc, qty: outsideCorners * 2, dayRate: oc.dayRate, weekRate: oc.weekRate, cat: 'Horn' })
+  }
+
+  const heightCm = 300
+  const tieRows = 3
+  const clampsPerJoint = 3
+  const joints = Math.max(0, totalPanelsOneFace - 1)
+
+  // Alignment clamps at joints
+  pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-KM22-054'), joints * clampsPerJoint * 2, 'Klemmur')
+
+  // Tie rod attachments + wedges
+  const tieRods = joints * tieRows
+  pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-KM22-138'), tieRods, 'Mótarær')
+  pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-KM22-750'), tieRods, 'Mótateinar')
+  pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-KM22-027'), tieRods * 2, 'Dregarafestingar')
+  pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-KM22-024'), tieRods * 4, 'Fleygur')
+
+  // Braces
+  const braces = Math.ceil(wallLength / 225)
+  pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-KM22-295'), braces, 'Skástífur')
+
+  // Working platform brackets
+  pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-KM22-277'), Math.ceil(wallLength / 250), 'Vinnupallar')
+
+  // Base plates
+  pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-KM22-044'), braces, 'Plötur')
+
+  // Adjustable stringers
+  pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-KM22-157'), braces, 'Dregarar')
+
+  // Crane hooks for large areas
+  const totalPanelArea = (netLength * heightCm / 10000) * 2
+  if (totalPanelArea > 5) {
+    pushBoQ(boq, accessories.find(a => a.id === '01-MÓT-KM22-179'), Math.ceil(totalPanelArea / 25) * 2, 'Kranakrókar')
+  }
+
+  return { boq, modeLabel: 'ROBUSTO (3 m)' }
+}
+
+// ---- Mode F: Column Formwork ----
+export function calculateModeF(
+  columnWidth: number,
+  columnHeight: number,
+  columnQty: number,
+): FormworkResult {
+  const boq: BoQItem[] = []
+  if (columnQty < 1) return { boq, modeLabel: 'Súlumót' }
+
+  // Find matching column panels (4 panels per column for square cross-section)
+  const heightPanel = SM01.find(p => p.colW === columnWidth && p.colH === columnHeight)
+  if (heightPanel) {
+    boq.push({ id: heightPanel.id, desc: heightPanel.desc, qty: 4 * columnQty, dayRate: heightPanel.dayRate, weekRate: heightPanel.weekRate, cat: 'Súluflekar' })
+  }
+
+  // Connection angles: 4 per column per height joint
+  const angleItem = SM01_ACC[0]
+  if (angleItem) {
+    pushBoQ(boq, angleItem, 4 * columnQty, 'Samtengihlutir')
+  }
+
+  return { boq, modeLabel: `Súlumót (${columnWidth}×${columnHeight})` }
 }
 
 // ---- Rental cost for a BoQ ----

@@ -8,6 +8,8 @@ import {
   calculateModeB,
   calculateModeC,
   calculateModeD,
+  calculateModeE,
+  calculateModeF,
   findID15Towers,
   calcFormworkTotal,
   calcFormworkItemCost,
@@ -26,7 +28,7 @@ import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
-type SystemKey = 'manto' | 'rasto' | 'alufort' | 'id15'
+type SystemKey = 'manto' | 'rasto' | 'alufort' | 'id15' | 'robusto' | 'column'
 
 export function FormworkCalculator() {
   const location = useLocation()
@@ -75,6 +77,17 @@ export function FormworkCalculator() {
   const [dTowerQty, setDTowerQty] = useState(initData.dTowerQty as number ?? 1)
   const [dRackQty, setDRackQty] = useState(initData.dRackQty as number ?? 0)
 
+  // Mode E (Robusto)
+  const [eWallLength, setEWallLength] = useState(12)
+  const [eInsideCorners, setEInsideCorners] = useState(0)
+  const [eOutsideCorners, setEOutsideCorners] = useState(0)
+  const [eOpenEnds, setEOpenEnds] = useState(0)
+
+  // Mode F (Column)
+  const [fColWidth, setFColWidth] = useState(70)
+  const [fColHeight, setFColHeight] = useState(300)
+  const [fColQty, setFColQty] = useState(1)
+
   const dTowerOptions = useMemo<ID15TowerOption[]>(() => {
     if (system !== 'id15') return []
     if (dHeight < 1.42 || dHeight > 20.10) return []
@@ -93,13 +106,19 @@ export function FormworkCalculator() {
       return calculateModeB(bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar)
     } else if (system === 'id15') {
       return calculateModeD(dSelectedCombo, dTowerQty, dRackQty)
+    } else if (system === 'robusto') {
+      return calculateModeE(eWallLength, eInsideCorners, eOutsideCorners, eOpenEnds)
+    } else if (system === 'column') {
+      return calculateModeF(fColWidth, fColHeight, fColQty)
     } else {
       return calculateModeC(cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID)
     }
   }, [system, aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
       bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
       cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
-      dSelectedCombo, dTowerQty, dRackQty])
+      dSelectedCombo, dTowerQty, dRackQty,
+      eWallLength, eInsideCorners, eOutsideCorners, eOpenEnds,
+      fColWidth, fColHeight, fColQty])
 
   const totalCost = calcFormworkTotal(result.boq, rentalDays, discount)
 
@@ -149,6 +168,8 @@ export function FormworkCalculator() {
       bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
       cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
       dHeight, dSelectedIdx, dTowerQty, dRackQty,
+      eWallLength, eInsideCorners, eOutsideCorners, eOpenEnds,
+      fColWidth, fColHeight, fColQty,
     }
     try {
       setSaving(true)
@@ -169,7 +190,9 @@ export function FormworkCalculator() {
       aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
       bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
       cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
-      dHeight, dSelectedIdx, dTowerQty, dRackQty, projectId])
+      dHeight, dSelectedIdx, dTowerQty, dRackQty,
+      eWallLength, eInsideCorners, eOutsideCorners, eOpenEnds,
+      fColWidth, fColHeight, fColQty, projectId])
 
   const handleSaveTemplate = useCallback(async () => {
     const name = prompt('Heiti sniðmáts:', `Steypumót — ${system}`)
@@ -180,6 +203,8 @@ export function FormworkCalculator() {
       bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
       cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
       dHeight, dSelectedIdx, dTowerQty, dRackQty,
+      eWallLength, eInsideCorners, eOutsideCorners, eOpenEnds,
+      fColWidth, fColHeight, fColQty,
     }
     try {
       setSavingTemplate(true)
@@ -194,7 +219,9 @@ export function FormworkCalculator() {
       aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
       bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
       cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
-      dHeight, dSelectedIdx, dTowerQty, dRackQty])
+      dHeight, dSelectedIdx, dTowerQty, dRackQty,
+      eWallLength, eInsideCorners, eOutsideCorners, eOpenEnds,
+      fColWidth, fColHeight, fColQty])
 
   return (
     <div className="space-y-6">
@@ -479,6 +506,78 @@ export function FormworkCalculator() {
               )}
             </>
           )}
+
+          {system === 'robusto' && (
+            <>
+              <h2 className="font-condensed text-lg font-semibold text-brand-dark">Robusto veggmót</h2>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Vegglengd (cm)</label>
+                <input type="number" min={30} step={1} value={eWallLength}
+                  onChange={e => setEWallLength(Math.max(30, Number(e.target.value)))}
+                  className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Innhorn</label>
+                  <input type="number" min={0} value={eInsideCorners}
+                    onChange={e => setEInsideCorners(Math.max(0, Number(e.target.value)))}
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Úthorn</label>
+                  <input type="number" min={0} value={eOutsideCorners}
+                    onChange={e => setEOutsideCorners(Math.max(0, Number(e.target.value)))}
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Opnir endar</label>
+                  <input type="number" min={0} value={eOpenEnds}
+                    onChange={e => setEOpenEnds(Math.max(0, Number(e.target.value)))}
+                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {system === 'column' && (
+            <>
+              <h2 className="font-condensed text-lg font-semibold text-brand-dark">Súlumót</h2>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Súlubreidd (cm)</label>
+                <select value={fColWidth}
+                  onChange={e => setFColWidth(Number(e.target.value) as 60 | 70)}
+                  className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+                >
+                  <option value={70}>70 cm</option>
+                  <option value={60}>60 cm</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Súluhæð (cm)</label>
+                <select value={fColHeight}
+                  onChange={e => setFColHeight(Number(e.target.value) as 75 | 300)}
+                  className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+                >
+                  <option value={300}>300 cm</option>
+                  <option value={75}>75 cm</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Fjöldi súlna</label>
+                <div className="mt-1 flex items-center gap-3">
+                  <button onClick={() => setFColQty(q => Math.max(1, q - 1))}
+                    className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 text-lg font-bold hover:border-brand-accent">−</button>
+                  <span className="min-w-[2rem] text-center text-lg font-bold">{fColQty}</span>
+                  <button onClick={() => setFColQty(q => q + 1)}
+                    className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 text-lg font-bold hover:border-brand-accent">+</button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Summary */}
@@ -517,7 +616,7 @@ export function FormworkCalculator() {
       </div>
 
       {/* 2D/3D Viewer */}
-      {system !== 'alufort' && system !== 'id15' && (
+      {system !== 'alufort' && system !== 'id15' && system !== 'robusto' && system !== 'column' && (
         <ViewerPanel
           svgContent={createFormworkDrawing({
             wallLength: system === 'rasto' ? aWallLength : bWallLength,
