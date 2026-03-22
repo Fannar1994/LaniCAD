@@ -1,8 +1,10 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Dashboard } from '@/pages/Dashboard'
 import { LoginPage } from '@/pages/LoginPage'
+import { NotFoundPage } from '@/pages/NotFoundPage'
 import { useAuth } from '@/lib/auth'
 
 // Lazy-loaded pages (code-split heavy chunks: Three.js, PDF.js, Tesseract, calculators)
@@ -41,6 +43,7 @@ export function App() {
   }
 
   return (
+    <ErrorBoundary>
     <Routes>
       <Route path="/" element={<AppShell />}>
         <Route index element={<Dashboard />} />
@@ -55,9 +58,10 @@ export function App() {
         <Route path="templates" element={<Suspense fallback={<LazyFallback />}><TemplatesPage /></Suspense>} />
         <Route path="settings" element={<Suspense fallback={<LazyFallback />}><SettingsPage /></Suspense>} />
         <Route path="audit-log" element={<Suspense fallback={<LazyFallback />}><AuditLogPage /></Suspense>} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
       <Route path="/login" element={<Navigate to="/" replace />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </ErrorBoundary>
   )
 }

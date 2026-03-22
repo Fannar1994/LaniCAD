@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Trash2, ExternalLink, Layers } from 'lucide-react'
-import { isApiConfigured, fetchTemplates, deleteTemplate } from '@/lib/db'
+import { Trash2, ExternalLink, Layers, Pencil, X } from 'lucide-react'
+import { isApiConfigured, fetchTemplates, deleteTemplate, updateTemplate } from '@/lib/db'
 import type { Template } from '@/lib/db'
 import type { CalculatorType } from '@/types'
 
@@ -26,6 +26,11 @@ export function TemplatesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filterType, setFilterType] = useState<CalculatorType | ''>('')
+  const [editing, setEditing] = useState<Template | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editDesc, setEditDesc] = useState('')
+  const [editPublic, setEditPublic] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -49,6 +54,32 @@ export function TemplatesPage() {
       setTemplates(prev => prev.filter(t => t.id !== id))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Villa við að eyða')
+    }
+  }
+
+  const openEdit = (t: Template) => {
+    setEditing(t)
+    setEditName(t.name)
+    setEditDesc(t.description || '')
+    setEditPublic(t.is_public)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editing || !editName.trim()) return
+    setSaving(true)
+    try {
+      const updated = await updateTemplate(editing.id, {
+        name: editName.trim(),
+        description: editDesc.trim(),
+        config: editing.config,
+        is_public: editPublic,
+      })
+      setTemplates(prev => prev.map(t => t.id === editing.id ? updated : t))
+      setEditing(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Villa við að vista')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -139,6 +170,13 @@ export function TemplatesPage() {
                         <ExternalLink className="h-4 w-4" />
                       </Link>
                       <button
+                        onClick={() => openEdit(t)}
+                        className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-brand-dark"
+                        title="Breyta"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
                         onClick={() => handleDelete(t.id, t.name)}
                         className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
                         title="Eyða"
@@ -151,6 +189,64 @@ export function TemplatesPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Edit modal */}
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h2 className="font-condensed text-lg font-bold text-brand-dark">Breyta sniðmáti</h2>
+              <button onClick={() => setEditing(null)} className="rounded p-1 text-gray-400 hover:bg-gray-100">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Heiti</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Lýsing</label>
+                <textarea
+                  value={editDesc}
+                  onChange={e => setEditDesc(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                />
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={editPublic}
+                  onChange={e => setEditPublic(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-brand-accent focus:ring-brand-accent"
+                />
+                Opinbert (sýnilegt öllum notendum)
+              </label>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setEditing(null)}
+                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+              >
+                Hætta við
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={saving || !editName.trim()}
+                className="rounded-md bg-brand-accent px-4 py-2 text-sm font-medium text-brand-dark hover:bg-yellow-400 disabled:opacity-50"
+              >
+                {saving ? 'Vista...' : 'Vista'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

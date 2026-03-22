@@ -462,6 +462,26 @@ app.post('/api/templates', authenticate, async (req, res) => {
   }
 })
 
+app.put('/api/templates/:id', authenticate, async (req, res) => {
+  const { name, description, config, is_public } = req.body
+  if (!name) {
+    return res.status(400).json({ error: 'Vantar heiti' })
+  }
+  try {
+    const { rows, rowCount } = await pool.query(
+      `UPDATE templates SET name = $1, description = $2, config = $3, is_public = $4
+       WHERE id = $5 AND user_id = $6 RETURNING *`,
+      [name, description || '', JSON.stringify(config || {}), is_public || false, req.params.id, req.user.id]
+    )
+    if (rowCount === 0) return res.status(404).json({ error: 'Sniðmát fannst ekki' })
+    await logAudit(req, 'update', 'template', req.params.id, { name })
+    res.json(rows[0])
+  } catch (err) {
+    console.error('Update template error:', err)
+    res.status(500).json({ error: 'Villa við að uppfæra sniðmát' })
+  }
+})
+
 app.delete('/api/templates/:id', authenticate, async (req, res) => {
   try {
     const { rowCount } = await pool.query(

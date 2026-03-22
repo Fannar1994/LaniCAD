@@ -104,6 +104,18 @@ export async function deleteTemplate(id: string): Promise<void> {
   await apiFetch(`/templates/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
 
+export async function updateTemplate(id: string, data: {
+  name: string
+  description?: string
+  config?: Record<string, unknown>
+  is_public?: boolean
+}): Promise<Template> {
+  return apiFetch<Template>(`/templates/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+}
+
 // ── Products ──
 
 export interface DbProduct {

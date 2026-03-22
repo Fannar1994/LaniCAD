@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
-import { Calculator, FolderOpen, FileText, Box, Ruler, Building2, Wrench } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Calculator, FolderOpen, FileText, Box, Ruler, Building2, Wrench, TrendingUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { fetchProjects, isApiConfigured } from '@/lib/db'
 import type { Project } from '@/types'
 
@@ -50,6 +51,30 @@ export function Dashboard() {
     return acc
   }, {})
 
+  const PIE_COLORS = ['#f5c800', '#404042', '#6b7280', '#3b82f6', '#10b981']
+  const pieData = useMemo(() =>
+    Object.entries(typeCounts).map(([type, count]) => ({
+      name: TYPE_LABELS[type] ?? type,
+      value: count,
+    })),
+    [typeCounts]
+  )
+
+  const weeklyData = useMemo(() => {
+    const now = Date.now()
+    const weeks: { name: string; verkefni: number }[] = []
+    for (let i = 3; i >= 0; i--) {
+      const weekStart = now - i * 7 * 86400000
+      const weekEnd = i === 0 ? now : now - (i - 1) * 7 * 86400000
+      const count = projects.filter(p => {
+        const t = new Date(p.created_at).getTime()
+        return t >= weekStart && t < weekEnd
+      }).length
+      weeks.push({ name: `Vika ${4 - i}`, verkefni: count })
+    }
+    return weeks
+  }, [projects])
+
   return (
     <div>
       <div className="mb-8">
@@ -76,6 +101,40 @@ export function Dashboard() {
           </div>
         ))}
       </div>
+
+      {/* Charts row */}
+      {!loadingProjects && projects.length > 0 && (
+        <div className="mb-8 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+            <h3 className="mb-3 flex items-center gap-2 font-condensed text-sm font-bold text-brand-dark">
+              <TrendingUp className="h-4 w-4" /> Verkefni eftir tegund
+            </h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} label={({ name, value }) => `${name} (${value})`}>
+                  {pieData.map((_entry, i) => (
+                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+            <h3 className="mb-3 font-condensed text-sm font-bold text-brand-dark">
+              Ný verkefni (síðustu 4 vikur)
+            </h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={weeklyData}>
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Bar dataKey="verkefni" fill="#f5c800" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       {/* Calculator quick links */}
       <h2 className="mb-4 font-condensed text-lg font-bold text-brand-dark">Reiknivélar</h2>

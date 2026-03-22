@@ -51,6 +51,7 @@ export default defineConfig({
           'pdf-vendor': ['pdfjs-dist', 'jspdf', 'jspdf-autotable'],
           'ocr-vendor': ['tesseract.js'],
           'xlsx-vendor': ['xlsx'],
+          'chart-vendor': ['recharts'],
         },
       },
     },
