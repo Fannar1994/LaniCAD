@@ -1,8 +1,10 @@
 import type { Project, CalculatorType, ClientInfo, LineItem } from '@/types'
 import { getApiUrl, isApiReady } from '@/lib/api-config'
 
-/** True when the API URL is configured */
-export const isApiConfigured = isApiReady()
+/** Check reactively if the API is configured (call each time, not cached) */
+export function isApiConfigured(): boolean {
+  return isApiReady()
+}
 
 function getToken(): string | null {
   return localStorage.getItem('lanicad_token')

@@ -42,7 +42,7 @@ export function ProjectsPage() {
     }
   }
 
-  if (!isApiConfigured) {
+  if (!isApiConfigured()) {
     return (
       <div>
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Verkefni</h1>

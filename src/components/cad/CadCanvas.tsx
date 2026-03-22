@@ -466,6 +466,7 @@ export function CadCanvas({ cad, equipmentSvg, onCursorChange, onStatusChange }:
           <foreignObject x={phase.position.x} y={phase.position.y - 20 * pixelScale} width={200 * pixelScale} height={30 * pixelScale}>
             <input
               autoFocus value={textInput}
+              title="Sláðu inn texta"
               onChange={e => setTextInput(e.target.value)}
               onKeyDown={e => {
                 if (e.key === 'Enter' && textInput.trim()) {

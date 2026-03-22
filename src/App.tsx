@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { Dashboard } from '@/pages/Dashboard'
+import { LoginPage } from '@/pages/LoginPage'
+import { useAuth } from '@/lib/auth'
 
 // Lazy-loaded pages (code-split heavy chunks: Three.js, PDF.js, Tesseract, calculators)
 const ProjectsPage = lazy(() => import('@/pages/ProjectsPage').then(m => ({ default: m.ProjectsPage })))
@@ -27,6 +29,17 @@ function LazyFallback() {
 const AuditLogPage = lazy(() => import('@/pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })))
 
 export function App() {
+  const { isAuthenticated } = useAuth()
+
+  if (!isAuthenticated) {
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    )
+  }
+
   return (
     <Routes>
       <Route path="/" element={<AppShell />}>
@@ -43,6 +56,7 @@ export function App() {
         <Route path="settings" element={<Suspense fallback={<LazyFallback />}><SettingsPage /></Suspense>} />
         <Route path="audit-log" element={<Suspense fallback={<LazyFallback />}><AuditLogPage /></Suspense>} />
       </Route>
+      <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

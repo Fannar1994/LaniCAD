@@ -168,7 +168,7 @@ export function DrawingPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
       {/* Hidden DXF file input */}
-      <input ref={dxfInputRef} type="file" accept=".dxf" onChange={handleDxfFileChange} className="hidden" />
+      <input ref={dxfInputRef} type="file" accept=".dxf" onChange={handleDxfFileChange} className="hidden" title="Flytja inn DXF skrá" />
       {/* PDF import dialog */}
       <PdfImportDialog open={pdfDialogOpen} onClose={() => setPdfDialogOpen(false)} onImport={handlePdfImported} />
       {/* Top toolbar */}
@@ -211,6 +211,7 @@ export function DrawingPage() {
           <div className="px-3 py-3 space-y-3">
             <h3 className="text-xs font-bold text-gray-600 uppercase tracking-wider">Búnaður</h3>
             <select value={equipmentType} onChange={e => setEquipmentType(e.target.value as EquipmentType)}
+              title="Veldu tegund búnaðar"
               className="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-brand-accent focus:ring-1 focus:ring-brand-accent">
               {equipmentOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
@@ -275,6 +276,7 @@ function NumField({ label, value, onChange, min, max, step = 1 }: {
     <div>
       <label className="block text-xs text-gray-600 mb-0.5">{label}</label>
       <input type="number" value={value} onChange={e => onChange(Number(e.target.value))} min={min} max={max} step={step}
+        title={label}
         className="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-brand-accent focus:ring-1 focus:ring-brand-accent" />
     </div>
   )
@@ -287,6 +289,7 @@ function SelField({ label, value, onChange, options }: {
     <div>
       <label className="block text-xs text-gray-600 mb-0.5">{label}</label>
       <select value={value} onChange={e => onChange(e.target.value)}
+        title={label}
         className="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-brand-accent focus:ring-1 focus:ring-brand-accent">
         {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>

@@ -30,7 +30,7 @@ export function Dashboard() {
   const [loadingProjects, setLoadingProjects] = useState(true)
 
   useEffect(() => {
-    if (!isApiConfigured) {
+    if (!isApiConfigured()) {
       setLoadingProjects(false)
       return
     }

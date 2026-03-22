@@ -36,7 +36,7 @@ export function LayerPanel({ cad }: { cad: CadStateReturn }) {
     <div className="border-t">
       <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
         <h3 className="text-xs font-bold text-gray-600 uppercase tracking-wider">Lög</h3>
-        <button onClick={() => setShowAdd(!showAdd)} className="text-gray-500 hover:text-gray-700">
+        <button onClick={() => setShowAdd(!showAdd)} className="text-gray-500 hover:text-gray-700" title="Bæta við lagi">
           <Plus size={14} />
         </button>
       </div>
@@ -46,7 +46,7 @@ export function LayerPanel({ cad }: { cad: CadStateReturn }) {
           <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Heiti lags..."
             className="w-full text-xs px-2 py-1 border rounded" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
           <div className="flex gap-2 items-center">
-            <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)} className="w-8 h-6" />
+            <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)} className="w-8 h-6" title="Litur lags" />
             <button onClick={handleAdd} className="text-xs px-2 py-0.5 bg-brand-dark text-white rounded">Bæta við</button>
           </div>
         </div>
@@ -75,6 +75,7 @@ export function LayerPanel({ cad }: { cad: CadStateReturn }) {
                   onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setEditingId(null) }}
                   className="flex-1 text-xs px-1 py-0 border rounded"
                   autoFocus
+                  title="Endurnefna lag"
                   onClick={e => e.stopPropagation()}
                 />
               ) : (

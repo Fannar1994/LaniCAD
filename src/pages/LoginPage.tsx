@@ -1,22 +1,27 @@
 import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
+import { isApiReady } from '@/lib/api-config'
 
 export function LoginPage() {
   const { login } = useAuth()
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const apiReady = isApiReady()
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      const ok = await login(email, password)
-      if (!ok) setError('Rangt netfang eða lykilorð')
-    } catch {
-      setError('Villa við innskráningu')
+      await login(email, password)
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Villa við innskráningu')
     } finally {
       setLoading(false)
     }
@@ -36,6 +41,11 @@ export function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          {!apiReady && (
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+              API þjónn er ekki stilltur. Stilltu API URL í vafra localStorage eða keyrðu Express þjóninn á localhost:3001.
+            </div>
+          )}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Netfang

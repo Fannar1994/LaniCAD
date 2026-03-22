@@ -52,7 +52,7 @@ export function TemplatesPage() {
     }
   }
 
-  if (!isApiConfigured) {
+  if (!isApiConfigured()) {
     return (
       <div>
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Sniðmát</h1>
@@ -74,6 +74,7 @@ export function TemplatesPage() {
           value={filterType}
           onChange={e => setFilterType(e.target.value as CalculatorType | '')}
           className="rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+          title="Sía eftir tegund"
         >
           <option value="">Allar tegundir</option>
           {CALCULATOR_TYPES.map(t => (

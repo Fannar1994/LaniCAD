@@ -73,14 +73,14 @@ export function PdfImportDialog({ open, onClose, onImport }: PdfImportDialogProp
           <h2 className="text-sm font-bold text-brand-dark flex items-center gap-2">
             <FileText size={16} /> Flytja inn PDF
           </h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-200 rounded"><X size={16} /></button>
+          <button onClick={onClose} className="p-1 hover:bg-gray-200 rounded" title="Loka"><X size={16} /></button>
         </div>
 
         {/* Content */}
         <div className="p-5 space-y-4">
           {/* File picker */}
           <div>
-            <input ref={fileRef} type="file" accept=".pdf" onChange={handleFileChange} className="hidden" />
+            <input ref={fileRef} type="file" accept=".pdf" onChange={handleFileChange} className="hidden" title="Veldu PDF skrá" />
             <button onClick={() => fileRef.current?.click()}
               className="flex items-center gap-2 px-4 py-2 bg-brand-dark text-white rounded text-sm hover:bg-gray-700 transition-colors">
               <Upload size={14} /> Veldu PDF skrá
