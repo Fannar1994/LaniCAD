@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
-import { MessageCircle, X, Send, Bot, User, Loader2 } from 'lucide-react'
-import { sendChatMessage, type ChatMessage } from '@/lib/db'
+import { MessageCircle, X, Send, Bot, User } from 'lucide-react'
+import { getLocalReply, type ChatMessage } from '@/lib/chat-engine'
 import { cn } from '@/lib/utils'
 
 export function ChatPanel() {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -15,7 +15,7 @@ export function ChatPanel() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages, loading])
+  }, [messages])
 
   useEffect(() => {
     if (open && inputRef.current) {
@@ -23,25 +23,17 @@ export function ChatPanel() {
     }
   }, [open])
 
-  async function handleSend() {
+  function handleSend() {
     const text = input.trim()
-    if (!text || loading) return
+    if (!text) return
 
     const userMsg: ChatMessage = { role: 'user', content: text }
     const updated = [...messages, userMsg]
     setMessages(updated)
     setInput('')
-    setLoading(true)
 
-    try {
-      const reply = await sendChatMessage(updated)
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Villa í AI þjónustu'
-      setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ ${errorMsg}` }])
-    } finally {
-      setLoading(false)
-    }
+    const reply = getLocalReply(updated)
+    setMessages(prev => [...prev, { role: 'assistant', content: reply }])
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -75,7 +67,7 @@ export function ChatPanel() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-white">LániCAD AI</h3>
-                <p className="text-[10px] text-gray-300">Aðstoðarmaður — Claude Sonnet</p>
+                <p className="text-[10px] text-gray-300">Aðstoðarmaður</p>
               </div>
             </div>
             <button
@@ -132,17 +124,7 @@ export function ChatPanel() {
               </div>
             ))}
 
-            {loading && (
-              <div className="flex gap-2">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-accent text-brand-dark">
-                  <Bot className="h-3.5 w-3.5" />
-                </div>
-                <div className="flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-500">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>Hugsa...</span>
-                </div>
-              </div>
-            )}
+
           </div>
 
           {/* Input */}
@@ -159,7 +141,7 @@ export function ChatPanel() {
               />
               <button
                 onClick={handleSend}
-                disabled={!input.trim() || loading}
+                disabled={!input.trim()}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-dark text-brand-accent transition-colors hover:bg-brand-dark/90 disabled:opacity-40"
                 aria-label="Senda"
               >
