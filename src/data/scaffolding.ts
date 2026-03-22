@@ -1,8 +1,24 @@
-// Scaffolding products — Facade scaffolding (Layher Allround)
+// Scaffolding products — Facade scaffolding systems
 // Daily rental prices (kr/day), weights (kg), sale prices (kr)
 // Source: Leigulager allt.xlsx, sub-group 01-PAL-VP01 (50 items)
 
-export const SCAFFOLD_ITEMS = [
+export type ScaffoldSystemKey = 'mercury' | 'layher-ar' | 'speedyscaf'
+
+export interface ScaffoldSystem {
+  key: ScaffoldSystemKey
+  brand: string
+  name: string
+  sub: string
+}
+
+export const SCAFFOLD_SYSTEMS: ScaffoldSystem[] = [
+  { key: 'mercury', brand: 'Mercury', name: 'Mercury', sub: 'VP01 · Facade scaffolding' },
+  { key: 'layher-ar', brand: 'Layher', name: 'Layher AR', sub: 'Allround · Facade scaffolding' },
+  { key: 'speedyscaf', brand: 'SpeedyScaf', name: 'SpeedyScaf', sub: 'Facade scaffolding' },
+]
+
+// ── Mercury (VP01) ──────────────────────────────
+export const MERCURY_ITEMS = [
   // --- Frames & Risers ---
   { itemNo: '01-PAL-VP01-000', saleNo: '97100000', name: 'Rammar 2,0m', dailyRate: 19, weight: 18.6, salePrice: 23895 },
   { itemNo: '01-PAL-VP01-001', saleNo: '97100001', name: 'Rammar 0,7m', dailyRate: 15, weight: 7.52, salePrice: 12867 },
@@ -69,6 +85,91 @@ export const SCAFFOLD_ITEMS = [
   { itemNo: '01-PAL-VP01-0109', saleNo: '971000109', name: 'Rekki f/tvöföld handrið', dailyRate: 64, weight: 20, salePrice: 38095 },
   { itemNo: '01-MÓT-AH21-046', saleNo: '97201046', name: 'Fylgihlutagrind', dailyRate: 100, weight: 30, salePrice: 0 },
 ] as const
+
+// ── Layher AR (Allround) — Placeholder: populate when inventory arrives ──
+export const LAYHER_AR_ITEMS = [
+  // --- Frames & Risers ---
+  { itemNo: '', saleNo: '', name: 'Rammar 2,0m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Rammar 0,7m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: '12cm hækkun f/ramma', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Splitti f/ramma', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Floors & Platforms ---
+  { itemNo: '', saleNo: '', name: 'Gólfborð 1,8m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Stigapallar 1,8m', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Stairs ---
+  { itemNo: '', saleNo: '', name: 'Stigar 2,0m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Stigar 2,7m', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Legs ---
+  { itemNo: '', saleNo: '', name: 'Lappir 50cm', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Lappir 100cm', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Guardrails ---
+  { itemNo: '', saleNo: '', name: 'Handrið 1,8m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Tvöföld handrið 1,8m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Handriðastoðir', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Endahandrið', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Wall Ties ---
+  { itemNo: '', saleNo: '', name: 'Veggfestingar 50cm', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Diagonal Braces ---
+  { itemNo: '', saleNo: '', name: 'Skástífur 2,12m', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Clamps ---
+  { itemNo: '', saleNo: '', name: 'Klemmur fastar', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Racks ---
+  { itemNo: '', saleNo: '', name: 'Rekkar fyrir ramma', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Rekkar fyrir gólf', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Rekki f/tvöföld handrið', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Fylgihlutagrind', dailyRate: 0, weight: 0, salePrice: 0 },
+] as const
+
+// ── SpeedyScaf — Placeholder: populate when inventory arrives ──
+export const SPEEDYSCAF_ITEMS = [
+  // --- Frames & Risers ---
+  { itemNo: '', saleNo: '', name: 'Rammar 2,0m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Rammar 0,7m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: '12cm hækkun f/ramma', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Splitti f/ramma', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Floors & Platforms ---
+  { itemNo: '', saleNo: '', name: 'Gólfborð 1,8m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Stigapallar 1,8m', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Stairs ---
+  { itemNo: '', saleNo: '', name: 'Stigar 2,0m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Stigar 2,7m', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Legs ---
+  { itemNo: '', saleNo: '', name: 'Lappir 50cm', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Lappir 100cm', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Guardrails ---
+  { itemNo: '', saleNo: '', name: 'Handrið 1,8m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Tvöföld handrið 1,8m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Handriðastoðir', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Endahandrið', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Wall Ties ---
+  { itemNo: '', saleNo: '', name: 'Veggfestingar 50cm', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Diagonal Braces ---
+  { itemNo: '', saleNo: '', name: 'Skástífur 2,12m', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Clamps ---
+  { itemNo: '', saleNo: '', name: 'Klemmur fastar', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Racks ---
+  { itemNo: '', saleNo: '', name: 'Rekkar fyrir ramma', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Rekkar fyrir gólf', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Rekki f/tvöföld handrið', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Fylgihlutagrind', dailyRate: 0, weight: 0, salePrice: 0 },
+] as const
+
+// Backwards compat alias
+export const SCAFFOLD_ITEMS = MERCURY_ITEMS
+
+/** Get the item array for a given scaffolding system */
+export function getScaffoldItems(system: ScaffoldSystemKey) {
+  switch (system) {
+    case 'mercury': return MERCURY_ITEMS
+    case 'layher-ar': return LAYHER_AR_ITEMS
+    case 'speedyscaf': return SPEEDYSCAF_ITEMS
+  }
+}
+
+/** Check if a system has real pricing data populated */
+export function hasScaffoldPricing(system: ScaffoldSystemKey): boolean {
+  return getScaffoldItems(system).some(i => i.dailyRate > 0)
+}
 
 export const BOARD_LENGTH_M = 1.8
 export const WALL_ANCHOR_AREA_M2 = 15

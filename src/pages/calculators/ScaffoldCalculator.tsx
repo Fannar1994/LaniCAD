@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
-import { SCAFFOLD_ITEMS } from '@/data/scaffolding'
+import { SCAFFOLD_SYSTEMS, getScaffoldItems, hasScaffoldPricing } from '@/data/scaffolding'
+import type { ScaffoldSystemKey } from '@/data/scaffolding'
 import { calculateLevelsFromHeight, calculateFacadeMaterials, calculateRacks, calculateAccessoryGrids } from '@/lib/calculations/geometry'
 import { calcScaffoldingRental } from '@/lib/calculations/rental'
 import { formatKr } from '@/lib/format'
@@ -30,6 +31,7 @@ export function ScaffoldCalculator() {
   const loadedTemplate = location.state?.template as { id: string; name: string; config: Record<string, unknown> } | undefined
   const initData = loadedProject?.data ?? loadedTemplate?.config ?? {}
 
+  const [system, setSystem] = useState<ScaffoldSystemKey>(initData.system as ScaffoldSystemKey ?? 'mercury')
   const [rentalDays, setRentalDays] = useState(initData.rentalDays as number ?? 30)
   const [facades, setFacades] = useState<Facade[]>(
     (initData.facades as Facade[] | undefined) ?? [{ id: 1, name: 'Hlið 1', length: 20, height: 8, endcaps: 2 }]
@@ -74,17 +76,20 @@ export function ScaffoldCalculator() {
     return totals
   }, [facades])
 
+  const systemItems = useMemo(() => getScaffoldItems(system), [system])
+  const hasPricing = hasScaffoldPricing(system)
+
   // Map material names to scaffold items for pricing
   const lineItems = useMemo(() => {
     return Object.entries(combinedMaterials)
       .filter(([, qty]) => qty > 0)
       .map(([name, qty]) => {
-        const item = SCAFFOLD_ITEMS.find(si => si.name === name)
+        const item = systemItems.find(si => si.name === name)
         const dailyRate = item?.dailyRate ?? 0
         const rentalCost = calcScaffoldingRental(dailyRate, rentalDays, qty)
         return { name, qty, dailyRate, rentalCost, itemNo: item?.itemNo ?? '', weight: (item?.weight ?? 0) * qty }
       })
-  }, [combinedMaterials, rentalDays])
+  }, [combinedMaterials, rentalDays, systemItems])
 
   const totalRental = lineItems.reduce((s, l) => s + l.rentalCost, 0)
   const totalWeight = lineItems.reduce((s, l) => s + l.weight, 0)
@@ -121,7 +126,7 @@ export function ScaffoldCalculator() {
       rentalCost: l.rentalCost,
       weight: l.weight,
     }))
-    const data: Record<string, unknown> = { rentalDays, facades, startDate, endDate }
+    const data: Record<string, unknown> = { system, rentalDays, facades, startDate, endDate }
     try {
       setSaving(true)
       if (projectId) {
@@ -137,12 +142,12 @@ export function ScaffoldCalculator() {
     } finally {
       setSaving(false)
     }
-  }, [client, lineItems, rentalDays, facades, startDate, endDate, projectId])
+  }, [client, lineItems, rentalDays, facades, startDate, endDate, projectId, system])
 
   const handleSaveTemplate = useCallback(async () => {
     const name = prompt('Heiti sniðmáts:', 'Vinnupallar')
     if (!name) return
-    const config: Record<string, unknown> = { rentalDays, facades, startDate, endDate }
+    const config: Record<string, unknown> = { system, rentalDays, facades, startDate, endDate }
     try {
       setSavingTemplate(true)
       await createTemplate({ type: 'scaffolding', name, config })
@@ -152,7 +157,7 @@ export function ScaffoldCalculator() {
     } finally {
       setSavingTemplate(false)
     }
-  }, [rentalDays, facades, startDate, endDate])
+  }, [rentalDays, facades, startDate, endDate, system])
 
   return (
     <div className="space-y-6">
@@ -160,6 +165,30 @@ export function ScaffoldCalculator() {
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Vinnupalla&shy;reiknivél</h1>
         <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={handleSaveTemplate} savingTemplate={savingTemplate} />
       </div>
+
+      {/* System tabs */}
+      <div className="flex flex-wrap gap-2">
+        {SCAFFOLD_SYSTEMS.map(s => (
+          <button
+            key={s.key}
+            onClick={() => setSystem(s.key)}
+            className={`rounded-md border px-4 py-2 text-sm transition ${
+              system === s.key
+                ? 'border-brand-accent bg-brand-accent/10 font-medium text-brand-dark'
+                : 'border-gray-200 text-gray-600 hover:border-gray-300'
+            }`}
+          >
+            <div className="font-medium">{s.name}</div>
+            <div className="text-xs text-gray-400">{s.sub}</div>
+          </button>
+        ))}
+      </div>
+
+      {!hasPricing && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+          <strong>Verðskrá vantar:</strong> Vöruverð og leiguverð hefur ekki verið slegið inn fyrir {SCAFFOLD_SYSTEMS.find(s => s.key === system)?.name}. Efnislisti birtur magn en leiguverð er 0 kr.
+        </div>
+      )}
 
       {/* Client info + Date range */}
       <div className="grid gap-6 lg:grid-cols-2">
