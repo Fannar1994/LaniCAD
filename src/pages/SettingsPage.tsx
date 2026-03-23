@@ -256,13 +256,13 @@ function GeneralSettings() {
           )}
         </h2>
         <p className="mt-1 text-xs text-gray-500">
-          Slóð á bakenda þjón (Cloudflare Tunnel eða localhost). Breytist í hvert skipti sem þjónninn endurræsist.
+          Slóð á bakenda þjón (localhost eða Turso).
         </p>
         <div className="mt-3 space-y-3">
           <div className="flex gap-2">
             <input
               type="url"
-              placeholder="https://xxxxx.trycloudflare.com/api"
+              placeholder="http://localhost:3001/api"
               value={apiUrlInput}
               onChange={e => setApiUrlInput(e.target.value)}
               className="block flex-1 rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
@@ -496,11 +496,12 @@ function ProductSettings() {
 
   const loadProducts = useCallback(async () => {
     setLoading(true)
+    setError('')
     try {
       const data = await fetchProducts(filterType || undefined)
       setProducts(data)
-    } catch {
-      setError('Villa við að sækja vörur')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Villa við að sækja vörur')
     } finally {
       setLoading(false)
     }
@@ -1258,11 +1259,12 @@ function UserManagement() {
 
   const loadUsers = useCallback(async () => {
     setLoading(true)
+    setError('')
     try {
       const data = await fetchUsers()
       setUsers(data)
-    } catch {
-      setError('Villa við að sækja notendur')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Villa við að sækja notendur')
     } finally {
       setLoading(false)
     }

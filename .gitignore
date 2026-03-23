@@ -8,6 +8,9 @@ dist/
 .env.*.local
 server/.env
 
+# Local SQLite database
+*.db
+
 # IDE
 .vscode/*
 !.vscode/extensions.json

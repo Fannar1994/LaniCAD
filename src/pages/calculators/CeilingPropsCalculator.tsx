@@ -39,6 +39,7 @@ export function CeilingPropsCalculator() {
   const [client, setClient] = useState<ClientInfo>(loadedProject?.client ?? emptyClient)
   const [startDate, setStartDate] = useState(initData.startDate as string ?? '')
   const [endDate, setEndDate] = useState(initData.endDate as string ?? '')
+  const [discount, setDiscount] = useState(initData.discount as number ?? 0)
   const [saving, setSaving] = useState(false)
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
@@ -84,7 +85,8 @@ export function CeilingPropsCalculator() {
     return items
   }, [selectedProp, selectedBeam, propQty, beamQty, rentalDays, accessoryQtys])
 
-  const totalRental = lines.reduce((sum, l) => sum + l.rentalCost, 0)
+  const subtotalRental = lines.reduce((sum, l) => sum + l.rentalCost, 0)
+  const totalRental = Math.round(subtotalRental * (1 - discount / 100))
 
   const classInfo = CLASS_INFO[selectedProp.classKey]
 
@@ -102,12 +104,13 @@ export function CeilingPropsCalculator() {
       ['Fjöldi stoða', `${propQty}`],
       ['Bitar', `${selectedBeam.name} × ${beamQty}`],
       ['Leigudagar', `${rentalDays}`],
+      ...(discount > 0 ? [['Afsláttur', `${discount}%`] as [string, string]] : []),
     ] as [string, string][],
     tableHeaders: ['Vörunúmer', 'Lýsing', 'Magn', 'Leiga'],
     tableRows: lines.map(l => [l.id, l.desc, l.qty, formatKr(l.rentalCost)]),
     totalLabel: 'Samtals:',
     totalValue: formatKr(totalRental),
-  }), [client, startDate, endDate, rentalDays, selectedProp, propQty, selectedBeam, beamQty, lines, totalRental])
+  }), [client, startDate, endDate, rentalDays, selectedProp, propQty, selectedBeam, beamQty, lines, totalRental, discount])
 
   const handleSave = useCallback(async () => {
     const name = client.name
@@ -120,7 +123,7 @@ export function CeilingPropsCalculator() {
       rentalCost: l.rentalCost,
     }))
     const data: Record<string, unknown> = {
-      rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate,
+      rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate, discount,
     }
     try {
       setSaving(true)
@@ -137,13 +140,13 @@ export function CeilingPropsCalculator() {
     } finally {
       setSaving(false)
     }
-  }, [client, lines, rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate, projectId])
+  }, [client, lines, rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate, projectId, discount])
 
   const handleSaveTemplate = useCallback(async () => {
     const name = prompt('Heiti sniðmáts:', 'Loftastoðir')
     if (!name) return
     const config: Record<string, unknown> = {
-      rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate,
+      rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate, discount,
     }
     try {
       setSavingTemplate(true)
@@ -154,7 +157,7 @@ export function CeilingPropsCalculator() {
     } finally {
       setSavingTemplate(false)
     }
-  }, [rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate])
+  }, [rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate, discount])
 
   return (
     <div className="space-y-6">
@@ -302,6 +305,11 @@ export function CeilingPropsCalculator() {
                 </dd>
               </div>
             </dl>
+            <div className="mt-3 flex items-center gap-2">
+              <label className="text-sm text-gray-500">Afsláttur</label>
+              <input type="number" min={0} max={100} value={discount} onChange={e => setDiscount(Math.max(0, Math.min(100, Number(e.target.value))))} title="Afsláttur %" className="w-16 rounded-md border-gray-300 text-sm text-right focus:border-brand-accent focus:ring-brand-accent" />
+              <span className="text-sm text-gray-500">%</span>
+            </div>
           </div>
 
           <div className="rounded-lg border-2 border-brand-accent bg-brand-accent/5 p-5">
@@ -309,6 +317,11 @@ export function CeilingPropsCalculator() {
             <div className="mt-1 font-condensed text-3xl font-bold text-brand-dark">
               {formatKr(totalRental)}
             </div>
+            {discount > 0 && (
+              <div className="mt-1 text-xs text-gray-500">
+                Afsláttur {discount}%: −{formatKr(subtotalRental - totalRental)}
+              </div>
+            )}
           </div>
         </div>
       </div>

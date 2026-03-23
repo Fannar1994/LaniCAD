@@ -3,7 +3,7 @@ const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
-const { Pool } = require('pg')
+const { createClient } = require('@libsql/client')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const Anthropic = require('@anthropic-ai/sdk')
@@ -12,7 +12,7 @@ const app = express()
 const PORT = process.env.PORT || 3001
 const JWT_SECRET = process.env.JWT_SECRET || 'change-this-to-a-random-secret'
 
-// Allowed origins for CORS (add your tunnel URL here)
+// Allowed origins for CORS
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:4173')
   .split(',').map(s => s.trim())
 
@@ -25,23 +25,15 @@ function getAnthropic() {
   return _anthropic
 }
 
-// ── Database ──
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  // Reconnect settings to survive transient DB outages
-  connectionTimeoutMillis: 5000,
-  idleTimeoutMillis: 30000,
-  max: 10,
-})
-
-// CRITICAL: Without this handler, any idle-client disconnect crashes the process
-pool.on('error', (err) => {
-  console.error('PostgreSQL pool idle client error (not crashing):', err.message)
+// ── Database (Turso / libSQL) ──
+const db = createClient({
+  url: process.env.TURSO_DATABASE_URL || 'file:local.db',
+  authToken: process.env.TURSO_AUTH_TOKEN,
 })
 
 // ── Security Middleware ──
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
-app.set('trust proxy', 1) // trust first proxy (cloudflared/ngrok)
+app.set('trust proxy', 1)
 
 // Rate limiting: 100 requests per 15 min per IP (general)
 const generalLimiter = rateLimit({
@@ -78,7 +70,7 @@ app.use(cors({
 
 app.use(express.json({ limit: '2mb' }))
 
-// Root route — landing page for tunnel visitors
+// Root route — landing page
 app.get('/', (_req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -139,7 +131,7 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Vantar netfang og lykilorð' })
   }
   try {
-    const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email])
+    const { rows } = await db.execute({ sql: 'SELECT * FROM users WHERE email = ?', args: [email] })
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Rangt netfang eða lykilorð' })
     }
@@ -178,11 +170,11 @@ function requireAdmin(req, res, next) {
 // ── Audit Log Helper ──
 async function logAudit(req, action, entityType, entityId, details = {}) {
   try {
-    await pool.query(
-      `INSERT INTO audit_log (user_id, user_email, action, entity_type, entity_id, details, ip_address)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [req.user.id, req.user.email, action, entityType, entityId || null, JSON.stringify(details), req.ip]
-    )
+    await db.execute({
+      sql: `INSERT INTO audit_log (user_id, user_email, action, entity_type, entity_id, details, ip_address)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      args: [req.user.id, req.user.email, action, entityType, entityId || null, JSON.stringify(details), req.ip],
+    })
   } catch (err) {
     console.error('Audit log error:', err.message)
   }
@@ -191,10 +183,10 @@ async function logAudit(req, action, entityType, entityId, details = {}) {
 // Get current user profile
 app.get('/api/auth/me', authenticate, async (req, res) => {
   try {
-    const { rows } = await pool.query(
-      'SELECT id, email, name, role, created_at FROM users WHERE id = $1',
-      [req.user.id]
-    )
+    const { rows } = await db.execute({
+      sql: 'SELECT id, email, name, role, created_at FROM users WHERE id = ?',
+      args: [req.user.id],
+    })
     if (rows.length === 0) return res.status(404).json({ error: 'Notandi fannst ekki' })
     res.json(rows[0])
   } catch (err) {
@@ -210,12 +202,18 @@ app.put('/api/auth/password', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Lykilorð verður að vera a.m.k. 6 stafir' })
   }
   try {
-    const { rows } = await pool.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id])
+    const { rows } = await db.execute({
+      sql: 'SELECT password_hash FROM users WHERE id = ?',
+      args: [req.user.id],
+    })
     if (rows.length === 0) return res.status(404).json({ error: 'Notandi fannst ekki' })
     const valid = await bcrypt.compare(currentPassword, rows[0].password_hash)
     if (!valid) return res.status(401).json({ error: 'Rangt núverandi lykilorð' })
     const hash = await bcrypt.hash(newPassword, 10)
-    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, req.user.id])
+    await db.execute({
+      sql: 'UPDATE users SET password_hash = ? WHERE id = ?',
+      args: [hash, req.user.id],
+    })
     res.json({ ok: true })
   } catch (err) {
     console.error('Update password error:', err)
@@ -229,9 +227,7 @@ app.put('/api/auth/password', authenticate, async (req, res) => {
 
 app.get('/api/users', authenticate, requireAdmin, async (req, res) => {
   try {
-    const { rows } = await pool.query(
-      'SELECT id, email, name, role, created_at FROM users ORDER BY created_at'
-    )
+    const { rows } = await db.execute('SELECT id, email, name, role, created_at FROM users ORDER BY created_at')
     res.json(rows)
   } catch (err) {
     console.error('Fetch users error:', err)
@@ -249,14 +245,14 @@ app.post('/api/users', authenticate, requireAdmin, async (req, res) => {
   }
   try {
     const hash = await bcrypt.hash(password, 10)
-    const { rows } = await pool.query(
-      `INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) RETURNING id, email, name, role, created_at`,
-      [email, hash, name, role || 'user']
-    )
+    const { rows } = await db.execute({
+      sql: `INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?) RETURNING id, email, name, role, created_at`,
+      args: [email, hash, name, role || 'user'],
+    })
     await logAudit(req, 'create', 'user', rows[0].id, { email, name, role })
     res.status(201).json(rows[0])
   } catch (err) {
-    if (err.code === '23505') {
+    if (err.message && err.message.includes('UNIQUE constraint failed')) {
       return res.status(409).json({ error: 'Netfang er nú þegar skráð' })
     }
     console.error('Create user error:', err)
@@ -269,19 +265,18 @@ app.put('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     const sets = []
     const vals = []
-    let i = 1
-    if (name !== undefined) { sets.push(`name = $${i++}`); vals.push(name) }
-    if (role !== undefined && ['admin', 'user'].includes(role)) { sets.push(`role = $${i++}`); vals.push(role) }
+    if (name !== undefined) { sets.push('name = ?'); vals.push(name) }
+    if (role !== undefined && ['admin', 'user'].includes(role)) { sets.push('role = ?'); vals.push(role) }
     if (password) {
       const hash = await bcrypt.hash(password, 10)
-      sets.push(`password_hash = $${i++}`); vals.push(hash)
+      sets.push('password_hash = ?'); vals.push(hash)
     }
     if (sets.length === 0) return res.status(400).json({ error: 'Ekkert til að uppfæra' })
     vals.push(req.params.id)
-    const { rows } = await pool.query(
-      `UPDATE users SET ${sets.join(', ')} WHERE id = $${i} RETURNING id, email, name, role, created_at`,
-      vals
-    )
+    const { rows } = await db.execute({
+      sql: `UPDATE users SET ${sets.join(', ')} WHERE id = ? RETURNING id, email, name, role, created_at`,
+      args: vals,
+    })
     if (rows.length === 0) return res.status(404).json({ error: 'Notandi fannst ekki' })
     await logAudit(req, 'update', 'user', req.params.id, { name, role })
     res.json(rows[0])
@@ -296,8 +291,8 @@ app.delete('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
     return res.status(400).json({ error: 'Þú getur ekki eytt sjálfum þér' })
   }
   try {
-    const { rowCount } = await pool.query('DELETE FROM users WHERE id = $1', [req.params.id])
-    if (rowCount === 0) return res.status(404).json({ error: 'Notandi fannst ekki' })
+    const result = await db.execute({ sql: 'DELETE FROM users WHERE id = ?', args: [req.params.id] })
+    if (result.rowsAffected === 0) return res.status(404).json({ error: 'Notandi fannst ekki' })
     await logAudit(req, 'delete', 'user', req.params.id)
     res.json({ ok: true })
   } catch (err) {
@@ -312,22 +307,21 @@ app.put('/api/products/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     const sets = []
     const vals = []
-    let i = 1
-    if (description !== undefined) { sets.push(`description = $${i++}`); vals.push(description) }
-    if (rates !== undefined) { sets.push(`rates = $${i++}`); vals.push(JSON.stringify(rates)) }
-    if (sale_price !== undefined) { sets.push(`sale_price = $${i++}`); vals.push(sale_price) }
-    if (weight !== undefined) { sets.push(`weight = $${i++}`); vals.push(weight) }
-    if (active !== undefined) { sets.push(`active = $${i++}`); vals.push(active) }
-    if (category !== undefined) { sets.push(`category = $${i++}`); vals.push(category) }
-    if (rental_no !== undefined) { sets.push(`rental_no = $${i++}`); vals.push(rental_no) }
-    if (sale_no !== undefined) { sets.push(`sale_no = $${i++}`); vals.push(sale_no) }
-    if (image_url !== undefined) { sets.push(`image_url = $${i++}`); vals.push(image_url) }
+    if (description !== undefined) { sets.push('description = ?'); vals.push(description) }
+    if (rates !== undefined) { sets.push('rates = ?'); vals.push(JSON.stringify(rates)) }
+    if (sale_price !== undefined) { sets.push('sale_price = ?'); vals.push(sale_price) }
+    if (weight !== undefined) { sets.push('weight = ?'); vals.push(weight) }
+    if (active !== undefined) { sets.push('active = ?'); vals.push(active ? 1 : 0) }
+    if (category !== undefined) { sets.push('category = ?'); vals.push(category) }
+    if (rental_no !== undefined) { sets.push('rental_no = ?'); vals.push(rental_no) }
+    if (sale_no !== undefined) { sets.push('sale_no = ?'); vals.push(sale_no) }
+    if (image_url !== undefined) { sets.push('image_url = ?'); vals.push(image_url) }
     if (sets.length === 0) return res.status(400).json({ error: 'Ekkert til að uppfæra' })
     vals.push(req.params.id)
-    const { rows } = await pool.query(
-      `UPDATE products SET ${sets.join(', ')} WHERE id = $${i} RETURNING *`,
-      vals
-    )
+    const { rows } = await db.execute({
+      sql: `UPDATE products SET ${sets.join(', ')} WHERE id = ? RETURNING *`,
+      args: vals,
+    })
     if (rows.length === 0) return res.status(404).json({ error: 'Vara fannst ekki' })
     await logAudit(req, 'update', 'product', req.params.id, { description })
     res.json(rows[0])
@@ -339,8 +333,8 @@ app.put('/api/products/:id', authenticate, requireAdmin, async (req, res) => {
 
 app.delete('/api/products/:id', authenticate, requireAdmin, async (req, res) => {
   try {
-    const { rowCount } = await pool.query('DELETE FROM products WHERE id = $1', [req.params.id])
-    if (rowCount === 0) return res.status(404).json({ error: 'Vara fannst ekki' })
+    const result = await db.execute({ sql: 'DELETE FROM products WHERE id = ?', args: [req.params.id] })
+    if (result.rowsAffected === 0) return res.status(404).json({ error: 'Vara fannst ekki' })
     await logAudit(req, 'delete', 'product', req.params.id)
     res.json({ ok: true })
   } catch (err) {
@@ -355,10 +349,10 @@ app.delete('/api/products/:id', authenticate, requireAdmin, async (req, res) => 
 
 app.get('/api/projects', authenticate, async (req, res) => {
   try {
-    const { rows } = await pool.query(
-      'SELECT * FROM projects WHERE user_id = $1 ORDER BY updated_at DESC',
-      [req.user.id]
-    )
+    const { rows } = await db.execute({
+      sql: 'SELECT * FROM projects WHERE user_id = ? ORDER BY updated_at DESC',
+      args: [req.user.id],
+    })
     res.json(rows)
   } catch (err) {
     console.error('Fetch projects error:', err)
@@ -368,10 +362,10 @@ app.get('/api/projects', authenticate, async (req, res) => {
 
 app.get('/api/projects/:id', authenticate, async (req, res) => {
   try {
-    const { rows } = await pool.query(
-      'SELECT * FROM projects WHERE id = $1 AND user_id = $2',
-      [req.params.id, req.user.id]
-    )
+    const { rows } = await db.execute({
+      sql: 'SELECT * FROM projects WHERE id = ? AND user_id = ?',
+      args: [req.params.id, req.user.id],
+    })
     if (rows.length === 0) return res.status(404).json({ error: 'Verkefni fannst ekki' })
     res.json(rows[0])
   } catch (err) {
@@ -386,11 +380,11 @@ app.post('/api/projects', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Vantar heiti og tegund' })
   }
   try {
-    const { rows } = await pool.query(
-      `INSERT INTO projects (user_id, name, type, client, data, line_items)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [req.user.id, name, type, JSON.stringify(client || {}), JSON.stringify(data || {}), JSON.stringify(line_items || [])]
-    )
+    const { rows } = await db.execute({
+      sql: `INSERT INTO projects (user_id, name, type, client, data, line_items)
+            VALUES (?, ?, ?, ?, ?, ?) RETURNING *`,
+      args: [req.user.id, name, type, JSON.stringify(client || {}), JSON.stringify(data || {}), JSON.stringify(line_items || [])],
+    })
     await logAudit(req, 'create', 'project', rows[0].id, { name, type })
     res.status(201).json(rows[0])
   } catch (err) {
@@ -404,17 +398,17 @@ app.put('/api/projects/:id', authenticate, async (req, res) => {
   try {
     const sets = []
     const vals = []
-    let i = 1
-    if (name !== undefined) { sets.push(`name = $${i++}`); vals.push(name) }
-    if (client !== undefined) { sets.push(`client = $${i++}`); vals.push(JSON.stringify(client)) }
-    if (data !== undefined) { sets.push(`data = $${i++}`); vals.push(JSON.stringify(data)) }
-    if (line_items !== undefined) { sets.push(`line_items = $${i++}`); vals.push(JSON.stringify(line_items)) }
+    if (name !== undefined) { sets.push('name = ?'); vals.push(name) }
+    if (client !== undefined) { sets.push('client = ?'); vals.push(JSON.stringify(client)) }
+    if (data !== undefined) { sets.push('data = ?'); vals.push(JSON.stringify(data)) }
+    if (line_items !== undefined) { sets.push('line_items = ?'); vals.push(JSON.stringify(line_items)) }
     if (sets.length === 0) return res.status(400).json({ error: 'Ekkert til að uppfæra' })
+    sets.push("updated_at = datetime('now')")
     vals.push(req.params.id, req.user.id)
-    const { rows } = await pool.query(
-      `UPDATE projects SET ${sets.join(', ')} WHERE id = $${i++} AND user_id = $${i} RETURNING *`,
-      vals
-    )
+    const { rows } = await db.execute({
+      sql: `UPDATE projects SET ${sets.join(', ')} WHERE id = ? AND user_id = ? RETURNING *`,
+      args: vals,
+    })
     if (rows.length === 0) return res.status(404).json({ error: 'Verkefni fannst ekki' })
     await logAudit(req, 'update', 'project', req.params.id, { name })
     res.json(rows[0])
@@ -426,11 +420,11 @@ app.put('/api/projects/:id', authenticate, async (req, res) => {
 
 app.delete('/api/projects/:id', authenticate, async (req, res) => {
   try {
-    const { rowCount } = await pool.query(
-      'DELETE FROM projects WHERE id = $1 AND user_id = $2',
-      [req.params.id, req.user.id]
-    )
-    if (rowCount === 0) return res.status(404).json({ error: 'Verkefni fannst ekki' })
+    const result = await db.execute({
+      sql: 'DELETE FROM projects WHERE id = ? AND user_id = ?',
+      args: [req.params.id, req.user.id],
+    })
+    if (result.rowsAffected === 0) return res.status(404).json({ error: 'Verkefni fannst ekki' })
     await logAudit(req, 'delete', 'project', req.params.id)
     res.json({ ok: true })
   } catch (err) {
@@ -445,14 +439,14 @@ app.delete('/api/projects/:id', authenticate, async (req, res) => {
 
 app.get('/api/templates', authenticate, async (req, res) => {
   try {
-    let query = 'SELECT * FROM templates WHERE (user_id = $1 OR is_public = true)'
+    let sql = 'SELECT * FROM templates WHERE (user_id = ? OR is_public = 1)'
     const vals = [req.user.id]
     if (req.query.type) {
-      query += ' AND type = $2'
+      sql += ' AND type = ?'
       vals.push(req.query.type)
     }
-    query += ' ORDER BY name'
-    const { rows } = await pool.query(query, vals)
+    sql += ' ORDER BY name'
+    const { rows } = await db.execute({ sql, args: vals })
     res.json(rows)
   } catch (err) {
     console.error('Fetch templates error:', err)
@@ -466,11 +460,11 @@ app.post('/api/templates', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Vantar tegund og heiti' })
   }
   try {
-    const { rows } = await pool.query(
-      `INSERT INTO templates (user_id, type, name, description, config, is_public)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [req.user.id, type, name, description || '', JSON.stringify(config || {}), is_public || false]
-    )
+    const { rows } = await db.execute({
+      sql: `INSERT INTO templates (user_id, type, name, description, config, is_public)
+            VALUES (?, ?, ?, ?, ?, ?) RETURNING *`,
+      args: [req.user.id, type, name, description || '', JSON.stringify(config || {}), is_public ? 1 : 0],
+    })
     await logAudit(req, 'create', 'template', rows[0].id, { name, type })
     res.status(201).json(rows[0])
   } catch (err) {
@@ -485,12 +479,12 @@ app.put('/api/templates/:id', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Vantar heiti' })
   }
   try {
-    const { rows, rowCount } = await pool.query(
-      `UPDATE templates SET name = $1, description = $2, config = $3, is_public = $4
-       WHERE id = $5 AND user_id = $6 RETURNING *`,
-      [name, description || '', JSON.stringify(config || {}), is_public || false, req.params.id, req.user.id]
-    )
-    if (rowCount === 0) return res.status(404).json({ error: 'Sniðmát fannst ekki' })
+    const { rows } = await db.execute({
+      sql: `UPDATE templates SET name = ?, description = ?, config = ?, is_public = ?
+            WHERE id = ? AND user_id = ? RETURNING *`,
+      args: [name, description || '', JSON.stringify(config || {}), is_public ? 1 : 0, req.params.id, req.user.id],
+    })
+    if (rows.length === 0) return res.status(404).json({ error: 'Sniðmát fannst ekki' })
     await logAudit(req, 'update', 'template', req.params.id, { name })
     res.json(rows[0])
   } catch (err) {
@@ -501,11 +495,11 @@ app.put('/api/templates/:id', authenticate, async (req, res) => {
 
 app.delete('/api/templates/:id', authenticate, async (req, res) => {
   try {
-    const { rowCount } = await pool.query(
-      'DELETE FROM templates WHERE id = $1 AND user_id = $2',
-      [req.params.id, req.user.id]
-    )
-    if (rowCount === 0) return res.status(404).json({ error: 'Sniðmát fannst ekki' })
+    const result = await db.execute({
+      sql: 'DELETE FROM templates WHERE id = ? AND user_id = ?',
+      args: [req.params.id, req.user.id],
+    })
+    if (result.rowsAffected === 0) return res.status(404).json({ error: 'Sniðmát fannst ekki' })
     await logAudit(req, 'delete', 'template', req.params.id)
     res.json({ ok: true })
   } catch (err) {
@@ -520,14 +514,14 @@ app.delete('/api/templates/:id', authenticate, async (req, res) => {
 
 app.get('/api/products', async (req, res) => {
   try {
-    let query = 'SELECT * FROM products WHERE active = true'
+    let sql = 'SELECT * FROM products WHERE active = 1'
     const vals = []
     if (req.query.calculator_type) {
-      query += ' AND calculator_type = $1'
+      sql += ' AND calculator_type = ?'
       vals.push(req.query.calculator_type)
     }
-    query += ' ORDER BY rental_no'
-    const { rows } = await pool.query(query, vals)
+    sql += ' ORDER BY rental_no'
+    const { rows } = await db.execute({ sql, args: vals })
     res.json(rows)
   } catch (err) {
     console.error('Fetch products error:', err)
@@ -541,21 +535,21 @@ app.post('/api/products', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Vantar tegund, vörunúmer og lýsingu' })
   }
   try {
-    const { rows } = await pool.query(
-      `INSERT INTO products (calculator_type, rental_no, sale_no, description, category, rates, sale_price, weight, image_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       ON CONFLICT (rental_no) DO UPDATE SET
-         calculator_type = EXCLUDED.calculator_type,
-         sale_no = EXCLUDED.sale_no,
-         description = EXCLUDED.description,
-         category = EXCLUDED.category,
-         rates = EXCLUDED.rates,
-         sale_price = EXCLUDED.sale_price,
-         weight = EXCLUDED.weight,
-         image_url = EXCLUDED.image_url
-       RETURNING *`,
-      [calculator_type, rental_no, sale_no || '', description, category || '', JSON.stringify(rates || {}), sale_price || 0, weight || 0, image_url || '']
-    )
+    const { rows } = await db.execute({
+      sql: `INSERT INTO products (calculator_type, rental_no, sale_no, description, category, rates, sale_price, weight, image_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (rental_no) DO UPDATE SET
+              calculator_type = excluded.calculator_type,
+              sale_no = excluded.sale_no,
+              description = excluded.description,
+              category = excluded.category,
+              rates = excluded.rates,
+              sale_price = excluded.sale_price,
+              weight = excluded.weight,
+              image_url = excluded.image_url
+            RETURNING *`,
+      args: [calculator_type, rental_no, sale_no || '', description, category || '', JSON.stringify(rates || {}), sale_price || 0, weight || 0, image_url || ''],
+    })
     res.status(201).json(rows[0])
   } catch (err) {
     console.error('Upsert product error:', err)
@@ -702,42 +696,40 @@ app.get('/api/audit-log', authenticate, requireAdmin, async (req, res) => {
   const entityType = req.query.entity_type
 
   try {
-    let query = 'SELECT * FROM audit_log'
+    let sql = 'SELECT * FROM audit_log'
     const conditions = []
     const vals = []
-    let i = 1
 
     if (action) {
-      conditions.push(`action = $${i++}`)
+      conditions.push('action = ?')
       vals.push(action)
     }
     if (entityType) {
-      conditions.push(`entity_type = $${i++}`)
+      conditions.push('entity_type = ?')
       vals.push(entityType)
     }
 
     if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ')
+      sql += ' WHERE ' + conditions.join(' AND ')
     }
 
-    query += ` ORDER BY created_at DESC LIMIT $${i++} OFFSET $${i++}`
+    sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?'
     vals.push(limit, offset)
 
-    const { rows } = await pool.query(query, vals)
+    const { rows } = await db.execute({ sql, args: vals })
 
     // Get total count for pagination
-    let countQuery = 'SELECT COUNT(*) as total FROM audit_log'
+    let countSql = 'SELECT COUNT(*) as total FROM audit_log'
     const countVals = []
     if (conditions.length > 0) {
       const countConditions = []
-      let ci = 1
-      if (action) { countConditions.push(`action = $${ci++}`); countVals.push(action) }
-      if (entityType) { countConditions.push(`entity_type = $${ci++}`); countVals.push(entityType) }
-      countQuery += ' WHERE ' + countConditions.join(' AND ')
+      if (action) { countConditions.push('action = ?'); countVals.push(action) }
+      if (entityType) { countConditions.push('entity_type = ?'); countVals.push(entityType) }
+      countSql += ' WHERE ' + countConditions.join(' AND ')
     }
-    const { rows: countRows } = await pool.query(countQuery, countVals)
+    const countResult = await db.execute({ sql: countSql, args: countVals })
 
-    res.json({ entries: rows, total: parseInt(countRows[0].total), limit, offset })
+    res.json({ entries: rows, total: Number(countResult.rows[0].total), limit, offset })
   } catch (err) {
     console.error('Audit log fetch error:', err)
     res.status(500).json({ error: 'Villa við að sækja aðgerðaskrá' })
@@ -750,14 +742,12 @@ app.get('/api/audit-log', authenticate, requireAdmin, async (req, res) => {
 
 app.get('/api/health', async (_req, res) => {
   try {
-    await pool.query('SELECT 1')
-    const { rows } = await pool.query(
-      "SELECT COUNT(*) as pending FROM request_queue WHERE status = 'pending'"
-    )
+    await db.execute('SELECT 1')
+    const result = await db.execute("SELECT COUNT(*) as pending FROM request_queue WHERE status = 'pending'")
     res.json({
       status: 'ok',
       db: 'connected',
-      pendingQueue: parseInt(rows[0].pending),
+      pendingQueue: Number(result.rows[0].pending),
       uptime: Math.floor(process.uptime()),
       timestamp: new Date().toISOString(),
     })
@@ -770,7 +760,7 @@ app.get('/api/health', async (_req, res) => {
 // Request Queue / Backlog System
 // ══════════════════════════════════════════
 
-// Queue a request for later processing (external clients use this when server might be offline)
+// Queue a request for later processing
 app.post('/api/queue', async (req, res) => {
   const { method, path, headers, body } = req.body
   if (!method || !path) {
@@ -785,11 +775,11 @@ app.post('/api/queue', async (req, res) => {
     return res.status(400).json({ error: 'Ekki er hægt að biðraða í biðröð' })
   }
   try {
-    const { rows } = await pool.query(
-      `INSERT INTO request_queue (method, path, headers, body, source_ip)
-       VALUES ($1, $2, $3, $4, $5) RETURNING id, status, created_at`,
-      [method.toUpperCase(), path, JSON.stringify(headers || {}), JSON.stringify(body || {}), req.ip]
-    )
+    const { rows } = await db.execute({
+      sql: `INSERT INTO request_queue (method, path, headers, body, source_ip)
+            VALUES (?, ?, ?, ?, ?) RETURNING id, status, created_at`,
+      args: [method.toUpperCase(), path, JSON.stringify(headers || {}), JSON.stringify(body || {}), req.ip],
+    })
     res.status(202).json({ queued: true, id: rows[0].id, created_at: rows[0].created_at })
   } catch (err) {
     console.error('Queue error:', err)
@@ -802,15 +792,15 @@ app.get('/api/queue', authenticate, requireAdmin, async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 50, 200)
   const status = req.query.status || 'all'
   try {
-    let query = 'SELECT * FROM request_queue'
+    let sql = 'SELECT * FROM request_queue'
     const vals = []
     if (status !== 'all') {
-      query += ' WHERE status = $1'
+      sql += ' WHERE status = ?'
       vals.push(status)
     }
-    query += ' ORDER BY created_at DESC LIMIT $' + (vals.length + 1)
+    sql += ' ORDER BY created_at DESC LIMIT ?'
     vals.push(limit)
-    const { rows } = await pool.query(query, vals)
+    const { rows } = await db.execute({ sql, args: vals })
     res.json(rows)
   } catch (err) {
     console.error('Queue fetch error:', err)
@@ -830,7 +820,7 @@ app.post('/api/queue/process', authenticate, requireAdmin, async (req, res) => {
 })
 
 async function processQueue() {
-  const { rows: pending } = await pool.query(
+  const { rows: pending } = await db.execute(
     "SELECT * FROM request_queue WHERE status = 'pending' ORDER BY created_at ASC LIMIT 100"
   )
   if (pending.length === 0) return { processed: 0, message: 'Engin beiðni í biðröð' }
@@ -871,58 +861,25 @@ async function processQueue() {
         req.end()
       })
 
-      await pool.query(
-        `UPDATE request_queue SET status = $1, processed_at = now(), response_code = $2, response_body = $3
-         WHERE id = $4`,
-        [result.code < 400 ? 'completed' : 'failed', result.code, JSON.stringify(result.body), item.id]
-      )
+      await db.execute({
+        sql: `UPDATE request_queue SET status = ?, processed_at = datetime('now'), response_code = ?, response_body = ?
+              WHERE id = ?`,
+        args: [result.code < 400 ? 'completed' : 'failed', result.code, JSON.stringify(result.body), item.id],
+      })
       if (result.code < 400) processed++
       else failed++
     } catch (err) {
       console.error(`Queue item ${item.id} failed:`, err.message)
-      await pool.query(
-        "UPDATE request_queue SET status = 'failed', processed_at = now(), response_body = $1 WHERE id = $2",
-        [JSON.stringify({ error: err.message }), item.id]
-      )
+      await db.execute({
+        sql: "UPDATE request_queue SET status = 'failed', processed_at = datetime('now'), response_body = ? WHERE id = ?",
+        args: [JSON.stringify({ error: err.message }), item.id],
+      })
       failed++
     }
   }
 
   return { processed, failed, total: pending.length }
 }
-
-// ══════════════════════════════════════════
-// Tunnel Info Endpoint
-// ══════════════════════════════════════════
-
-let tunnelUrl = null
-
-app.get('/api/tunnel', authenticate, async (_req, res) => {
-  res.json({
-    tunnelUrl: tunnelUrl,
-    active: !!tunnelUrl,
-    localPort: PORT,
-    hint: tunnelUrl
-      ? 'Deila þessari slóð með öðrum til að tengjast'
-      : 'Ræstu tunnel: npx cloudflared-tunnel tunnel --url http://localhost:3001',
-  })
-})
-
-// Set tunnel URL (called by tunnel start script)
-app.post('/api/tunnel', authenticate, requireAdmin, (req, res) => {
-  const { url } = req.body
-  if (url && typeof url === 'string' && url.startsWith('https://')) {
-    tunnelUrl = url
-    // Add tunnel URL to CORS allowed origins
-    if (!ALLOWED_ORIGINS.includes(url)) {
-      ALLOWED_ORIGINS.push(url)
-    }
-    console.log(`Tunnel URL set: ${url}`)
-    res.json({ ok: true, tunnelUrl: url })
-  } else {
-    res.status(400).json({ error: 'Ógild tunnel slóð' })
-  }
-})
 
 // ── Global error handlers (prevent silent crashes) ──
 process.on('unhandledRejection', (reason, promise) => {
@@ -966,10 +923,9 @@ server.on('error', (err) => {
 function shutdown(signal) {
   console.log(`\n${signal} received — shutting down gracefully...`)
   server.close(() => {
-    pool.end().then(() => {
-      console.log('Database pool closed.')
-      process.exit(0)
-    })
+    db.close()
+    console.log('Database connection closed.')
+    process.exit(0)
   })
   // Force-kill after 5s if graceful shutdown hangs
   setTimeout(() => process.exit(1), 5000)

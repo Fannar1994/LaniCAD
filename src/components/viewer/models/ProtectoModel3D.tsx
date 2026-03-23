@@ -1,5 +1,3 @@
-import React from 'react'
-
 /**
  * Protecto edge protection 3D model
  * Guardrail system with posts, top rail, mid rail, toe board, and safety mesh

@@ -248,22 +248,6 @@ export function RollingScaffoldModel3D({ height, width }: RollingScaffoldModel3D
         </>
       )}
 
-      {/* === INTERNAL LADDER === */}
-      <group>
-        {Array.from({ length: Math.floor(height / 0.3) }, (_, i) => (
-          <Tube
-            key={`rung_${i}`}
-            start={[hw * 0.3, 0.3 + i * 0.3, hl - 0.05]}
-            end={[hw * 0.3 + baseW * 0.25, 0.3 + i * 0.3, hl - 0.05]}
-            radius={0.01}
-            color="#999"
-          />
-        ))}
-        {/* Ladder side rails */}
-        <Tube start={[hw * 0.3, 0.2, hl - 0.05]} end={[hw * 0.3, height, hl - 0.05]} radius={0.012} color="#999" />
-        <Tube start={[hw * 0.3 + baseW * 0.25, 0.2, hl - 0.05]} end={[hw * 0.3 + baseW * 0.25, height, hl - 0.05]} radius={0.012} color="#999" />
-      </group>
-
       {/* Ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
         <planeGeometry args={[6, 6]} />

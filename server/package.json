@@ -2,13 +2,11 @@
   "name": "lanicad-server",
   "version": "1.0.0",
   "private": true,
-  "description": "LániCAD REST API — Express + PostgreSQL",
+  "description": "LániCAD REST API — Express + Turso (libSQL)",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "public": "node start-public.js",
-    "tunnel": "cloudflared tunnel --url http://localhost:3001",
     "seed-users": "node seed-users.js"
   },
   "dependencies": {
@@ -20,6 +18,6 @@
     "express-rate-limit": "^8.3.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
-    "pg": "^8.13.1"
+    "@libsql/client": "^0.14.0"
   }
 }

@@ -17,6 +17,7 @@ export type CadActionType =
   | 'place_formwork'
   | 'place_rolling'
   | 'place_ceiling'
+  | 'place_protecto'
   | 'navigate'
   | 'set_equipment'
   | 'clear_canvas'

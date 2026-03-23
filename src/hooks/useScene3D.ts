@@ -4,7 +4,7 @@
  */
 import { useState, useCallback, useRef } from 'react'
 
-export type EquipmentKind = 'fence' | 'scaffold' | 'rolling' | 'formwork' | 'ceiling'
+export type EquipmentKind = 'fence' | 'scaffold' | 'rolling' | 'formwork' | 'ceiling' | 'protecto'
 
 export interface SceneObject {
   id: string
@@ -50,6 +50,7 @@ const EQUIPMENT_LABELS: Record<EquipmentKind, string> = {
   rolling: 'Hjólapallur',
   formwork: 'Steypumót',
   ceiling: 'Loftastoðir',
+  protecto: 'Protecto öryggisgrind',
 }
 
 const DEFAULT_PARAMS: Record<EquipmentKind, Record<string, unknown>> = {
@@ -58,6 +59,7 @@ const DEFAULT_PARAMS: Record<EquipmentKind, Record<string, unknown>> = {
   rolling: { height: 6, width: 'wide' },
   formwork: { wallLength: 4, wallHeight: 3, system: 'Rasto' },
   ceiling: { propCount: 3, propHeight: 3, beamCount: 2, roomWidth: 4 },
+  protecto: { length: 8, height: 1.1, postSpacing: 2.0 },
 }
 
 const MAX_HISTORY = 30

@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
-import { SCAFFOLD_SYSTEMS, getScaffoldItems, hasScaffoldPricing } from '@/data/scaffolding'
+import { SCAFFOLD_SYSTEMS, getScaffoldItems } from '@/data/scaffolding'
 import type { ScaffoldSystemKey } from '@/data/scaffolding'
 import { calculateLevelsFromHeight, calculateFacadeMaterials, calculateRacks, calculateAccessoryGrids } from '@/lib/calculations/geometry'
 import { calcScaffoldingRental } from '@/lib/calculations/rental'
@@ -39,6 +39,7 @@ export function ScaffoldCalculator() {
   const [client, setClient] = useState<ClientInfo>(loadedProject?.client ?? emptyClient)
   const [startDate, setStartDate] = useState(initData.startDate as string ?? '')
   const [endDate, setEndDate] = useState(initData.endDate as string ?? '')
+  const [discount, setDiscount] = useState(initData.discount as number ?? 0)
   const [saving, setSaving] = useState(false)
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
@@ -77,7 +78,6 @@ export function ScaffoldCalculator() {
   }, [facades])
 
   const systemItems = useMemo(() => getScaffoldItems(system), [system])
-  const hasPricing = hasScaffoldPricing(system)
 
   // Map material names to scaffold items for pricing
   const lineItems = useMemo(() => {
@@ -91,7 +91,8 @@ export function ScaffoldCalculator() {
       })
   }, [combinedMaterials, rentalDays, systemItems])
 
-  const totalRental = lineItems.reduce((s, l) => s + l.rentalCost, 0)
+  const subtotalRental = lineItems.reduce((s, l) => s + l.rentalCost, 0)
+  const totalRental = Math.round(subtotalRental * (1 - discount / 100))
   const totalWeight = lineItems.reduce((s, l) => s + l.weight, 0)
 
   const primaryLevels = useMemo(() => calculateLevelsFromHeight(facades[0].height), [facades])
@@ -107,12 +108,13 @@ export function ScaffoldCalculator() {
       ['Hliðar', `${facades.length}`],
       ['Leigudagar', `${rentalDays}`],
       ['Heildarþyngd', `${Math.round(totalWeight)} kg`],
+      ...(discount > 0 ? [['Afsláttur', `${discount}%`] as [string, string]] : []),
     ] as [string, string][],
     tableHeaders: ['Vörunúmer', 'Lýsing', 'Magn', 'Þyngd (kg)', 'Leiga'],
     tableRows: lineItems.map(l => [l.itemNo, l.name, l.qty, Math.round(l.weight), formatKr(l.rentalCost)]),
     totalLabel: 'Samtals:',
     totalValue: formatKr(totalRental),
-  }), [client, startDate, endDate, rentalDays, facades.length, totalWeight, lineItems, totalRental])
+  }), [client, startDate, endDate, rentalDays, facades.length, totalWeight, lineItems, totalRental, discount])
 
   const handleSave = useCallback(async () => {
     const name = client.name
@@ -126,7 +128,7 @@ export function ScaffoldCalculator() {
       rentalCost: l.rentalCost,
       weight: l.weight,
     }))
-    const data: Record<string, unknown> = { system, rentalDays, facades, startDate, endDate }
+    const data: Record<string, unknown> = { system, rentalDays, facades, startDate, endDate, discount }
     try {
       setSaving(true)
       if (projectId) {
@@ -142,12 +144,12 @@ export function ScaffoldCalculator() {
     } finally {
       setSaving(false)
     }
-  }, [client, lineItems, rentalDays, facades, startDate, endDate, projectId, system])
+  }, [client, lineItems, rentalDays, facades, startDate, endDate, projectId, system, discount])
 
   const handleSaveTemplate = useCallback(async () => {
     const name = prompt('Heiti sniðmáts:', 'Vinnupallar')
     if (!name) return
-    const config: Record<string, unknown> = { system, rentalDays, facades, startDate, endDate }
+    const config: Record<string, unknown> = { system, rentalDays, facades, startDate, endDate, discount }
     try {
       setSavingTemplate(true)
       await createTemplate({ type: 'scaffolding', name, config })
@@ -157,7 +159,7 @@ export function ScaffoldCalculator() {
     } finally {
       setSavingTemplate(false)
     }
-  }, [rentalDays, facades, startDate, endDate, system])
+  }, [rentalDays, facades, startDate, endDate, system, discount])
 
   return (
     <div className="space-y-6">
@@ -184,11 +186,7 @@ export function ScaffoldCalculator() {
         ))}
       </div>
 
-      {!hasPricing && (
-        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
-          <strong>Verðskrá vantar:</strong> Vöruverð og leiguverð hefur ekki verið slegið inn fyrir {SCAFFOLD_SYSTEMS.find(s => s.key === system)?.name}. Efnislisti birtur magn en leiguverð er 0 kr.
-        </div>
-      )}
+
 
       {/* Client info + Date range */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -282,12 +280,22 @@ export function ScaffoldCalculator() {
                 <dd className="font-medium">{Math.round(totalWeight)} kg</dd>
               </div>
             </dl>
+            <div className="mt-3 flex items-center gap-2">
+              <label className="text-sm text-gray-500">Afsláttur</label>
+              <input type="number" min={0} max={100} value={discount} onChange={e => setDiscount(Math.max(0, Math.min(100, Number(e.target.value))))} title="Afsláttur %" className="w-16 rounded-md border-gray-300 text-sm text-right focus:border-brand-accent focus:ring-brand-accent" />
+              <span className="text-sm text-gray-500">%</span>
+            </div>
           </div>
           <div className="rounded-lg border-2 border-brand-accent bg-brand-accent/5 p-5">
             <div className="text-sm font-medium text-gray-500">Heildarkostnaður leigu</div>
             <div className="mt-1 font-condensed text-3xl font-bold text-brand-dark">
               {formatKr(totalRental)}
             </div>
+            {discount > 0 && (
+              <div className="mt-1 text-xs text-gray-500">
+                Afsláttur {discount}%: −{formatKr(subtotalRental - totalRental)}
+              </div>
+            )}
           </div>
         </div>
       </div>

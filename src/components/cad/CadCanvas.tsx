@@ -79,8 +79,8 @@ export function CadCanvas({ cad, equipmentSvg, onCursorChange, onStatusChange }:
     if (!el) return { x: 0, y: 0 }
     const rect = el.getBoundingClientRect()
     return {
-      x: vp.x + ((clientX - rect.left) / containerSize.w) * vp.w,
-      y: vp.y + ((clientY - rect.top) / containerSize.h) * vp.h,
+      x: vp.x + ((clientX - rect.left) / rect.width) * vp.w,
+      y: vp.y + ((clientY - rect.top) / rect.height) * vp.h,
     }
   }, [vp, containerSize])
 
@@ -419,7 +419,7 @@ export function CadCanvas({ cad, equipmentSvg, onCursorChange, onStatusChange }:
         {gridLines}
 
         {/* Equipment SVG background */}
-        <g ref={equipRef} opacity={cad.layers.find(l => l.id === 'equipment')?.visible ? 1 : 0} />
+        <g ref={equipRef} opacity={cad.layers.find(l => l.id === 'equipment')?.visible ? 1 : 0} pointerEvents="none" />
 
         {/* User objects by layer */}
         {cad.layers.filter(l => l.visible && l.id !== 'equipment').map(layer => (
@@ -499,7 +499,7 @@ function CadObjectSvg({ object, selected, pixelScale }: { object: CadObject; sel
   const { geometry: geo, style } = object
   const common: React.SVGAttributes<SVGElement> = {
     stroke: style.stroke,
-    strokeWidth: style.strokeWidth + (selected ? 1 * pixelScale : 0),
+    strokeWidth: Math.max(style.strokeWidth, 0.5) * pixelScale + (selected ? 1 * pixelScale : 0),
     fill: style.fill || 'none',
     opacity: style.opacity,
     strokeDasharray: style.lineDash?.join(' ') || undefined,
@@ -558,7 +558,7 @@ function DimensionSvg({ geo, style, pixelScale }: { geo: DimensionGeometry; styl
   if (len < 0.1) return null
   const nx = -dy / len, ny = dx / len
   const ox = nx * offset, oy = ny * offset
-  const sw = style.strokeWidth || 0.5 * pixelScale
+  const sw = Math.max(style.strokeWidth, 0.5) * pixelScale
   const arrowSize = 6 * pixelScale
   const angle = Math.atan2(dy, dx)
 

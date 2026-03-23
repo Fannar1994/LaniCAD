@@ -257,21 +257,6 @@ export function FormworkCalculator() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Input section */}
         <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-5">
-          {/* Discount */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Afsláttur (%)</label>
-            <input
-              type="number"
-              min={0}
-              max={100}
-              value={discount}
-              onChange={e => setDiscount(Math.max(0, Math.min(100, Number(e.target.value))))}
-              className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-              title="Afsláttur"
-            />
-          </div>
-
-          <hr className="border-gray-200" />
 
           {/* MODE A: Rasto / Takko */}
           {system === 'rasto' && (
@@ -512,7 +497,7 @@ export function FormworkCalculator() {
               <h2 className="font-condensed text-lg font-semibold text-brand-dark">Robusto veggmót</h2>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Vegglengd (cm)</label>
-                <input type="number" min={30} step={1} value={eWallLength}
+                <input type="number" min={30} step={1} value={eWallLength} title="Vegglengd (cm)"
                   onChange={e => setEWallLength(Math.max(30, Number(e.target.value)))}
                   className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
                 />
@@ -520,21 +505,21 @@ export function FormworkCalculator() {
               <div className="grid gap-4 sm:grid-cols-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Innhorn</label>
-                  <input type="number" min={0} value={eInsideCorners}
+                  <input type="number" min={0} value={eInsideCorners} title="Innhorn"
                     onChange={e => setEInsideCorners(Math.max(0, Number(e.target.value)))}
                     className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Úthorn</label>
-                  <input type="number" min={0} value={eOutsideCorners}
+                  <input type="number" min={0} value={eOutsideCorners} title="Úthorn"
                     onChange={e => setEOutsideCorners(Math.max(0, Number(e.target.value)))}
                     className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Opnir endar</label>
-                  <input type="number" min={0} value={eOpenEnds}
+                  <input type="number" min={0} value={eOpenEnds} title="Opnir endar"
                     onChange={e => setEOpenEnds(Math.max(0, Number(e.target.value)))}
                     className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
                   />
@@ -548,7 +533,7 @@ export function FormworkCalculator() {
               <h2 className="font-condensed text-lg font-semibold text-brand-dark">Súlumót</h2>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Súlubreidd (cm)</label>
-                <select value={fColWidth}
+                <select value={fColWidth} title="Súlubreidd"
                   onChange={e => setFColWidth(Number(e.target.value) as 60 | 70)}
                   className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
                 >
@@ -558,7 +543,7 @@ export function FormworkCalculator() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Súluhæð (cm)</label>
-                <select value={fColHeight}
+                <select value={fColHeight} title="Súluhæð"
                   onChange={e => setFColHeight(Number(e.target.value) as 75 | 300)}
                   className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
                 >
@@ -604,6 +589,11 @@ export function FormworkCalculator() {
                 </div>
               )}
             </dl>
+            <div className="mt-3 flex items-center gap-2">
+              <label className="text-sm text-gray-500">Afsláttur</label>
+              <input type="number" min={0} max={100} value={discount} onChange={e => setDiscount(Math.max(0, Math.min(100, Number(e.target.value))))} title="Afsláttur %" className="w-16 rounded-md border-gray-300 text-sm text-right focus:border-brand-accent focus:ring-brand-accent" />
+              <span className="text-sm text-gray-500">%</span>
+            </div>
           </div>
 
           <div className="rounded-lg border-2 border-brand-accent bg-brand-accent/5 p-5">

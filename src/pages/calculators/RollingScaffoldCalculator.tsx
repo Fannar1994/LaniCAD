@@ -32,6 +32,7 @@ export function RollingScaffoldCalculator() {
   const [client, setClient] = useState<ClientInfo>(loadedProject?.client ?? emptyClient)
   const [startDate, setStartDate] = useState(initData.startDate as string ?? '')
   const [endDate, setEndDate] = useState(initData.endDate as string ?? '')
+  const [discount, setDiscount] = useState(initData.discount as number ?? 0)
   const [saving, setSaving] = useState(false)
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
@@ -43,7 +44,7 @@ export function RollingScaffoldCalculator() {
     return scaffoldType === 'narrow' ? NARROW_PRICING[height] : WIDE_PRICING[height]
   }, [scaffoldType, height, isQuickly])
 
-  const rentalCost = useMemo(() => {
+  const subtotalRental = useMemo(() => {
     if (!pricing) return 0
     let cost = calcRollingRental(rentalDays, pricing)
     if (includeSupportLegs) {
@@ -51,6 +52,8 @@ export function RollingScaffoldCalculator() {
     }
     return cost
   }, [pricing, rentalDays, includeSupportLegs])
+
+  const rentalCost = Math.round(subtotalRental * (1 - discount / 100))
 
   // Component breakdown for detailed view
   const components = useMemo(() => {
@@ -76,6 +79,7 @@ export function RollingScaffoldCalculator() {
       ...(!isQuickly ? [['Hæð', `${height} m`] as [string, string]] : []),
       ['Leigudagar', `${rentalDays}`],
       ['Stoðfætur', includeSupportLegs ? 'Já' : 'Nei'],
+      ...(discount > 0 ? [['Afslátt' as string, `${discount}%`] as [string, string]] : []),
     ] as [string, string][],
     tableHeaders: ['Lýsing', 'Upphæð'],
     tableRows: [
@@ -88,7 +92,7 @@ export function RollingScaffoldCalculator() {
     ] as (string | number)[][],
     totalLabel: 'Samtals:',
     totalValue: formatKr(rentalCost),
-  }), [client, startDate, endDate, rentalDays, typeLabel, isQuickly, height, includeSupportLegs, rentalCost, pricing])
+  }), [client, startDate, endDate, rentalDays, typeLabel, isQuickly, height, includeSupportLegs, rentalCost, pricing, discount])
 
   const handleSave = useCallback(async () => {
     const name = client.name
@@ -108,7 +112,7 @@ export function RollingScaffoldCalculator() {
         rentalCost: calcRollingRental(rentalDays, SUPPORT_LEGS_PRICING),
       })
     }
-    const data: Record<string, unknown> = { scaffoldType, height, rentalDays, includeSupportLegs, startDate, endDate }
+    const data: Record<string, unknown> = { scaffoldType, height, rentalDays, includeSupportLegs, startDate, endDate, discount }
     try {
       setSaving(true)
       if (projectId) {
@@ -124,12 +128,12 @@ export function RollingScaffoldCalculator() {
     } finally {
       setSaving(false)
     }
-  }, [client, scaffoldType, typeLabel, isQuickly, height, rentalDays, rentalCost, includeSupportLegs, startDate, endDate, projectId])
+  }, [client, scaffoldType, typeLabel, isQuickly, height, rentalDays, rentalCost, includeSupportLegs, startDate, endDate, projectId, discount])
 
   const handleSaveTemplate = useCallback(async () => {
     const name = prompt('Heiti sniðmáts:', `Hjólapallar — ${typeLabel}`)
     if (!name) return
-    const config: Record<string, unknown> = { scaffoldType, height, rentalDays, includeSupportLegs, startDate, endDate }
+    const config: Record<string, unknown> = { scaffoldType, height, rentalDays, includeSupportLegs, startDate, endDate, discount }
     try {
       setSavingTemplate(true)
       await createTemplate({ type: 'rolling', name, config })
@@ -139,7 +143,7 @@ export function RollingScaffoldCalculator() {
     } finally {
       setSavingTemplate(false)
     }
-  }, [scaffoldType, typeLabel, height, rentalDays, includeSupportLegs, startDate, endDate])
+  }, [scaffoldType, typeLabel, height, rentalDays, includeSupportLegs, startDate, endDate, discount])
 
   return (
     <div className="space-y-6">
@@ -231,11 +235,21 @@ export function RollingScaffoldCalculator() {
             <div className="mt-1 font-condensed text-3xl font-bold text-brand-dark">
               {formatKr(rentalCost)}
             </div>
+            {discount > 0 && (
+              <div className="mt-1 text-xs text-gray-500">
+                Afslátt {discount}%: −{formatKr(subtotalRental - rentalCost)}
+              </div>
+            )}
             {includeSupportLegs && (
               <div className="mt-1 text-xs text-gray-500">
                 (með stoðfótum: {formatKr(calcRollingRental(rentalDays, SUPPORT_LEGS_PRICING))})
               </div>
             )}
+            <div className="mt-3 flex items-center gap-2">
+              <label className="text-sm text-gray-500">Afslátt</label>
+              <input type="number" min={0} max={100} value={discount} onChange={e => setDiscount(Math.max(0, Math.min(100, Number(e.target.value))))} title="Afsláttur %" className="w-16 rounded-md border-gray-300 text-sm text-right focus:border-brand-accent focus:ring-brand-accent" />
+              <span className="text-sm text-gray-500">%</span>
+            </div>
           </div>
         </div>
       </div>

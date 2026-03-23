@@ -11,7 +11,7 @@ const STORAGE_KEY = 'lanicad_api_url'
 const ENV_URL = import.meta.env.VITE_API_URL as string | undefined
 const LOCAL_FALLBACK = 'http://localhost:3001/api'
 
-/** Get the current API base URL (e.g. "https://xxx.trycloudflare.com/api") */
+/** Get the current API base URL */
 export function getApiUrl(): string {
   // 1. User-configured override
   const stored = localStorage.getItem(STORAGE_KEY)

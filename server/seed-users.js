@@ -1,8 +1,11 @@
 require('dotenv').config()
-const { Pool } = require('pg')
+const { createClient } = require('@libsql/client')
 const bcrypt = require('bcrypt')
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const db = createClient({
+  url: process.env.TURSO_DATABASE_URL || 'file:local.db',
+  authToken: process.env.TURSO_AUTH_TOKEN,
+})
 
 async function seed() {
   const users = [
@@ -16,13 +19,13 @@ async function seed() {
   for (const u of users) {
     const hash = await bcrypt.hash(u.pw, 10)
     try {
-      const { rows } = await pool.query(
-        `INSERT INTO users (email, password_hash, name, role)
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (email) DO NOTHING
-         RETURNING id, email, name, role`,
-        [u.email, hash, u.name, u.role]
-      )
+      const { rows } = await db.execute({
+        sql: `INSERT INTO users (email, password_hash, name, role)
+              VALUES (?, ?, ?, ?)
+              ON CONFLICT (email) DO NOTHING
+              RETURNING id, email, name, role`,
+        args: [u.email, hash, u.name, u.role],
+      })
       if (rows.length > 0) {
         console.log(`Created: ${rows[0].email} (${rows[0].role})`)
       } else {
@@ -34,11 +37,11 @@ async function seed() {
   }
 
   // Show all users
-  const { rows } = await pool.query('SELECT id, email, name, role, created_at FROM users ORDER BY created_at')
+  const { rows } = await db.execute('SELECT id, email, name, role, created_at FROM users ORDER BY created_at')
   console.log('\nAll users:')
   console.table(rows)
 
-  await pool.end()
+  db.close()
 }
 
 seed()
