@@ -1,10 +1,12 @@
 import { useRef, type ReactNode } from 'react'
 import * as THREE from 'three'
 
+export type FormworkSystem3D = 'Rasto' | 'Takko' | 'Manto' | 'Alufort' | 'ID-15' | 'Robusto' | 'Column' | 'ST60'
+
 interface FormworkModel3DProps {
   wallLength: number  // meters
   wallHeight: number  // meters
-  system: 'Rasto' | 'Takko' | 'Manto'
+  system: FormworkSystem3D
 }
 
 const PANEL_THICKNESS = 0.12
@@ -138,9 +140,24 @@ function PushPullProp({ x, wallHeight, zPanel, direction }: {
 }
 
 export function FormworkModel3D({ wallLength, wallHeight, system }: FormworkModel3DProps) {
+  switch (system) {
+    case 'ID-15':
+    case 'ST60':
+      return <ShoringTowerModel3D towerWidth={wallLength} towerHeight={wallHeight} system={system} />
+    case 'Alufort':
+      return <SlabFormworkModel3D slabWidth={wallLength} slabDepth={wallHeight} />
+    case 'Column':
+      return <ColumnFormworkModel3D columnSize={wallLength} columnHeight={wallHeight} />
+    default:
+      return <WallFormworkModel3D wallLength={wallLength} wallHeight={wallHeight} system={system} />
+  }
+}
+
+/** Wall formwork (Rasto/Takko/Manto/Robusto) */
+function WallFormworkModel3D({ wallLength, wallHeight, system }: { wallLength: number; wallHeight: number; system: string }) {
   const groupRef = useRef<THREE.Group>(null)
   const offsetX = -wallLength / 2
-  const panelColor = system === 'Manto' ? '#4a6fa5' : '#c06030'
+  const panelColor = system === 'Manto' ? '#4a6fa5' : system === 'Robusto' ? '#8a5a2a' : '#c06030'
   const panelWidths = packPanels(wallLength, system)
 
   // Panel centers (z positions): front side negative Z, back side positive Z
@@ -231,6 +248,186 @@ export function FormworkModel3D({ wallLength, wallHeight, system }: FormworkMode
       {/* ═══ GROUND ═══ */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
         <planeGeometry args={[wallLength + 6, wallHeight + 4]} />
+        <meshStandardMaterial color="#e0e0e0" side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  )
+}
+
+/** ID-15 / ST60 Shoring tower 3D model */
+function ShoringTowerModel3D({ towerWidth, towerHeight, system }: { towerWidth: number; towerHeight: number; system: string }) {
+  const groupRef = useRef<THREE.Group>(null)
+  const bayH = system === 'ST60' ? 1.5 : 2.0
+  const bays = Math.max(1, Math.round(towerHeight / bayH))
+  const halfW = towerWidth / 2
+  const depth = towerWidth * 0.8 // tower depth
+  const halfD = depth / 2
+  const tubeR = system === 'ST60' ? 0.02 : 0.025
+  const color = system === 'ST60' ? '#4a8a4a' : '#4a6aaa'
+
+  return (
+    <group ref={groupRef}>
+      {/* 4 vertical standards (legs) */}
+      {([[-halfW, -halfD], [halfW, -halfD], [halfW, halfD], [-halfW, halfD]] as [number, number][]).map(([lx, lz], i) => (
+        <Tube key={`leg_${i}`} start={[lx, 0, lz]} end={[lx, towerHeight, lz]} radius={tubeR} color={color} />
+      ))}
+
+      {/* Horizontal ledgers and X-braces per bay */}
+      {Array.from({ length: bays + 1 }, (_, b) => {
+        const y = Math.min(b * bayH, towerHeight)
+        return (
+          <group key={`bay_${b}`}>
+            {/* Horizontal frame at each level */}
+            <Tube start={[-halfW, y, -halfD]} end={[halfW, y, -halfD]} radius={tubeR * 0.7} color={color} />
+            <Tube start={[-halfW, y, halfD]} end={[halfW, y, halfD]} radius={tubeR * 0.7} color={color} />
+            <Tube start={[-halfW, y, -halfD]} end={[-halfW, y, halfD]} radius={tubeR * 0.7} color={color} />
+            <Tube start={[halfW, y, -halfD]} end={[halfW, y, halfD]} radius={tubeR * 0.7} color={color} />
+            {/* X-braces on front and back */}
+            {b < bays && (
+              <>
+                <Tube start={[-halfW, y, -halfD]} end={[halfW, Math.min(y + bayH, towerHeight), -halfD]} radius={0.01} color="#888" />
+                <Tube start={[halfW, y, -halfD]} end={[-halfW, Math.min(y + bayH, towerHeight), -halfD]} radius={0.01} color="#888" />
+                <Tube start={[-halfW, y, halfD]} end={[halfW, Math.min(y + bayH, towerHeight), halfD]} radius={0.01} color="#888" />
+              </>
+            )}
+          </group>
+        )
+      })}
+
+      {/* Base jacks */}
+      {([[-halfW, -halfD], [halfW, -halfD], [halfW, halfD], [-halfW, halfD]] as [number, number][]).map(([jx, jz], i) => (
+        <group key={`jack_${i}`}>
+          <Tube start={[jx, -0.3, jz]} end={[jx, 0, jz]} radius={0.015} color="#666" />
+          <mesh position={[jx, -0.31, jz]}>
+            <boxGeometry args={[0.15, 0.02, 0.15]} />
+            <meshStandardMaterial color="#555" metalness={0.4} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Head forks at top */}
+      {([[-halfW, -halfD], [halfW, -halfD], [halfW, halfD], [-halfW, halfD]] as [number, number][]).map(([hx, hz], i) => (
+        <group key={`head_${i}`}>
+          <Tube start={[hx, towerHeight, hz]} end={[hx, towerHeight + 0.15, hz]} radius={0.012} color="#666" />
+          <mesh position={[hx, towerHeight + 0.16, hz]}>
+            <boxGeometry args={[0.08, 0.04, 0.04]} />
+            <meshStandardMaterial color="#777" metalness={0.3} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Ground */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.32, 0]} receiveShadow>
+        <planeGeometry args={[towerWidth + 3, depth + 3]} />
+        <meshStandardMaterial color="#e0e0e0" side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  )
+}
+
+/** Alufort slab/ceiling formwork 3D model */
+function SlabFormworkModel3D({ slabWidth, slabDepth }: { slabWidth: number; slabDepth: number }) {
+  const groupRef = useRef<THREE.Group>(null)
+  const halfW = slabWidth / 2
+  const halfD = slabDepth / 2
+  const deckH = 0.05
+  const propH = 2.5 // typical prop height below slab
+
+  return (
+    <group ref={groupRef}>
+      {/* Slab deck panels */}
+      <mesh position={[0, propH + deckH / 2, 0]}>
+        <boxGeometry args={[slabWidth, deckH, slabDepth]} />
+        <meshStandardMaterial color="#7a7aaa" roughness={0.6} />
+      </mesh>
+
+      {/* Primary beams (along width) */}
+      {Array.from({ length: Math.ceil(slabDepth / 1.2) + 1 }, (_, i) => {
+        const bz = -halfD + i * 1.2
+        if (bz > halfD) return null
+        return (
+          <mesh key={`pb_${i}`} position={[0, propH - 0.03, bz]}>
+            <boxGeometry args={[slabWidth, 0.06, 0.08]} />
+            <meshStandardMaterial color="#aa8844" roughness={0.6} />
+          </mesh>
+        )
+      })}
+
+      {/* Props */}
+      {Array.from({ length: Math.ceil(slabWidth / 1.5) }, (_, i) => {
+        const px = -halfW + 0.5 + i * 1.5
+        return Array.from({ length: Math.ceil(slabDepth / 1.5) }, (_, j) => {
+          const pz = -halfD + 0.5 + j * 1.5
+          if (px > halfW || pz > halfD) return null
+          return (
+            <group key={`prop_${i}_${j}`}>
+              <Tube start={[px, 0, pz]} end={[px, propH - 0.06, pz]} radius={0.025} color="#888" />
+              <mesh position={[px, -0.01, pz]}>
+                <cylinderGeometry args={[0.06, 0.06, 0.02, 8]} />
+                <meshStandardMaterial color="#666" />
+              </mesh>
+            </group>
+          )
+        })
+      })}
+
+      {/* Ground */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
+        <planeGeometry args={[slabWidth + 3, slabDepth + 3]} />
+        <meshStandardMaterial color="#e0e0e0" side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  )
+}
+
+/** Column formwork 3D model */
+function ColumnFormworkModel3D({ columnSize, columnHeight }: { columnSize: number; columnHeight: number }) {
+  const groupRef = useRef<THREE.Group>(null)
+  const half = columnSize / 2
+  const panelT = 0.08
+
+  return (
+    <group ref={groupRef}>
+      {/* 4 panels forming column box */}
+      {/* Front */}
+      <mesh position={[0, columnHeight / 2, half + panelT / 2]}>
+        <boxGeometry args={[columnSize + panelT * 2, columnHeight, panelT]} />
+        <meshStandardMaterial color="#c06030" roughness={0.7} />
+      </mesh>
+      {/* Back */}
+      <mesh position={[0, columnHeight / 2, -half - panelT / 2]}>
+        <boxGeometry args={[columnSize + panelT * 2, columnHeight, panelT]} />
+        <meshStandardMaterial color="#c06030" roughness={0.7} />
+      </mesh>
+      {/* Left */}
+      <mesh position={[-half - panelT / 2, columnHeight / 2, 0]}>
+        <boxGeometry args={[panelT, columnHeight, columnSize]} />
+        <meshStandardMaterial color="#b05525" roughness={0.7} />
+      </mesh>
+      {/* Right */}
+      <mesh position={[half + panelT / 2, columnHeight / 2, 0]}>
+        <boxGeometry args={[panelT, columnHeight, columnSize]} />
+        <meshStandardMaterial color="#b05525" roughness={0.7} />
+      </mesh>
+
+      {/* Horizontal clamp bands */}
+      {Array.from({ length: Math.max(2, Math.floor(columnHeight / 0.6)) }, (_, i) => {
+        const cy = 0.3 + i * 0.6
+        if (cy > columnHeight - 0.2) return null
+        const outer = half + panelT + 0.02
+        return (
+          <group key={`clamp_${i}`}>
+            <Tube start={[-outer, cy, -outer]} end={[outer, cy, -outer]} radius={0.012} color="#555" />
+            <Tube start={[outer, cy, -outer]} end={[outer, cy, outer]} radius={0.012} color="#555" />
+            <Tube start={[outer, cy, outer]} end={[-outer, cy, outer]} radius={0.012} color="#555" />
+            <Tube start={[-outer, cy, outer]} end={[-outer, cy, -outer]} radius={0.012} color="#555" />
+          </group>
+        )
+      })}
+
+      {/* Ground */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
+        <planeGeometry args={[columnSize + 3, columnSize + 3]} />
         <meshStandardMaterial color="#e0e0e0" side={THREE.DoubleSide} />
       </mesh>
     </group>

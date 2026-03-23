@@ -18,17 +18,21 @@ import { createScaffoldDrawing } from '@/components/viewer/drawings/ScaffoldDraw
 import { createRollingScaffoldDrawing } from '@/components/viewer/drawings/RollingScaffoldDrawing2D'
 import { createFormworkDrawing } from '@/components/viewer/drawings/FormworkDrawing2D'
 import { createCeilingPropsDrawing } from '@/components/viewer/drawings/CeilingPropsDrawing2D'
+import { createProtectoDrawing } from '@/components/viewer/drawings/ProtectoDrawing2D'
 import { FenceModel3D } from '@/components/viewer/models/FenceModel3D'
 import { ScaffoldModel3D } from '@/components/viewer/models/ScaffoldModel3D'
 import { RollingScaffoldModel3D } from '@/components/viewer/models/RollingScaffoldModel3D'
 import { FormworkModel3D } from '@/components/viewer/models/FormworkModel3D'
 import { CeilingPropsModel3D } from '@/components/viewer/models/CeilingPropsModel3D'
+import ProtectoModel3D from '@/components/viewer/models/ProtectoModel3D'
+import type { FenceStyle } from '@/components/viewer/drawings/FenceDrawing2D'
+import type { FormworkDrawingSystem } from '@/components/viewer/drawings/FormworkDrawing2D'
 import { exportDxf } from '@/lib/cad/export-dxf'
 import { importDxf } from '@/lib/cad/import-dxf'
 import type { Point2D } from '@/types/cad'
 import { cadId } from '@/types/cad'
 
-type EquipmentType = 'fence' | 'scaffold' | 'rolling' | 'formwork' | 'ceiling'
+type EquipmentType = 'fence' | 'scaffold' | 'rolling' | 'formwork' | 'ceiling' | 'protecto'
 type ViewMode = 'cad' | '3d' | '3d-scene'
 
 const equipmentOptions: { value: EquipmentType; label: string }[] = [
@@ -37,6 +41,7 @@ const equipmentOptions: { value: EquipmentType; label: string }[] = [
   { value: 'rolling', label: 'Hjólapallar' },
   { value: 'formwork', label: 'Steypumót' },
   { value: 'ceiling', label: 'Loftastoðir' },
+  { value: 'protecto', label: 'Protecto öryggisgrind' },
 ]
 
 export function DrawingPage() {
@@ -54,6 +59,7 @@ export function DrawingPage() {
   const [fencePanelWidth, setFencePanelWidth] = useState(3.5)
   const [fencePanelHeight, setFencePanelHeight] = useState(2.0)
   const [fenceIncludeGate, setFenceIncludeGate] = useState(false)
+  const [fenceStyle, setFenceStyle] = useState<FenceStyle>('standard')
 
   // Scaffold params
   const [scaffoldLength, setScaffoldLength] = useState(10)
@@ -68,13 +74,18 @@ export function DrawingPage() {
   // Formwork params
   const [formworkLength, setFormworkLength] = useState(6)
   const [formworkHeight, setFormworkHeight] = useState(3)
-  const [formworkSystem, setFormworkSystem] = useState<'Rasto' | 'Takko' | 'Manto'>('Rasto')
+  const [formworkSystem, setFormworkSystem] = useState<FormworkDrawingSystem>('Rasto')
 
   // Ceiling props params
   const [ceilingPropCount, setCeilingPropCount] = useState(4)
   const [ceilingPropHeight, setCeilingPropHeight] = useState(3)
   const [ceilingBeamCount, setCeilingBeamCount] = useState(3)
   const [ceilingRoomWidth, setCeilingRoomWidth] = useState(6)
+
+  // Protecto edge protection params
+  const [protectoLength, setProtectoLength] = useState(8)
+  const [protectoHeight, setProtectoHeight] = useState(1.1)
+  const [protectoPostSpacing, setProtectoPostSpacing] = useState(2.0)
 
   // Chat → CAD bridge: consume pending actions from AI chat
   const { pendingAction, clearPendingAction } = useChatCad()
@@ -92,6 +103,7 @@ export function DrawingPage() {
         if (params.panelWidth) setFencePanelWidth(n('panelWidth', fencePanelWidth))
         if (params.panelHeight) setFencePanelHeight(n('panelHeight', fencePanelHeight))
         if (params.includeGate !== undefined) setFenceIncludeGate(!!params.includeGate)
+        if (params.fenceStyle) setFenceStyle(s('fenceStyle', fenceStyle) as FenceStyle)
         setStatus('AI: Girðing sett upp')
         break
       case 'place_scaffold':
@@ -105,7 +117,7 @@ export function DrawingPage() {
         setEquipmentType('formwork')
         if (params.length) setFormworkLength(n('length', formworkLength))
         if (params.height) setFormworkHeight(n('height', formworkHeight))
-        if (params.system) setFormworkSystem(s('system', formworkSystem) as 'Rasto' | 'Takko' | 'Manto')
+        if (params.system) setFormworkSystem(s('system', formworkSystem) as FormworkDrawingSystem)
         setStatus('AI: Steypumót sett upp')
         break
       case 'place_rolling':
@@ -121,6 +133,13 @@ export function DrawingPage() {
         if (params.beamCount) setCeilingBeamCount(n('beamCount', ceilingBeamCount))
         if (params.roomWidth) setCeilingRoomWidth(n('roomWidth', ceilingRoomWidth))
         setStatus('AI: Loftastoðir settar upp')
+        break
+      case 'place_protecto':
+        setEquipmentType('protecto')
+        if (params.length) setProtectoLength(n('length', protectoLength))
+        if (params.height) setProtectoHeight(n('height', protectoHeight))
+        if (params.postSpacing) setProtectoPostSpacing(n('postSpacing', protectoPostSpacing))
+        setStatus('AI: Protecto öryggisgrind sett upp')
         break
       case 'draw_rect':
         cad.addObject({
@@ -164,7 +183,7 @@ export function DrawingPage() {
   const svgContent = useMemo(() => {
     switch (equipmentType) {
       case 'fence':
-        return createFenceDrawing({ panels: fencePanels, panelWidth: fencePanelWidth, panelHeight: fencePanelHeight, stones: fencePanels + 1, clamps: fencePanels - 1, includeGate: fenceIncludeGate })
+        return createFenceDrawing({ panels: fencePanels, panelWidth: fencePanelWidth, panelHeight: fencePanelHeight, stones: fencePanels + 1, clamps: fencePanels - 1, includeGate: fenceIncludeGate, fenceStyle })
       case 'scaffold':
         return createScaffoldDrawing({ length: scaffoldLength, levels2m: scaffoldLevels2m, levels07m: scaffoldLevels07m, legType: scaffoldLegType, endcaps: 0 })
       case 'rolling':
@@ -173,20 +192,23 @@ export function DrawingPage() {
         return createFormworkDrawing({ wallLength: formworkLength, wallHeight: formworkHeight, system: formworkSystem })
       case 'ceiling':
         return createCeilingPropsDrawing({ propCount: ceilingPropCount, propHeight: ceilingPropHeight, beamCount: ceilingBeamCount, roomWidth: ceilingRoomWidth })
+      case 'protecto':
+        return createProtectoDrawing({ length: protectoLength, height: protectoHeight, postSpacing: protectoPostSpacing })
     }
   }, [
     equipmentType,
-    fencePanels, fencePanelWidth, fencePanelHeight, fenceIncludeGate,
+    fencePanels, fencePanelWidth, fencePanelHeight, fenceIncludeGate, fenceStyle,
     scaffoldLength, scaffoldLevels2m, scaffoldLevels07m, scaffoldLegType,
     rollingHeight, rollingWidth,
     formworkLength, formworkHeight, formworkSystem,
     ceilingPropCount, ceilingPropHeight, ceilingBeamCount, ceilingRoomWidth,
+    protectoLength, protectoHeight, protectoPostSpacing,
   ])
 
   const model3D = useMemo(() => {
     switch (equipmentType) {
       case 'fence':
-        return <FenceModel3D panels={fencePanels} panelWidth={fencePanelWidth} panelHeight={fencePanelHeight} includeGate={fenceIncludeGate} />
+        return <FenceModel3D panels={fencePanels} panelWidth={fencePanelWidth} panelHeight={fencePanelHeight} includeGate={fenceIncludeGate} fenceStyle={fenceStyle} />
       case 'scaffold':
         return <ScaffoldModel3D length={scaffoldLength} levels2m={scaffoldLevels2m} levels07m={scaffoldLevels07m} legType={scaffoldLegType} />
       case 'rolling':
@@ -195,14 +217,17 @@ export function DrawingPage() {
         return <FormworkModel3D wallLength={formworkLength} wallHeight={formworkHeight} system={formworkSystem} />
       case 'ceiling':
         return <CeilingPropsModel3D propCount={ceilingPropCount} propHeight={ceilingPropHeight} beamCount={ceilingBeamCount} roomWidth={ceilingRoomWidth} />
+      case 'protecto':
+        return <ProtectoModel3D length={protectoLength} height={protectoHeight} postSpacing={protectoPostSpacing} />
     }
   }, [
     equipmentType,
-    fencePanels, fencePanelWidth, fencePanelHeight, fenceIncludeGate,
+    fencePanels, fencePanelWidth, fencePanelHeight, fenceIncludeGate, fenceStyle,
     scaffoldLength, scaffoldLevels2m, scaffoldLevels07m, scaffoldLegType,
     rollingHeight, rollingWidth,
     formworkLength, formworkHeight, formworkSystem,
     ceilingPropCount, ceilingPropHeight, ceilingBeamCount, ceilingRoomWidth,
+    protectoLength, protectoHeight, protectoPostSpacing,
   ])
 
   const cameraPosition: [number, number, number] = useMemo(() => {
@@ -212,8 +237,9 @@ export function DrawingPage() {
       case 'rolling': return [4, rollingHeight * 0.7, 6]
       case 'formwork': return [formworkLength * 0.6, formworkHeight, formworkLength * 0.8]
       case 'ceiling': return [ceilingRoomWidth * 0.6, ceilingPropHeight, ceilingRoomWidth * 0.8]
+      case 'protecto': return [protectoLength * 0.6, 3, protectoLength * 0.5]
     }
-  }, [equipmentType, fencePanels, fencePanelWidth, scaffoldLength, scaffoldLevels2m, rollingHeight, formworkLength, formworkHeight, ceilingRoomWidth, ceilingPropHeight])
+  }, [equipmentType, fencePanels, fencePanelWidth, scaffoldLength, scaffoldLevels2m, rollingHeight, formworkLength, formworkHeight, ceilingRoomWidth, ceilingPropHeight, protectoLength])
 
   // Import handlers
   const handleImportDxf = useCallback(() => { dxfInputRef.current?.click() }, [])
@@ -338,10 +364,23 @@ export function DrawingPage() {
             {/* Dynamic params */}
             {equipmentType === 'fence' && (
               <div className="space-y-2">
+                <SelField label="Tegund girðingar" value={fenceStyle} onChange={v => {
+                  const style = v as FenceStyle
+                  setFenceStyle(style)
+                  if (style === 'plastic') { setFencePanelWidth(2.1); setFencePanelHeight(1.1) }
+                  else if (style === 'queue') { setFencePanelWidth(2.5); setFencePanelHeight(1.1) }
+                  else if (style === 'warning') { setFencePanelWidth(1.3); setFencePanelHeight(0.31) }
+                  else { setFencePanelWidth(3.5); setFencePanelHeight(2.0) }
+                }} options={[['standard', 'Stálgirðing (venjuleg)'], ['plastic', 'Plastgirðing'], ['queue', 'Röðunargirðing'], ['warning', 'Aðvörunargirðing']]} />
                 <NumField label="Fjöldi panela" value={fencePanels} onChange={setFencePanels} min={1} max={50} />
-                <SelField label="Breidd" value={String(fencePanelWidth)} onChange={v => setFencePanelWidth(Number(v))} options={[['3.5', '3.5m'], ['2.5', '2.5m'], ['2.1', '2.1m']]} />
-                <SelField label="Hæð" value={String(fencePanelHeight)} onChange={v => setFencePanelHeight(Number(v))} options={[['2.0', '2.0m'], ['1.8', '1.8m']]} />
-                <ChkField label="Hlið" checked={fenceIncludeGate} onChange={setFenceIncludeGate} />
+                <SelField label="Breidd" value={String(fencePanelWidth)} onChange={v => setFencePanelWidth(Number(v))} options={
+                  fenceStyle === 'standard' ? [['3.5', '3.5m (þung)'], ['3.5', '3.5m (létt)'], ['3.5', '3.5m (lág 1.2m)']]
+                  : fenceStyle === 'plastic' ? [['2.1', '2.1m']]
+                  : fenceStyle === 'queue' ? [['2.5', '2.5m']]
+                  : [['1.3', '1.3m']]
+                } />
+                <NumField label="Hæð (m)" value={fencePanelHeight} onChange={setFencePanelHeight} min={0.3} max={2.5} step={0.1} />
+                {fenceStyle === 'standard' && <ChkField label="Hlið" checked={fenceIncludeGate} onChange={setFenceIncludeGate} />}
               </div>
             )}
             {equipmentType === 'scaffold' && (
@@ -360,9 +399,18 @@ export function DrawingPage() {
             )}
             {equipmentType === 'formwork' && (
               <div className="space-y-2">
-                <NumField label="Vegglengd (m)" value={formworkLength} onChange={setFormworkLength} min={1} max={30} step={0.5} />
-                <NumField label="Hæð (m)" value={formworkHeight} onChange={setFormworkHeight} min={1} max={6} step={0.5} />
-                <SelField label="Kerfi" value={formworkSystem} onChange={v => setFormworkSystem(v as 'Rasto' | 'Takko' | 'Manto')} options={[['Rasto', 'Rasto'], ['Takko', 'Takko'], ['Manto', 'Manto']]} />
+                <SelField label="Kerfi" value={formworkSystem} onChange={v => setFormworkSystem(v as FormworkDrawingSystem)} options={[
+                  ['Rasto', 'Rasto (veggmót)'],
+                  ['Takko', 'Takko (veggmót)'],
+                  ['Manto', 'Manto (veggmót)'],
+                  ['Robusto', 'Robusto (þungamót)'],
+                  ['ID-15', 'ID-15 (stoðturn)'],
+                  ['ST60', 'ST60 (stoðturn)'],
+                  ['Alufort', 'Alufort (plötumót)'],
+                  ['Column', 'Súlumót'],
+                ]} />
+                <NumField label={formworkSystem === 'Column' ? 'Súlustærð (m)' : 'Lengd (m)'} value={formworkLength} onChange={setFormworkLength} min={0.3} max={30} step={0.5} />
+                <NumField label="Hæð (m)" value={formworkHeight} onChange={setFormworkHeight} min={1} max={10} step={0.5} />
               </div>
             )}
             {equipmentType === 'ceiling' && (
@@ -371,6 +419,13 @@ export function DrawingPage() {
                 <NumField label="Hæð (m)" value={ceilingPropHeight} onChange={setCeilingPropHeight} min={1.5} max={5.5} step={0.1} />
                 <NumField label="Bitar (HT-20)" value={ceilingBeamCount} onChange={setCeilingBeamCount} min={1} max={10} />
                 <NumField label="Herbergisbreidd (m)" value={ceilingRoomWidth} onChange={setCeilingRoomWidth} min={2} max={15} step={0.5} />
+              </div>
+            )}
+            {equipmentType === 'protecto' && (
+              <div className="space-y-2">
+                <NumField label="Lengd (m)" value={protectoLength} onChange={setProtectoLength} min={2} max={50} step={1} />
+                <NumField label="Hæð (m)" value={protectoHeight} onChange={setProtectoHeight} min={0.8} max={1.5} step={0.1} />
+                <NumField label="Staurafjarlægð (m)" value={protectoPostSpacing} onChange={setProtectoPostSpacing} min={1} max={3} step={0.25} />
               </div>
             )}
           </div>

@@ -1,11 +1,14 @@
 import { useRef } from 'react'
 import * as THREE from 'three'
 
+export type FenceStyle3D = 'standard' | 'plastic' | 'queue' | 'warning'
+
 interface FenceModel3DProps {
   panels: number
   panelWidth: number  // meters
   panelHeight: number // meters
   includeGate?: boolean
+  fenceStyle?: FenceStyle3D
 }
 
 const FRAME_R = 0.021   // 42mm OD frame tube
@@ -156,7 +159,88 @@ function FencePanel({ x, panelWidth, panelHeight, isGate }: {
   )
 }
 
-export function FenceModel3D({ panels, panelWidth, panelHeight, includeGate }: FenceModel3DProps) {
+/** Plastic barrier panel — solid orange/yellow body */
+function PlasticPanel({ x, panelWidth, panelHeight }: {
+  x: number; panelWidth: number; panelHeight: number
+}) {
+  return (
+    <group>
+      {/* Solid plastic body */}
+      <mesh position={[x + panelWidth / 2, panelHeight / 2, 0]}>
+        <boxGeometry args={[panelWidth - 0.01, panelHeight - 0.02, 0.06]} />
+        <meshStandardMaterial color="#e87020" roughness={0.8} />
+      </mesh>
+      {/* Top rail */}
+      <mesh position={[x + panelWidth / 2, panelHeight - 0.025, 0]}>
+        <boxGeometry args={[panelWidth, 0.05, 0.07]} />
+        <meshStandardMaterial color="#cc5500" roughness={0.7} />
+      </mesh>
+      {/* Bottom rail */}
+      <mesh position={[x + panelWidth / 2, 0.025, 0]}>
+        <boxGeometry args={[panelWidth, 0.05, 0.07]} />
+        <meshStandardMaterial color="#cc5500" roughness={0.7} />
+      </mesh>
+      {/* Left post */}
+      <Tube start={[x + 0.02, 0, 0]} end={[x + 0.02, panelHeight, 0]} radius={0.02} color="#cc5500" />
+      {/* Right post */}
+      <Tube start={[x + panelWidth - 0.02, 0, 0]} end={[x + panelWidth - 0.02, panelHeight, 0]} radius={0.02} color="#cc5500" />
+    </group>
+  )
+}
+
+/** Queue barrier — two horizontal rails between posts */
+function QueuePanel({ x, panelWidth, panelHeight }: {
+  x: number; panelWidth: number; panelHeight: number
+}) {
+  return (
+    <group>
+      {/* Left post */}
+      <Tube start={[x, 0, 0]} end={[x, panelHeight, 0]} radius={FRAME_R} />
+      {/* Right post */}
+      <Tube start={[x + panelWidth, 0, 0]} end={[x + panelWidth, panelHeight, 0]} radius={FRAME_R} />
+      {/* Top rail */}
+      <Tube start={[x, panelHeight * 0.9, 0]} end={[x + panelWidth, panelHeight * 0.9, 0]} radius={0.015} color="#f5c800" />
+      {/* Mid rail */}
+      <Tube start={[x, panelHeight * 0.5, 0]} end={[x + panelWidth, panelHeight * 0.5, 0]} radius={0.015} color="#f5c800" />
+      {/* Bottom rail */}
+      <Tube start={[x, panelHeight * 0.15, 0]} end={[x + panelWidth, panelHeight * 0.15, 0]} radius={0.012} color="#999" />
+    </group>
+  )
+}
+
+/** Warning sign panel — thin sign board */
+function WarningPanel({ x, panelWidth, panelHeight }: {
+  x: number; panelWidth: number; panelHeight: number
+}) {
+  return (
+    <group>
+      {/* Sign board — red/white */}
+      <mesh position={[x + panelWidth / 2, panelHeight * 0.7, 0]}>
+        <boxGeometry args={[panelWidth * 0.9, panelHeight * 0.4, 0.015]} />
+        <meshStandardMaterial color="#cc2200" roughness={0.6} />
+      </mesh>
+      {/* White stripe on sign */}
+      <mesh position={[x + panelWidth / 2, panelHeight * 0.7, 0.009]}>
+        <boxGeometry args={[panelWidth * 0.8, panelHeight * 0.15, 0.002]} />
+        <meshStandardMaterial color="#ffffff" roughness={0.5} />
+      </mesh>
+      {/* Support post */}
+      <Tube start={[x + panelWidth / 2, 0, 0]} end={[x + panelWidth / 2, panelHeight, 0]} radius={0.015} color="#666" />
+    </group>
+  )
+}
+
+/** Plastic/rubber weighted base */
+function PlasticBase({ position }: { position: [number, number, number] }) {
+  return (
+    <mesh position={[position[0], position[1] + 0.05, position[2]]}>
+      <boxGeometry args={[0.4, 0.1, 0.3]} />
+      <meshStandardMaterial color="#555" roughness={0.9} />
+    </mesh>
+  )
+}
+
+export function FenceModel3D({ panels, panelWidth, panelHeight, includeGate, fenceStyle = 'standard' }: FenceModel3DProps) {
   const groupRef = useRef<THREE.Group>(null)
   const totalWidth = panels * panelWidth
   const offsetX = -totalWidth / 2
@@ -166,14 +250,26 @@ export function FenceModel3D({ panels, panelWidth, panelHeight, includeGate }: F
       {/* Fence panels */}
       {Array.from({ length: panels }, (_, i) => {
         const x = offsetX + i * panelWidth
-        const isGate = !!includeGate && i === panels - 1
-        return <FencePanel key={i} x={x} panelWidth={panelWidth} panelHeight={panelHeight} isGate={isGate} />
+        const isGate = !!includeGate && i === panels - 1 && fenceStyle === 'standard'
+        switch (fenceStyle) {
+          case 'plastic':
+            return <PlasticPanel key={i} x={x} panelWidth={panelWidth} panelHeight={panelHeight} />
+          case 'queue':
+            return <QueuePanel key={i} x={x} panelWidth={panelWidth} panelHeight={panelHeight} />
+          case 'warning':
+            return <WarningPanel key={i} x={x} panelWidth={panelWidth} panelHeight={panelHeight} />
+          default:
+            return <FencePanel key={i} x={x} panelWidth={panelWidth} panelHeight={panelHeight} isGate={isGate} />
+        }
       })}
 
-      {/* Concrete base stones — N+1 for N panels */}
-      {Array.from({ length: panels + 1 }, (_, i) => (
-        <ConcreteBlock key={`stone_${i}`} position={[offsetX + i * panelWidth, 0, 0]} />
-      ))}
+      {/* Base stones/feet */}
+      {fenceStyle !== 'warning' && Array.from({ length: panels + 1 }, (_, i) => {
+        const pos: [number, number, number] = [offsetX + i * panelWidth, 0, 0]
+        return fenceStyle === 'plastic' || fenceStyle === 'queue'
+          ? <PlasticBase key={`base_${i}`} position={pos} />
+          : <ConcreteBlock key={`stone_${i}`} position={pos} />
+      })}
 
       {/* Ground plane */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
