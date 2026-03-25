@@ -22,6 +22,16 @@ export function exportPdf(data: PdfExportData) {
   const pageWidth = doc.internal.pageSize.getWidth()
   let y = 15
 
+  // Generate document reference number (LC-TYPE-YYMMDD-HHMM)
+  const now = new Date()
+  const typeCode = data.calculatorType.slice(0, 3).toUpperCase()
+  const yy = String(now.getFullYear()).slice(2)
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const dd = String(now.getDate()).padStart(2, '0')
+  const hh = String(now.getHours()).padStart(2, '0')
+  const min = String(now.getMinutes()).padStart(2, '0')
+  const docRef = `LC-${typeCode}-${yy}${mm}${dd}-${hh}${min}`
+
   // Header bar
   doc.setFillColor(64, 64, 66) // #404042
   doc.rect(0, 0, pageWidth, 28, 'F')
@@ -38,9 +48,11 @@ export function exportPdf(data: PdfExportData) {
   doc.setFont('helvetica', 'normal')
   doc.text(data.title, 15, y + 13)
 
-  // Date in header
+  // Date + document reference in header
   doc.setFontSize(9)
-  doc.text(formatDate(new Date()), pageWidth - 15, y + 5, { align: 'right' })
+  doc.text(formatDate(now), pageWidth - 15, y + 5, { align: 'right' })
+  doc.setFontSize(7)
+  doc.text(`Tilvísun: ${docRef}`, pageWidth - 15, y + 10, { align: 'right' })
 
   y = 38
 
@@ -161,19 +173,29 @@ export function exportPdf(data: PdfExportData) {
   doc.setFont('helvetica', 'bold')
   doc.text(data.totalValue, pageWidth - 18, finalY + 11, { align: 'right' })
 
-  // Footer
+  // Footer with page numbers and document reference
   const pageCount = doc.getNumberOfPages()
+  const pageHeight = doc.internal.pageSize.getHeight()
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i)
     doc.setFontSize(7)
     doc.setTextColor(150, 150, 150)
     doc.text(
       `LániCAD — ${data.calculatorType} — Síða ${i}/${pageCount}`,
-      pageWidth / 2, doc.internal.pageSize.getHeight() - 8,
+      pageWidth / 2, pageHeight - 8,
       { align: 'center' }
+    )
+    doc.text(
+      docRef,
+      pageWidth - 15, pageHeight - 8,
+      { align: 'right' }
+    )
+    doc.text(
+      formatDate(now),
+      15, pageHeight - 8,
     )
   }
 
-  const filename = `lanicad-${data.calculatorType.toLowerCase().replace(/\s+/g, '-')}-${formatDate(new Date()).replace(/\./g, '')}.pdf`
+  const filename = `lanicad-${data.calculatorType.toLowerCase().replace(/\s+/g, '-')}-${formatDate(now).replace(/\./g, '')}.pdf`
   doc.save(filename)
 }

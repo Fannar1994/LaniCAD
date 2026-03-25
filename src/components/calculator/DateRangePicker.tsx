@@ -13,9 +13,11 @@ export function DateRangePicker({
   startDate, endDate, rentalDays,
   onStartDateChange, onEndDateChange, onRentalDaysChange,
 }: Props) {
+  const isInvalid = !!(startDate && endDate && new Date(startDate) > new Date(endDate))
+
   const handleStartChange = (value: string) => {
     onStartDateChange(value)
-    if (value && endDate) {
+    if (value && endDate && new Date(value) <= new Date(endDate)) {
       const days = daysBetween(new Date(value), new Date(endDate))
       onRentalDaysChange(Math.max(1, days))
     }
@@ -23,7 +25,7 @@ export function DateRangePicker({
 
   const handleEndChange = (value: string) => {
     onEndDateChange(value)
-    if (startDate && value) {
+    if (startDate && value && new Date(startDate) <= new Date(value)) {
       const days = daysBetween(new Date(startDate), new Date(value))
       onRentalDaysChange(Math.max(1, days))
     }
@@ -75,6 +77,9 @@ export function DateRangePicker({
           />
         </div>
       </div>
+      {isInvalid && (
+        <p className="mt-2 text-sm text-red-600">Upphafsdagur má ekki vera á eftir lokadegi</p>
+      )}
     </div>
   )
 }

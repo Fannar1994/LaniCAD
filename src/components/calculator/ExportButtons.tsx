@@ -45,6 +45,7 @@ export function ExportButtons({ onExportPdf, onExportExcel, onSave, saving, onSa
       </button>
       <button
         onClick={onExportExcel}
+        aria-label="Flytja út sem Excel"
         className="inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium text-white hover:bg-green-700 transition"
       >
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">

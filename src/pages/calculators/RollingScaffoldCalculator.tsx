@@ -79,7 +79,7 @@ export function RollingScaffoldCalculator() {
       ...(!isQuickly ? [['Hæð', `${height} m`] as [string, string]] : []),
       ['Leigudagar', `${rentalDays}`],
       ['Stoðfætur', includeSupportLegs ? 'Já' : 'Nei'],
-      ...(discount > 0 ? [['Afslátt' as string, `${discount}%`] as [string, string]] : []),
+      ...(discount > 0 ? [['Afsláttur' as string, `${discount}%`] as [string, string]] : []),
     ] as [string, string][],
     tableHeaders: ['Lýsing', 'Upphæð'],
     tableRows: [
