@@ -39,9 +39,9 @@
 - [x] Role-based access control (restrict routes by role)
 - [x] Audit log (track user actions in PostgreSQL)
 - [x] Unit tests for new features (DXF parser, i18n, catalog sync)
-- [ ] End-to-end tests (Playwright)
+- [x] End-to-end tests (Playwright — 22 tests passing)
 - [x] Product image uploads in Settings > Vörur
-- [ ] Multi-project comparison / reporting dashboard
+- [x] Multi-project comparison / reporting dashboard (ReportsPage with charts, filters, Excel export)
 - [ ] Client portal (read-only link sharing)
 - [x] Offline save queue with auto-flush on reconnect
 - [x] FormworkCalculator state restore (all 26 mode A-F variables)

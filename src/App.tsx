@@ -19,6 +19,7 @@ const FormworkCalculator = lazy(() => import('@/pages/calculators/FormworkCalcul
 const DrawingPage = lazy(() => import('@/pages/DrawingPage').then(m => ({ default: m.DrawingPage })))
 const SchematicsPage = lazy(() => import('@/pages/SchematicsPage').then(m => ({ default: m.SchematicsPage })))
 const TemplatesPage = lazy(() => import('@/pages/TemplatesPage').then(m => ({ default: m.TemplatesPage })))
+const ReportsPage = lazy(() => import('@/pages/ReportsPage').then(m => ({ default: m.ReportsPage })))
 
 function LazyFallback() {
   return (
@@ -58,6 +59,7 @@ export function App() {
         <Route path="drawing" element={<Suspense fallback={<LazyFallback />}><DrawingPage /></Suspense>} />
         <Route path="schematics" element={<Suspense fallback={<LazyFallback />}><SchematicsPage /></Suspense>} />
         <Route path="templates" element={<Suspense fallback={<LazyFallback />}><TemplatesPage /></Suspense>} />
+        <Route path="reports" element={<Suspense fallback={<LazyFallback />}><ReportsPage /></Suspense>} />
         <Route path="settings" element={<Suspense fallback={<LazyFallback />}><SettingsPage /></Suspense>} />
         <Route path="audit-log" element={isAdmin ? <Suspense fallback={<LazyFallback />}><AuditLogPage /></Suspense> : <Navigate to="/" replace />} />
         <Route path="*" element={<NotFoundPage />} />

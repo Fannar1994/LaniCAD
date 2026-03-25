@@ -12,6 +12,7 @@ import {
   FileText,
   Layers,
   ClipboardList,
+  BarChart3,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n'
@@ -26,6 +27,7 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, tKey: 'nav.dashboard' },
   { to: '/projects', icon: FolderOpen, tKey: 'nav.projects' },
   { to: '/templates', icon: Layers, tKey: 'nav.templates' },
+  { to: '/reports', icon: BarChart3, tKey: 'nav.reports' },
 ] as const
 
 const calculatorItems = [

@@ -79,10 +79,10 @@ L├íniCAD is a 2D/3D CAD system for construction equipment rental. It serves f
 - [ ] Optional: client approval workflow (accept/reject quote)
 
 ### 3.2 Multi-Project Reporting
-- [ ] Side-by-side comparison of multiple quotes
-- [ ] Equipment utilization dashboard (what's rented, what's available)
-- [ ] Revenue reporting by calculator type, time period, client
-- [ ] Export consolidated reports as PDF/Excel
+- [x] Side-by-side comparison of multiple quotes
+- [x] Equipment utilization dashboard (what's rented, what's available)
+- [x] Revenue reporting by calculator type, time period, client
+- [x] Export consolidated reports as PDF/Excel
 
 ### 3.3 Advanced 3D Features
 - [ ] Site context (ground plane, building outline import)
@@ -91,10 +91,10 @@ L├íniCAD is a 2D/3D CAD system for construction equipment rental. It serves f
 - [ ] Multi-equipment scene composition (fence + scaffold on same site)
 
 ### 3.4 E2E Testing
-- [ ] Set up Playwright
-- [ ] Write tests for critical paths: login ΓåÆ calculator ΓåÆ save ΓåÆ export
-- [ ] Add to GitHub Actions CI pipeline
-- [ ] Coverage for all 5 calculators
+- [x] Set up Playwright
+- [x] Write tests for critical paths: login → calculator → save → export
+- [x] Add to GitHub Actions CI pipeline
+- [x] Coverage for all 5 calculators (22 tests passing)
 
 ---
 
