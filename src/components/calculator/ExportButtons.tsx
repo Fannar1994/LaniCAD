@@ -14,6 +14,7 @@ export function ExportButtons({ onExportPdf, onExportExcel, onSave, saving, onSa
         <button
           onClick={onSave}
           disabled={saving}
+          aria-label="Vista verkefni"
           className="inline-flex items-center gap-2 rounded-md bg-brand-accent px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium text-brand-dark hover:bg-brand-accent-hover transition disabled:opacity-50"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -26,6 +27,7 @@ export function ExportButtons({ onExportPdf, onExportExcel, onSave, saving, onSa
         <button
           onClick={onSaveTemplate}
           disabled={savingTemplate}
+          aria-label="Vista sniðmát"
           className="inline-flex items-center gap-2 rounded-md border border-brand-accent bg-white px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium text-brand-dark hover:bg-brand-accent/10 transition disabled:opacity-50"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -36,6 +38,7 @@ export function ExportButtons({ onExportPdf, onExportExcel, onSave, saving, onSa
       )}
       <button
         onClick={onExportPdf}
+        aria-label="Prenta PDF"
         className="inline-flex items-center gap-2 rounded-md bg-brand-dark px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium text-white hover:bg-gray-700 transition"
       >
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">

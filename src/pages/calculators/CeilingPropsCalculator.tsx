@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { LOFTASTODIR, MOTABITAR, AUKAHLUTIR, CLASS_INFO } from '@/data/ceiling-props'
 import { calcStandardRental } from '@/lib/calculations/rental'
 import { formatKr } from '@/lib/format'
-import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
+import { ClientInfoPanel, DateRangePicker, ExportButtons, TemplateNameDialog } from '@/components/calculator'
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
 import { createProject, updateProject, createTemplate } from '@/lib/db'
@@ -43,6 +43,7 @@ export function CeilingPropsCalculator() {
   const [saving, setSaving] = useState(false)
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
 
   const selectedProp = LOFTASTODIR[selectedPropIdx]
   const selectedBeam = MOTABITAR[selectedBeamIdx]
@@ -142,9 +143,7 @@ export function CeilingPropsCalculator() {
     }
   }, [client, lines, rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate, projectId, discount])
 
-  const handleSaveTemplate = useCallback(async () => {
-    const name = prompt('Heiti sniðmáts:', 'Loftastoðir')
-    if (!name) return
+  const handleSaveTemplate = useCallback(async (name: string) => {
     const config: Record<string, unknown> = {
       rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate, discount,
     }
@@ -156,6 +155,7 @@ export function CeilingPropsCalculator() {
       toast.error(e instanceof Error ? e.message : 'Villa við vistun sniðmáts')
     } finally {
       setSavingTemplate(false)
+      setTemplateDialogOpen(false)
     }
   }, [rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate, discount])
 
@@ -163,7 +163,7 @@ export function CeilingPropsCalculator() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Loftastoðir og mótabitar</h1>
-        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={handleSaveTemplate} savingTemplate={savingTemplate} />
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={() => setTemplateDialogOpen(true)} savingTemplate={savingTemplate} />
       </div>
 
       {/* Client info + Date range */}
@@ -378,6 +378,7 @@ export function CeilingPropsCalculator() {
           </table>
         </div>
       </div>
+      <TemplateNameDialog open={templateDialogOpen} defaultName="Loftastoðir" onConfirm={handleSaveTemplate} onCancel={() => setTemplateDialogOpen(false)} />
     </div>
   )
 }

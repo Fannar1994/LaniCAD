@@ -8,7 +8,7 @@ import {
 } from '@/data/rolling-scaffold'
 import { calcRollingRental } from '@/lib/calculations/rental'
 import { formatKr } from '@/lib/format'
-import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
+import { ClientInfoPanel, DateRangePicker, ExportButtons, TemplateNameDialog } from '@/components/calculator'
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
 import { createProject, updateProject, createTemplate } from '@/lib/db'
@@ -36,6 +36,7 @@ export function RollingScaffoldCalculator() {
   const [saving, setSaving] = useState(false)
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
 
   const isQuickly = scaffoldType === 'quickly'
 
@@ -130,9 +131,7 @@ export function RollingScaffoldCalculator() {
     }
   }, [client, scaffoldType, typeLabel, isQuickly, height, rentalDays, rentalCost, includeSupportLegs, startDate, endDate, projectId, discount])
 
-  const handleSaveTemplate = useCallback(async () => {
-    const name = prompt('Heiti sniðmáts:', `Hjólapallar — ${typeLabel}`)
-    if (!name) return
+  const handleSaveTemplate = useCallback(async (name: string) => {
     const config: Record<string, unknown> = { scaffoldType, height, rentalDays, includeSupportLegs, startDate, endDate, discount }
     try {
       setSavingTemplate(true)
@@ -142,6 +141,7 @@ export function RollingScaffoldCalculator() {
       toast.error(e instanceof Error ? e.message : 'Villa við vistun sniðmáts')
     } finally {
       setSavingTemplate(false)
+      setTemplateDialogOpen(false)
     }
   }, [scaffoldType, typeLabel, height, rentalDays, includeSupportLegs, startDate, endDate, discount])
 
@@ -149,7 +149,7 @@ export function RollingScaffoldCalculator() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Hjólapalla&shy;reiknivél</h1>
-        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={handleSaveTemplate} savingTemplate={savingTemplate} />
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={() => setTemplateDialogOpen(true)} savingTemplate={savingTemplate} />
       </div>
 
       {/* Client info + Date range */}
@@ -237,7 +237,7 @@ export function RollingScaffoldCalculator() {
             </div>
             {discount > 0 && (
               <div className="mt-1 text-xs text-gray-500">
-                Afslátt {discount}%: −{formatKr(subtotalRental - rentalCost)}
+                Afsláttur {discount}%: −{formatKr(subtotalRental - rentalCost)}
               </div>
             )}
             {includeSupportLegs && (
@@ -246,7 +246,7 @@ export function RollingScaffoldCalculator() {
               </div>
             )}
             <div className="mt-3 flex items-center gap-2">
-              <label className="text-sm text-gray-500">Afslátt</label>
+              <label className="text-sm text-gray-500">Afsláttur</label>
               <input type="number" min={0} max={100} value={discount} onChange={e => setDiscount(Math.max(0, Math.min(100, Number(e.target.value))))} title="Afsláttur %" className="w-16 rounded-md border-gray-300 text-sm text-right focus:border-brand-accent focus:ring-brand-accent" />
               <span className="text-sm text-gray-500">%</span>
             </div>
@@ -297,6 +297,13 @@ export function RollingScaffoldCalculator() {
           </div>
         </div>
       )}
+
+      <TemplateNameDialog
+        open={templateDialogOpen}
+        defaultName={`Hjólapallar — ${typeLabel}`}
+        onConfirm={handleSaveTemplate}
+        onCancel={() => setTemplateDialogOpen(false)}
+      />
     </div>
   )
 }

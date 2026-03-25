@@ -5,7 +5,7 @@ import { FENCE_PRODUCTS, FENCE_TYPES, MIN_RENTAL_DAYS, type FenceProductData } f
 import { calcFenceRental } from '@/lib/calculations/rental'
 import { calcFenceGeometry } from '@/lib/calculations/geometry'
 import { formatKr } from '@/lib/format'
-import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
+import { ClientInfoPanel, DateRangePicker, ExportButtons, TemplateNameDialog } from '@/components/calculator'
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
 import { createProject, updateProject, createTemplate } from '@/lib/db'
@@ -47,6 +47,7 @@ export function FenceCalculator() {
   const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [discount, setDiscount] = useState(initData.discount as number ?? 0)
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
 
   const fenceType = FENCE_TYPES.find(t => t.key === selectedType)!
   const fenceProduct = FENCE_PRODUCTS[fenceType.productKey]
@@ -212,9 +213,7 @@ export function FenceCalculator() {
     }
   }, [client, lines, selectedType, totalLength, effectiveDays, includeGate, includeWheels, includeLock, stoneType, priceMode, discount, startDate, endDate, projectId])
 
-  const handleSaveTemplate = useCallback(async () => {
-    const name = prompt('Heiti sniðmáts:', `Girðingar — ${selectedType}`)
-    if (!name) return
+  const handleSaveTemplate = useCallback(async (name: string) => {
     const config: Record<string, unknown> = {
       selectedType, totalLength, rentalDays: effectiveDays, includeGate, includeWheels, includeLock, stoneType, priceMode, discount, startDate, endDate,
     }
@@ -226,6 +225,7 @@ export function FenceCalculator() {
       toast.error(e instanceof Error ? e.message : 'Villa við vistun sniðmáts')
     } finally {
       setSavingTemplate(false)
+      setTemplateDialogOpen(false)
     }
   }, [selectedType, totalLength, effectiveDays, includeGate, includeWheels, includeLock, stoneType, priceMode, discount, startDate, endDate])
 
@@ -233,7 +233,7 @@ export function FenceCalculator() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Girðingareiknivél</h1>
-        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={handleSaveTemplate} savingTemplate={savingTemplate} />
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={() => setTemplateDialogOpen(true)} savingTemplate={savingTemplate} />
       </div>
 
       {/* Client info + Date range */}
@@ -598,6 +598,13 @@ export function FenceCalculator() {
           )
         })()}
       </div>
+
+      <TemplateNameDialog
+        open={templateDialogOpen}
+        defaultName={`Girðingar — ${selectedType}`}
+        onConfirm={handleSaveTemplate}
+        onCancel={() => setTemplateDialogOpen(false)}
+      />
     </div>
   )
 }

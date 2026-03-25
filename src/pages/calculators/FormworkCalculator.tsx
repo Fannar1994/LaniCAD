@@ -17,7 +17,7 @@ import {
   type ID15TowerOption,
 } from '@/lib/calculations/formwork'
 import { formatKr } from '@/lib/format'
-import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
+import { ClientInfoPanel, DateRangePicker, ExportButtons, TemplateNameDialog } from '@/components/calculator'
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
 import { createProject, updateProject, createTemplate } from '@/lib/db'
@@ -45,6 +45,7 @@ export function FormworkCalculator() {
   const [saving, setSaving] = useState(false)
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
 
   // Mode A (Rasto/Takko)
   const [aWallLength, setAWallLength] = useState(12)
@@ -194,9 +195,7 @@ export function FormworkCalculator() {
       eWallLength, eInsideCorners, eOutsideCorners, eOpenEnds,
       fColWidth, fColHeight, fColQty, projectId])
 
-  const handleSaveTemplate = useCallback(async () => {
-    const name = prompt('Heiti sniðmáts:', `Steypumót — ${system}`)
-    if (!name) return
+  const handleSaveTemplate = useCallback(async (name: string) => {
     const config: Record<string, unknown> = {
       system, rentalDays, discount, startDate, endDate,
       aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
@@ -214,6 +213,7 @@ export function FormworkCalculator() {
       toast.error(e instanceof Error ? e.message : 'Villa við vistun sniðmáts')
     } finally {
       setSavingTemplate(false)
+      setTemplateDialogOpen(false)
     }
   }, [system, rentalDays, discount, startDate, endDate,
       aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
@@ -227,7 +227,7 @@ export function FormworkCalculator() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Steypumótareiknivél</h1>
-        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={handleSaveTemplate} savingTemplate={savingTemplate} />
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={() => setTemplateDialogOpen(true)} savingTemplate={savingTemplate} />
       </div>
 
       {/* Client info + Date range */}
@@ -663,6 +663,7 @@ export function FormworkCalculator() {
           </table>
         </div>
       </div>
+      <TemplateNameDialog open={templateDialogOpen} defaultName={`Steypumót — ${system}`} onConfirm={handleSaveTemplate} onCancel={() => setTemplateDialogOpen(false)} />
     </div>
   )
 }

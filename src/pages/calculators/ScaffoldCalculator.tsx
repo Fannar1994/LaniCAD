@@ -1,12 +1,12 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
-import { SCAFFOLD_SYSTEMS, getScaffoldItems } from '@/data/scaffolding'
+import { SCAFFOLD_SYSTEMS, getScaffoldItems, hasScaffoldPricing } from '@/data/scaffolding'
 import type { ScaffoldSystemKey } from '@/data/scaffolding'
 import { calculateLevelsFromHeight, calculateFacadeMaterials, calculateRacks, calculateAccessoryGrids } from '@/lib/calculations/geometry'
 import { calcScaffoldingRental } from '@/lib/calculations/rental'
 import { formatKr } from '@/lib/format'
-import { ClientInfoPanel, DateRangePicker, ExportButtons } from '@/components/calculator'
+import { ClientInfoPanel, DateRangePicker, ExportButtons, TemplateNameDialog } from '@/components/calculator'
 import { exportPdf } from '@/lib/export-pdf'
 import { exportExcel } from '@/lib/export-excel'
 import { createProject, updateProject, createTemplate } from '@/lib/db'
@@ -43,6 +43,7 @@ export function ScaffoldCalculator() {
   const [saving, setSaving] = useState(false)
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
 
   const addFacade = () => {
     const id = Math.max(0, ...facades.map(f => f.id)) + 1
@@ -146,9 +147,7 @@ export function ScaffoldCalculator() {
     }
   }, [client, lineItems, rentalDays, facades, startDate, endDate, projectId, system, discount])
 
-  const handleSaveTemplate = useCallback(async () => {
-    const name = prompt('Heiti sniðmáts:', 'Vinnupallar')
-    if (!name) return
+  const handleSaveTemplate = useCallback(async (name: string) => {
     const config: Record<string, unknown> = { system, rentalDays, facades, startDate, endDate, discount }
     try {
       setSavingTemplate(true)
@@ -158,6 +157,7 @@ export function ScaffoldCalculator() {
       toast.error(e instanceof Error ? e.message : 'Villa við vistun sniðmáts')
     } finally {
       setSavingTemplate(false)
+      setTemplateDialogOpen(false)
     }
   }, [rentalDays, facades, startDate, endDate, system, discount])
 
@@ -165,7 +165,7 @@ export function ScaffoldCalculator() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="font-condensed text-2xl font-bold text-brand-dark">Vinnupalla&shy;reiknivél</h1>
-        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={handleSaveTemplate} savingTemplate={savingTemplate} />
+        <ExportButtons onExportPdf={() => exportPdf(getExportData())} onExportExcel={() => exportExcel(getExportData())} onSave={handleSave} saving={saving} onSaveTemplate={() => setTemplateDialogOpen(true)} savingTemplate={savingTemplate} />
       </div>
 
       {/* System tabs */}
@@ -186,7 +186,12 @@ export function ScaffoldCalculator() {
         ))}
       </div>
 
-
+      {/* Warning for systems without pricing data */}
+      {!hasScaffoldPricing(system) && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <strong>Athugið:</strong> Verðskrá hefur ekki verið skráð fyrir {SCAFFOLD_SYSTEMS.find(s => s.key === system)?.name}. Verðútreikningar sýna 0 kr.
+        </div>
+      )}
 
       {/* Client info + Date range */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -357,6 +362,13 @@ export function ScaffoldCalculator() {
           </table>
         </div>
       </div>
+
+      <TemplateNameDialog
+        open={templateDialogOpen}
+        defaultName="Vinnupallar"
+        onConfirm={handleSaveTemplate}
+        onCancel={() => setTemplateDialogOpen(false)}
+      />
     </div>
   )
 }

@@ -11,6 +11,9 @@ export function ClientInfoPanel({ client, onChange }: Props) {
     onChange({ ...client, [field]: value })
   }
 
+  const kennitalaDigits = client.kennitala.replace(/\D/g, '')
+  const kennitalaInvalid = kennitalaDigits.length > 0 && kennitalaDigits.length !== 10
+
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-5">
       <h2 className="font-condensed text-lg font-semibold text-brand-dark">Upplýsingar um viðskiptavin</h2>
@@ -43,8 +46,13 @@ export function ClientInfoPanel({ client, onChange }: Props) {
             onChange={e => update('kennitala', formatKennitala(e.target.value))}
             placeholder="000000-0000"
             maxLength={11}
-            className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
+            className={`mt-1 block w-full rounded-md text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent ${
+              kennitalaInvalid ? 'border-red-400' : 'border-gray-300'
+            }`}
           />
+          {kennitalaInvalid && (
+            <p className="mt-1 text-xs text-red-500">Kennitala þarf að vera 10 tölustafir</p>
+          )}
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-500">Sími</label>
