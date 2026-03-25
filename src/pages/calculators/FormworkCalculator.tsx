@@ -606,22 +606,45 @@ export function FormworkCalculator() {
       </div>
 
       {/* 2D/3D Viewer */}
-      {system !== 'alufort' && system !== 'id15' && system !== 'robusto' && system !== 'column' && (
-        <ViewerPanel
-          svgContent={createFormworkDrawing({
-            wallLength: system === 'rasto' ? aWallLength : bWallLength,
-            wallHeight: system === 'rasto' ? (aSubSystem === 'rasto' ? 3.0 : 1.2) : bHeight / 100,
-            system: system === 'rasto' ? (aSubSystem === 'rasto' ? 'Rasto' : 'Takko') : 'Manto',
-          })}
-          model3D={
-            <FormworkModel3D
-              wallLength={system === 'rasto' ? aWallLength : bWallLength}
-              wallHeight={system === 'rasto' ? (aSubSystem === 'rasto' ? 3.0 : 1.2) : bHeight / 100}
-              system={system === 'rasto' ? (aSubSystem === 'rasto' ? 'Rasto' : 'Takko') : 'Manto'}
-            />
-          }
-        />
-      )}
+      {(() => {
+        // Map calculator system to drawing system params
+        let drawSystem: 'Rasto' | 'Takko' | 'Manto' | 'Alufort' | 'ID-15' | 'Robusto' | 'Column'
+        let drawLength: number
+        let drawHeight: number
+        if (system === 'rasto') {
+          drawSystem = aSubSystem === 'rasto' ? 'Rasto' : 'Takko'
+          drawLength = aWallLength
+          drawHeight = aSubSystem === 'rasto' ? 3.0 : 1.2
+        } else if (system === 'manto') {
+          drawSystem = 'Manto'
+          drawLength = bWallLength
+          drawHeight = bHeight / 100
+        } else if (system === 'alufort') {
+          drawSystem = 'Alufort'
+          drawLength = cSlabLength
+          drawHeight = cSlabHeight / 100
+        } else if (system === 'id15') {
+          drawSystem = 'ID-15'
+          drawLength = 1.5
+          drawHeight = dHeight / 100
+        } else if (system === 'robusto') {
+          drawSystem = 'Robusto'
+          drawLength = eWallLength
+          drawHeight = 3.0
+        } else {
+          drawSystem = 'Column'
+          drawLength = fColWidth / 100
+          drawHeight = fColHeight / 100
+        }
+        return (
+          <ViewerPanel
+            svgContent={createFormworkDrawing({ wallLength: drawLength, wallHeight: drawHeight, system: drawSystem })}
+            model3D={
+              <FormworkModel3D wallLength={drawLength} wallHeight={drawHeight} system={drawSystem} />
+            }
+          />
+        )
+      })()}
 
       {/* BoQ table */}
       <div className="rounded-lg border border-gray-200 bg-white">

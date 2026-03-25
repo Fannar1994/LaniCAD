@@ -98,6 +98,22 @@ export function createCeilingPropsDrawing(params: {
     [w, h + slabH + 15]
   )
 
+  // Scale bar (1m reference)
+  const sby = -40
+  const scaleLen = 1 * scale
+  model.paths!['scale_line'] = new makerjs.paths.Line([0, sby], [scaleLen, sby])
+  model.paths!['scale_l'] = new makerjs.paths.Line([0, sby - 4], [0, sby + 4])
+  model.paths!['scale_r'] = new makerjs.paths.Line([scaleLen, sby - 4], [scaleLen, sby + 4])
+  model.models!['scale_text'] = makerjs.model.addCaption({}, '1 m', [5, sby - 12], [scaleLen - 5, sby - 12])
+
+  // LániCAD branding
+  model.models!['brand'] = makerjs.model.addCaption(
+    {},
+    'LániCAD  ·  BYKO Leiga',
+    [w - 60, sby - 12],
+    [w + 15, sby - 12]
+  )
+
   return makerjs.exporter.toSVG(model, {
     stroke: '#404042',
     strokeWidth: '1.2',
