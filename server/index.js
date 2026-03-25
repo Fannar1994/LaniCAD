@@ -575,9 +575,9 @@ const SYSTEM_PROMPT = `Þú ert LániCAD AI aðstoðarmaður — sérfræðingur
 
 ### 1. GIRÐINGAR (Mobile Fences) — Lágmarksleigu: 10 dagar
 Leiguverð er í 12 tímabilum (30 dagar hvert), lækkandi:
-- Girðing 3500×2000mm (1.7kg/m): [120, 60, 30, 15, 15, ...] kr/dag, sala: 18.500 kr
-- Girðing 3500×2000mm (1.1kg/m): [100, 50, 25, 13, 13, ...] kr/dag, sala: 13.500 kr
-- Girðing 3500×1200mm (1.1kg/m): [80, 40, 20, 10, 10, ...] kr/dag, sala: 10.500 kr
+- Girðing 3500×2000mm (1.7mm): [120, 60, 30, 15, 15, ...] kr/dag, sala: 18.500 kr
+- Girðing 3500×2000mm (1.1mm): [100, 50, 25, 13, 13, ...] kr/dag, sala: 13.500 kr
+- Girðing 3500×1200mm (1.1mm): [80, 40, 20, 10, 10, ...] kr/dag, sala: 10.500 kr
 - Biðröðgirðing 2500mm: [90, 45, 23, 12, 12, ...] kr/dag, sala: 12.000 kr
 - Plastgirðing 2100mm: [50, 25, 13, 7, 7, ...] kr/dag, sala: 5.500 kr
 - Steinn (steinsteypa): [30, 15, 8, 4, ...] kr/dag, sala: 4.500 kr

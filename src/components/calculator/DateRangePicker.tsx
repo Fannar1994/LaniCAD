@@ -44,7 +44,7 @@ export function DateRangePicker({
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-5">
       <h2 className="font-condensed text-lg font-semibold text-brand-dark">Leigutímabil</h2>
-      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+      <div className="mt-3 grid gap-3 md:grid-cols-3">
         <div>
           <label className="block text-xs font-medium text-gray-500">Upphafsdagur</label>
           <input

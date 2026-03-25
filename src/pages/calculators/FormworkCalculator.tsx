@@ -48,29 +48,29 @@ export function FormworkCalculator() {
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
 
   // Mode A (Rasto/Takko)
-  const [aWallLength, setAWallLength] = useState(12)
-  const [aSubSystem, setASubSystem] = useState<'rasto' | 'takko'>('rasto')
-  const [aInsideCorners, setAInsideCorners] = useState(0)
-  const [aOutsideCorners, setAOutsideCorners] = useState(0)
-  const [aOpenEnds, setAOpenEnds] = useState(0)
-  const [aTieBar, setATieBar] = useState(TIE_BAR_OPTIONS[0].id)
+  const [aWallLength, setAWallLength] = useState(initData.aWallLength as number ?? 12)
+  const [aSubSystem, setASubSystem] = useState<'rasto' | 'takko'>(initData.aSubSystem as 'rasto' | 'takko' ?? 'rasto')
+  const [aInsideCorners, setAInsideCorners] = useState(initData.aInsideCorners as number ?? 0)
+  const [aOutsideCorners, setAOutsideCorners] = useState(initData.aOutsideCorners as number ?? 0)
+  const [aOpenEnds, setAOpenEnds] = useState(initData.aOpenEnds as number ?? 0)
+  const [aTieBar, setATieBar] = useState(initData.aTieBar as string ?? TIE_BAR_OPTIONS[0].id)
 
   // Mode B (Manto)
-  const [bWallLength, setBWallLength] = useState(12)
-  const [bHeight, setBHeight] = useState(300)
-  const [bInsideCorners, setBInsideCorners] = useState(0)
-  const [bOutsideCorners, setBOutsideCorners] = useState(0)
-  const [bOpenEnds, setBOpenEnds] = useState(0)
-  const [bTieBar, setBTieBar] = useState(TIE_BAR_OPTIONS[0].id)
+  const [bWallLength, setBWallLength] = useState(initData.bWallLength as number ?? 12)
+  const [bHeight, setBHeight] = useState(initData.bHeight as number ?? 300)
+  const [bInsideCorners, setBInsideCorners] = useState(initData.bInsideCorners as number ?? 0)
+  const [bOutsideCorners, setBOutsideCorners] = useState(initData.bOutsideCorners as number ?? 0)
+  const [bOpenEnds, setBOpenEnds] = useState(initData.bOpenEnds as number ?? 0)
+  const [bTieBar, setBTieBar] = useState(initData.bTieBar as string ?? TIE_BAR_OPTIONS[0].id)
 
   // Mode C (Alufort)
-  const [cSlabLength, setCSlabLength] = useState(6)
-  const [cSlabWidth, setCSlabWidth] = useState(5)
-  const [cSlabHeight, setCSlabHeight] = useState(2.8)
-  const [cConcreteThickness, setCConcreteThickness] = useState(0.2)
-  const [cSpacingL, setCSpacingL] = useState(1.5)
-  const [cSpacingW, setCSpacingW] = useState(1.5)
-  const [cUseID, setCUseID] = useState(false)
+  const [cSlabLength, setCSlabLength] = useState(initData.cSlabLength as number ?? 6)
+  const [cSlabWidth, setCSlabWidth] = useState(initData.cSlabWidth as number ?? 5)
+  const [cSlabHeight, setCSlabHeight] = useState(initData.cSlabHeight as number ?? 2.8)
+  const [cConcreteThickness, setCConcreteThickness] = useState(initData.cConcreteThickness as number ?? 0.2)
+  const [cSpacingL, setCSpacingL] = useState(initData.cSpacingL as number ?? 1.5)
+  const [cSpacingW, setCSpacingW] = useState(initData.cSpacingW as number ?? 1.5)
+  const [cUseID, setCUseID] = useState(initData.cUseID as boolean ?? false)
 
   // Mode D (ID-15)
   const [dHeight, setDHeight] = useState(initData.dHeight as number ?? 3.0)
@@ -79,15 +79,15 @@ export function FormworkCalculator() {
   const [dRackQty, setDRackQty] = useState(initData.dRackQty as number ?? 0)
 
   // Mode E (Robusto)
-  const [eWallLength, setEWallLength] = useState(12)
-  const [eInsideCorners, setEInsideCorners] = useState(0)
-  const [eOutsideCorners, setEOutsideCorners] = useState(0)
-  const [eOpenEnds, setEOpenEnds] = useState(0)
+  const [eWallLength, setEWallLength] = useState(initData.eWallLength as number ?? 12)
+  const [eInsideCorners, setEInsideCorners] = useState(initData.eInsideCorners as number ?? 0)
+  const [eOutsideCorners, setEOutsideCorners] = useState(initData.eOutsideCorners as number ?? 0)
+  const [eOpenEnds, setEOpenEnds] = useState(initData.eOpenEnds as number ?? 0)
 
   // Mode F (Column)
-  const [fColWidth, setFColWidth] = useState(70)
-  const [fColHeight, setFColHeight] = useState(300)
-  const [fColQty, setFColQty] = useState(1)
+  const [fColWidth, setFColWidth] = useState(initData.fColWidth as number ?? 70)
+  const [fColHeight, setFColHeight] = useState(initData.fColHeight as number ?? 300)
+  const [fColQty, setFColQty] = useState(initData.fColQty as number ?? 1)
 
   const dTowerOptions = useMemo<ID15TowerOption[]>(() => {
     if (system !== 'id15') return []
@@ -290,7 +290,7 @@ export function FormworkCalculator() {
                   </select>
                 </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Innhorn</label>
                   <input type="number" min={0} value={aInsideCorners} onChange={e => setAInsideCorners(Math.max(0, Number(e.target.value)))}
@@ -337,7 +337,7 @@ export function FormworkCalculator() {
                   {TIE_BAR_OPTIONS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                 </select>
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Innhorn</label>
                   <input type="number" min={0} value={bInsideCorners} onChange={e => setBInsideCorners(Math.max(0, Number(e.target.value)))}
@@ -429,7 +429,7 @@ export function FormworkCalculator() {
               {dTowerOptions.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Veldu samsetningu</label>
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-3 md:grid-cols-3">
                     {dTowerOptions.map((opt, i) => (
                       <button
                         key={opt.idx}
@@ -502,7 +502,7 @@ export function FormworkCalculator() {
                   className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
                 />
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Innhorn</label>
                   <input type="number" min={0} value={eInsideCorners} title="Innhorn"

@@ -10,6 +10,84 @@ function getToken(): string | null {
   return localStorage.getItem('lanicad_token')
 }
 
+// ── Offline Queue ──
+
+const QUEUE_KEY = 'lanicad_offline_queue'
+
+interface QueuedRequest {
+  id: string
+  path: string
+  method: string
+  body: string | undefined
+  timestamp: number
+  label: string
+}
+
+function getQueue(): QueuedRequest[] {
+  try {
+    return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]')
+  } catch { return [] }
+}
+
+function saveQueue(queue: QueuedRequest[]): void {
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue))
+}
+
+function enqueue(req: Omit<QueuedRequest, 'id' | 'timestamp'>): void {
+  const queue = getQueue()
+  queue.push({ ...req, id: crypto.randomUUID(), timestamp: Date.now() })
+  saveQueue(queue)
+}
+
+/** Get the number of queued offline requests */
+export function getOfflineQueueCount(): number {
+  return getQueue().length
+}
+
+/** Flush the offline queue — retry all queued requests. Returns count of succeeded items. */
+export async function flushOfflineQueue(): Promise<number> {
+  const queue = getQueue()
+  if (queue.length === 0) return 0
+  const apiUrl = getApiUrl()
+  if (!apiUrl) return 0
+  const token = getToken()
+
+  let succeeded = 0
+  const remaining: QueuedRequest[] = []
+
+  for (const item of queue) {
+    try {
+      const res = await fetch(`${apiUrl}${item.path}`, {
+        method: item.method,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: item.body,
+      })
+      if (res.ok) {
+        succeeded++
+      } else {
+        remaining.push(item)
+      }
+    } catch {
+      remaining.push(item)
+    }
+  }
+
+  saveQueue(remaining)
+  return succeeded
+}
+
+// Auto-flush when coming back online
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    flushOfflineQueue().then(n => {
+      if (n > 0) console.log(`[LániCAD] Synced ${n} offline request(s)`)
+    })
+  })
+}
+
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const apiUrl = getApiUrl()
   if (!apiUrl) throw new Error('API URL er ekki stillt. Farðu í Stillingar → Almennt.')
@@ -27,6 +105,25 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error(body.error || `API villa (${res.status})`)
   }
   return res.json()
+}
+
+/** Like apiFetch but queues the request for later if network is unavailable */
+async function apiFetchWithQueue<T>(path: string, label: string, options?: RequestInit): Promise<T> {
+  try {
+    return await apiFetch<T>(path, options)
+  } catch (err) {
+    // Queue mutation requests (POST/PUT/DELETE) when offline or API unreachable
+    const method = options?.method ?? 'GET'
+    if (method !== 'GET' && (
+      !navigator.onLine ||
+      (err instanceof TypeError && err.message.includes('fetch')) ||
+      (err instanceof Error && err.message.includes('API URL'))
+    )) {
+      enqueue({ path, method, body: options?.body as string | undefined, label })
+      throw new Error(`Ekki náðist samband — beiðni geymd til reynslu síðar (${label})`)
+    }
+    throw err
+  }
 }
 
 // ── Projects ──
@@ -48,7 +145,7 @@ export async function createProject(project: {
   data: Record<string, unknown>
   line_items: LineItem[]
 }): Promise<Project> {
-  return apiFetch<Project>('/projects', {
+  return apiFetchWithQueue<Project>('/projects', 'Vista verkefni', {
     method: 'POST',
     body: JSON.stringify(project),
   })
@@ -58,7 +155,7 @@ export async function updateProject(
   id: string,
   updates: Partial<Pick<Project, 'name' | 'client' | 'data' | 'line_items'>>
 ): Promise<Project> {
-  return apiFetch<Project>(`/projects/${encodeURIComponent(id)}`, {
+  return apiFetchWithQueue<Project>(`/projects/${encodeURIComponent(id)}`, 'Uppfæra verkefni', {
     method: 'PUT',
     body: JSON.stringify(updates),
   })
@@ -94,7 +191,7 @@ export async function createTemplate(template: {
   config: Record<string, unknown>
   is_public?: boolean
 }): Promise<Template> {
-  return apiFetch<Template>('/templates', {
+  return apiFetchWithQueue<Template>('/templates', 'Vista sniðmát', {
     method: 'POST',
     body: JSON.stringify(template),
   })

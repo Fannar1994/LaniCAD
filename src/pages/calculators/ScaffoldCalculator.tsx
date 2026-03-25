@@ -224,7 +224,7 @@ export function ScaffoldCalculator() {
                   </button>
                 )}
               </div>
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500">Lengd (m)</label>
                   <input
