@@ -169,6 +169,50 @@ export async function deleteProject(id: string): Promise<void> {
   await apiFetch(`/projects/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
 
+// ── Project Sharing ──
+
+export interface ShareInfo {
+  shared: boolean
+  token?: string
+  created_at?: string
+}
+
+export async function getShareStatus(projectId: string): Promise<ShareInfo> {
+  return apiFetch<ShareInfo>(`/projects/${encodeURIComponent(projectId)}/share`)
+}
+
+export async function shareProject(projectId: string): Promise<{ token: string; created_at: string }> {
+  return apiFetch<{ token: string; created_at: string }>(`/projects/${encodeURIComponent(projectId)}/share`, {
+    method: 'POST',
+  })
+}
+
+export async function unshareProject(projectId: string): Promise<void> {
+  await apiFetch(`/projects/${encodeURIComponent(projectId)}/share`, { method: 'DELETE' })
+}
+
+export interface SharedProject {
+  name: string
+  type: CalculatorType
+  client: string
+  data: string
+  line_items: string
+  created_at: string
+  updated_at: string
+  owner_name: string
+}
+
+export async function fetchSharedProject(token: string): Promise<SharedProject> {
+  const apiUrl = getApiUrl()
+  if (!apiUrl) throw new Error('API URL er ekki stillt')
+  const res = await fetch(`${apiUrl}/shared/${encodeURIComponent(token)}`)
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `Villa (${res.status})`)
+  }
+  return res.json()
+}
+
 // ── Templates ──
 
 export interface Template {

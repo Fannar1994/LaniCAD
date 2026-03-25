@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Trash2, ExternalLink } from 'lucide-react'
-import { isApiConfigured, fetchProjects, deleteProject } from '@/lib/db'
+import { Trash2, ExternalLink, Share2, Link2, X, Check, Copy } from 'lucide-react'
+import { isApiConfigured, fetchProjects, deleteProject, shareProject, unshareProject, getShareStatus, type ShareInfo } from '@/lib/db'
 import type { Project } from '@/types'
 
 const TYPE_LABELS: Record<string, string> = {
@@ -16,6 +16,10 @@ export function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [shareDialogId, setShareDialogId] = useState<string | null>(null)
+  const [shareInfo, setShareInfo] = useState<ShareInfo | null>(null)
+  const [shareLoading, setShareLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -40,6 +44,57 @@ export function ProjectsPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Villa við að eyða')
     }
+  }
+
+  const handleShareOpen = async (id: string) => {
+    setShareDialogId(id)
+    setShareLoading(true)
+    setCopied(false)
+    try {
+      const info = await getShareStatus(id)
+      setShareInfo(info)
+    } catch {
+      setShareInfo(null)
+    } finally {
+      setShareLoading(false)
+    }
+  }
+
+  const handleShareCreate = async () => {
+    if (!shareDialogId) return
+    setShareLoading(true)
+    try {
+      const { token } = await shareProject(shareDialogId)
+      setShareInfo({ shared: true, token })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Villa við deilingu')
+    } finally {
+      setShareLoading(false)
+    }
+  }
+
+  const handleShareRemove = async () => {
+    if (!shareDialogId) return
+    setShareLoading(true)
+    try {
+      await unshareProject(shareDialogId)
+      setShareInfo({ shared: false })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Villa við að fjarlægja deilingu')
+    } finally {
+      setShareLoading(false)
+    }
+  }
+
+  const getShareUrl = (token: string) => {
+    const base = window.location.origin + (import.meta.env.BASE_URL || '/')
+    return `${base}shared/${token}`
+  }
+
+  const handleCopy = (token: string) => {
+    navigator.clipboard.writeText(getShareUrl(token))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   if (!isApiConfigured()) {
@@ -113,6 +168,13 @@ export function ProjectsPage() {
                         <ExternalLink className="h-4 w-4" />
                       </Link>
                       <button
+                        onClick={() => handleShareOpen(p.id)}
+                        className="rounded p-1 text-gray-400 hover:bg-blue-50 hover:text-blue-600"
+                        title="Deila"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </button>
+                      <button
                         onClick={() => handleDelete(p.id, p.name)}
                         className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
                         title="Eyða"
@@ -125,6 +187,64 @@ export function ProjectsPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Share dialog */}
+      {shareDialogId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShareDialogId(null)}>
+          <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-condensed text-lg font-bold text-brand-dark flex items-center gap-2">
+                <Link2 className="h-5 w-5" /> Deila verkefni
+              </h2>
+              <button onClick={() => setShareDialogId(null)} className="rounded p-1 text-gray-400 hover:bg-gray-100">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {shareLoading ? (
+              <div className="flex justify-center py-6">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-accent border-t-transparent" />
+              </div>
+            ) : shareInfo?.shared && shareInfo.token ? (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">Verkefnið er deilt. Allir með hlekkinn geta séð það.</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    readOnly
+                    value={getShareUrl(shareInfo.token)}
+                    className="flex-1 rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-mono text-gray-600"
+                    onFocus={e => e.target.select()}
+                  />
+                  <button
+                    onClick={() => handleCopy(shareInfo.token!)}
+                    className="flex items-center gap-1 rounded bg-brand-accent px-3 py-2 text-xs font-medium text-brand-dark hover:bg-brand-accent/80"
+                  >
+                    {copied ? <><Check className="h-3.5 w-3.5" /> Afritað</> : <><Copy className="h-3.5 w-3.5" /> Afrita</>}
+                  </button>
+                </div>
+                <button
+                  onClick={handleShareRemove}
+                  className="text-xs text-red-500 hover:text-red-700 hover:underline"
+                >
+                  Fjarlægja deilingu
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Búðu til hlekk sem viðskiptavinur getur opnað til að sjá verkefnið í skrifvörðu yfirliti.
+                </p>
+                <button
+                  onClick={handleShareCreate}
+                  className="rounded bg-brand-accent px-4 py-2 text-sm font-medium text-brand-dark hover:bg-brand-accent/80"
+                >
+                  Búa til hlekk
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -116,3 +116,19 @@ CREATE TABLE IF NOT EXISTS request_queue (
 
 CREATE INDEX IF NOT EXISTS idx_request_queue_status ON request_queue(status);
 CREATE INDEX IF NOT EXISTS idx_request_queue_created_at ON request_queue(created_at DESC);
+
+
+-- ══════════════════════════════════════════
+-- 7. PROJECT SHARES (read-only share links)
+-- ══════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS project_shares (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
+  created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_project_shares_token ON project_shares(token);
+CREATE INDEX IF NOT EXISTS idx_project_shares_project_id ON project_shares(project_id);

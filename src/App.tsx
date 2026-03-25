@@ -20,6 +20,7 @@ const DrawingPage = lazy(() => import('@/pages/DrawingPage').then(m => ({ defaul
 const SchematicsPage = lazy(() => import('@/pages/SchematicsPage').then(m => ({ default: m.SchematicsPage })))
 const TemplatesPage = lazy(() => import('@/pages/TemplatesPage').then(m => ({ default: m.TemplatesPage })))
 const ReportsPage = lazy(() => import('@/pages/ReportsPage').then(m => ({ default: m.ReportsPage })))
+const SharedProjectPage = lazy(() => import('@/pages/SharedProjectPage').then(m => ({ default: m.SharedProjectPage })))
 
 function LazyFallback() {
   return (
@@ -39,6 +40,7 @@ export function App() {
     return (
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/shared/:token" element={<Suspense fallback={<LazyFallback />}><SharedProjectPage /></Suspense>} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     )
@@ -65,6 +67,7 @@ export function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Route>
       <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/shared/:token" element={<Suspense fallback={<LazyFallback />}><SharedProjectPage /></Suspense>} />
     </Routes>
     </ErrorBoundary>
   )

@@ -42,7 +42,7 @@
 - [x] End-to-end tests (Playwright — 22 tests passing)
 - [x] Product image uploads in Settings > Vörur
 - [x] Multi-project comparison / reporting dashboard (ReportsPage with charts, filters, Excel export)
-- [ ] Client portal (read-only link sharing)
+- [x] Client portal (read-only link sharing — ShareDialog + SharedProjectPage)
 - [x] Offline save queue with auto-flush on reconnect
 - [x] FormworkCalculator state restore (all 26 mode A-F variables)
 - [x] Professional PDF invoice template (BYKO Leiga branding)

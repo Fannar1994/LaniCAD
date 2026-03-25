@@ -437,6 +437,104 @@ app.delete('/api/projects/:id', authenticate, async (req, res) => {
 })
 
 // ══════════════════════════════════════════
+// Project Sharing (Client Portal)
+// ══════════════════════════════════════════
+
+const crypto = require('crypto')
+
+// Create or get share link for a project
+app.post('/api/projects/:id/share', authenticate, async (req, res) => {
+  try {
+    // Verify project belongs to user
+    const { rows: projects } = await db.execute({
+      sql: 'SELECT id FROM projects WHERE id = ? AND user_id = ?',
+      args: [req.params.id, req.user.id],
+    })
+    if (projects.length === 0) return res.status(404).json({ error: 'Verkefni fannst ekki' })
+
+    // Check if share already exists
+    const { rows: existing } = await db.execute({
+      sql: 'SELECT * FROM project_shares WHERE project_id = ?',
+      args: [req.params.id],
+    })
+    if (existing.length > 0) {
+      return res.json({ token: existing[0].token, created_at: existing[0].created_at })
+    }
+
+    // Create new share token
+    const token = crypto.randomBytes(32).toString('hex')
+    const { rows } = await db.execute({
+      sql: 'INSERT INTO project_shares (project_id, token, created_by) VALUES (?, ?, ?) RETURNING *',
+      args: [req.params.id, token, req.user.id],
+    })
+    await logAudit(req, 'share', 'project', req.params.id, { token })
+    res.status(201).json({ token: rows[0].token, created_at: rows[0].created_at })
+  } catch (err) {
+    console.error('Share project error:', err)
+    res.status(500).json({ error: 'Villa við að deila verkefni' })
+  }
+})
+
+// Delete share link for a project
+app.delete('/api/projects/:id/share', authenticate, async (req, res) => {
+  try {
+    // Verify project belongs to user
+    const { rows: projects } = await db.execute({
+      sql: 'SELECT id FROM projects WHERE id = ? AND user_id = ?',
+      args: [req.params.id, req.user.id],
+    })
+    if (projects.length === 0) return res.status(404).json({ error: 'Verkefni fannst ekki' })
+
+    await db.execute({
+      sql: 'DELETE FROM project_shares WHERE project_id = ?',
+      args: [req.params.id],
+    })
+    await logAudit(req, 'unshare', 'project', req.params.id)
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('Unshare project error:', err)
+    res.status(500).json({ error: 'Villa við að afturkalla deilingu' })
+  }
+})
+
+// Get share status for a project
+app.get('/api/projects/:id/share', authenticate, async (req, res) => {
+  try {
+    const { rows } = await db.execute({
+      sql: `SELECT ps.* FROM project_shares ps
+            JOIN projects p ON p.id = ps.project_id
+            WHERE ps.project_id = ? AND p.user_id = ?`,
+      args: [req.params.id, req.user.id],
+    })
+    if (rows.length === 0) return res.json({ shared: false })
+    res.json({ shared: true, token: rows[0].token, created_at: rows[0].created_at })
+  } catch (err) {
+    console.error('Get share status error:', err)
+    res.status(500).json({ error: 'Villa' })
+  }
+})
+
+// Public: View shared project (no authentication required)
+app.get('/api/shared/:token', async (req, res) => {
+  try {
+    const { rows } = await db.execute({
+      sql: `SELECT p.name, p.type, p.client, p.data, p.line_items, p.created_at, p.updated_at,
+                   u.name as owner_name
+            FROM project_shares ps
+            JOIN projects p ON p.id = ps.project_id
+            JOIN users u ON u.id = p.user_id
+            WHERE ps.token = ?`,
+      args: [req.params.token],
+    })
+    if (rows.length === 0) return res.status(404).json({ error: 'Deilt verkefni fannst ekki eða hlekkur útrunninn' })
+    res.json(rows[0])
+  } catch (err) {
+    console.error('Shared project fetch error:', err)
+    res.status(500).json({ error: 'Villa við að sækja deilt verkefni' })
+  }
+})
+
+// ══════════════════════════════════════════
 // Templates
 // ══════════════════════════════════════════
 
