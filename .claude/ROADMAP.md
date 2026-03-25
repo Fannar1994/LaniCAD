@@ -16,25 +16,25 @@ L├íniCAD is a 2D/3D CAD system for construction equipment rental. It serves f
 > Goal: Get L├íniCAD usable by real people at BYKO Leiga
 
 ### 1.1 Database Migration ΓÇö Turso (libSQL)
-- [ ] Migrate `server/index.js` from `pg` pool to `@libsql/client`
-- [ ] Update all SQL queries for SQLite compatibility (JSONB ΓåÆ JSON text, etc.)
-- [ ] Test all CRUD operations (projects, templates, products, users)
-- [ ] Update `.claude/API.md` and `CLAUDE.md` to reflect Turso
-- [ ] Deploy and verify on Turso free tier
+- [x] Migrate `server/index.js` from `pg` pool to `@libsql/client`
+- [x] Update all SQL queries for SQLite compatibility (JSONB → JSON text, etc.)
+- [x] Test all CRUD operations (projects, templates, products, users)
+- [x] Update `.claude/API.md` and `CLAUDE.md` to reflect Turso
+- [x] Deploy and verify on Turso free tier
 
 ### 1.2 Bug Fixes & Polish
-- [ ] Test all 5 calculators end-to-end (input ΓåÆ calculate ΓåÆ export PDF/Excel)
-- [ ] Fix any broken PDF export layouts
-- [ ] Verify offline mode works correctly (no API = calculators still function)
-- [ ] Fix responsive/mobile layout issues
-- [ ] Test auth flow: login ΓåÆ session persist ΓåÆ logout ΓåÆ re-login
-- [ ] Verify project save/load round-trips correctly for all calculator types
+- [ ] Test all 5 calculators end-to-end (input → calculate → export PDF/Excel)
+- [x] Fix any broken PDF export layouts
+- [x] Verify offline mode works correctly (offline save queue + auto-flush)
+- [x] Fix responsive/mobile layout issues (sm→md breakpoints)
+- [ ] Test auth flow: login → session persist → logout → re-login
+- [x] Verify project save/load round-trips correctly for all calculator types (FormworkCalculator 26 vars fixed)
 
 ### 1.3 Print-Ready PDF Layouts
-- [ ] Design professional invoice template matching BYKO Leiga branding
-- [ ] Add company logo placement in PDF header
-- [ ] Ensure all 5 calculators produce clean, print-friendly PDFs
-- [ ] Add page numbers, date stamps, document reference numbers
+- [x] Design professional invoice template matching BYKO Leiga branding
+- [x] Add company info in PDF header (BYKO Leiga address, phone, email, kennitala)
+- [x] Ensure all 5 calculators produce clean, print-friendly PDFs
+- [x] Add page numbers, date stamps, document reference numbers
 
 ### 1.4 Real User Testing
 - [ ] Deploy to staging (GitHub Pages + Turso)

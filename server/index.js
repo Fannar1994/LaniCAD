@@ -11,6 +11,9 @@ const Anthropic = require('@anthropic-ai/sdk')
 const app = express()
 const PORT = process.env.PORT || 3001
 const JWT_SECRET = process.env.JWT_SECRET || 'change-this-to-a-random-secret'
+if (!process.env.JWT_SECRET) {
+  console.warn('⚠️  WARNING: JWT_SECRET is not set — using insecure default. Set JWT_SECRET in your environment for production.')
+}
 
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:4173')

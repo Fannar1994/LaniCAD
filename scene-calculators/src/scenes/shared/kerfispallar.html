@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vinnupallar – Excel Specification</title>
+</head>
+<body>
+
+<h1>Vinnupallar – Scaffold Calculator Specification</h1>
+
+<p>
+  This document describes the structure and calculations of the
+  <b>Vinnupallatafla með forsendum (Tvöföld handrið)</b> Excel workbook
+  for scaffolding (vinnupallar) and maps it to a React + TypeScript calculator.
+  The Excel workbook is the <b>single source of truth</b> for all
+  quantities and formulas. The code must mirror the Excel logic exactly.
+</p>
+
+<hr />
+
+<h2>1. Inputs per pallur (platform)</h2>
+
+<p>
+  The sheet defines multiple platforms (pallar) as columns. In Excel there
+  are columns for Pallur nr. 1–20 (or more). Below is the structure with
+  the example values you provided for Pallur 1–4:
+</p>
+
+<table border="1" cellpadding="4" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Description</th>
+      <th>Pallur 1</th>
+      <th>Pallur 2</th>
+      <th>Pallur 3</th>
+      <th>Pallur 4</th>
+      <!-- Pallur 5–20 exist in Excel but are omitted here for brevity.
+           The code should support all pallar present in the workbook. -->
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Einingafjöldi</td>
+      <td>Number of bays/sections per pallur</td>
+      <td>5</td>
+      <td>5</td>
+      <td>5</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>Fjöldi 2m hæða</td>
+      <td>Number of 2.0m frame heights</td>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>Fjöldi 0,7m hæða</td>
+      <td>Number of 0.7m frame heights</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>Hæsta standhæð í m</td>
+      <td>Highest standing height (m)</td>
+      <td>4</td>
+      <td>4</td>
+      <td>4</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>Mesta vinnuhæð í m</td>
+      <td>Max working height (m)</td>
+      <td>6</td>
+      <td>6</td>
+      <td>6</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>Fjöldi endalokana</td>
+      <td>Number of end closures</td>
+      <td>2</td>
+      <td>2</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  In the React calculator, you should expose these fields as numeric
+  inputs per pallur (with support for all pallar in the original sheet).
+</p>
+
+<hr />
+
+<h2>2. Item list – Söluvrn / Leigunumer / Heiti & sample quantities</h2>
+
+<p>
+  Each item row in Excel has:
+</p>
+<ul>
+  <li><b>Söluvrn</b> – sales item number.</li>
+  <li><b>Leigunumer</b> – rental item number.</li>
+  <li><b>Heiti</b> – description.</li>
+  <li>Quantity per pallur (20+ columns).</li>
+  <li><b>Samtals</b> – total quantity across all pallar.</li>
+  <li><b>Ein.verð</b> – unit daily rental price.</li>
+  <li><b>Samtals</b> – line total daily price (<b>quantity × Ein.verð</b>).</li>
+</ul>
+
+<p>
+  Below is the list of items with the example quantities you provided
+  (only showing quantities for Pallur 1–4 for readability). The React
+  calculator must compute these quantities from the inputs using the
+  same Excel formulas.
+</p>
+
+<table border="1" cellpadding="4" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Söluvrn</th>
+      <th>Leigunumer</th>
+      <th>Heiti</th>
+      <th>P1</th>
+      <th>P2</th>
+      <th>P3</th>
+      <th>P4</th>
+      <th>Samtals magn</th>
+      <th>Ein.verð</th>
+      <th>Línusamtals (dagleiga)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>97100000</td>
+      <td>01-PAL-VP01-000</td>
+      <td>RAMMAR 2,0M</td>
+      <td>12</td>
+      <td>12</td>
+      <td>12</td>
+      <td>12</td>
+      <td>50</td>
+      <td>19,00</td>
+      <td>950</td>
+    </tr>
+    <tr>
+      <td>97100001</td>
+      <td>01-PAL-VP01-001</td>
+      <td>RAMMAR 0,7M</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>15,00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>97100083</td>
+      <td>01-PAL-VP01-083</td>
+      <td>12CM HÆKKUN F/RAMMA</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0</td>
+      <td>2,00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>97100002</td>
+      <td>01-PAL-VP01-002</td>
+      <td>GÓLFBORÐ 1,8M</td>
+      <td>18</td>
+      <td>20</td>
+      <td>20</td>
+      <td>20</td>
+      <td>78</td>
+      <td>12,00</td>
+      <td>936</td>
+    </tr>
+    <tr>
+      <td>97100003</td>
+      <td>01-PAL-VP01-003</td>
+      <td>STIGAPALLAR 1,8M</td>
+      <td>2</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>2</td>
+      <td>50,00</td>
+      <td>100</td>
+    </tr>
+    <tr>
+      <td>97100004</td>
+      <td>01-PAL-VP01-004</td>
+      <td>STIGAR 2,0M</td>
+      <td>2</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>2</td>
+      <td>17,00</td>
+      <td>34</td>
+    </tr>
+    <tr>
+      <td>97100005</td>
+      <td>01-PAL-VP01-005</td>
+      <td>STIGAR 2,7M</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0</td>
+      <td>25,00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>97100084</td>
+      <td>01-PAL-VP01-084</td>
+      <td>FRAMLENGING Á 2M STIGA</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0</td>
+      <td>3,00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>97100006</td>
+      <td>01-PAL-VP01-006</td>
+      <td>LAPPIR 50CM</td>
+      <td>12</td>
+      <td>12</td>
+      <td>12</td>
+      <td>12</td>
+      <td>284</td>
+      <td>6,00</td>
+      <td>1.704</td>
+    </tr>
+    <tr>
+      <td>97100007</td>
+      <td>01-PAL-VP01-007</td>
+      <td>LAPPIR 100CM</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0</td>
+      <td>8,00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>971000101</td>
+      <td>01-PAL-VP01-0101</td>
+      <td>TVÖFÖLD HANDRIÐ</td>
+      <td>15</td>
+      <td>15</td>
+      <td>15</td>
+      <td>15</td>
+      <td>60</td>
+      <td>15,00</td>
+      <td>900</td>
+    </tr>
+    <tr>
+      <td>97100011</td>
+      <td>01-PAL-VP01-011</td>
+      <td>HANDRIÐASTOÐIR</td>
+      <td>8</td>
+      <td>8</td>
+      <td>6</td>
+      <td>6</td>
+      <td>46</td>
+      <td>7,00</td>
+      <td>322</td>
+    </tr>
+    <tr>
+      <td>97100012</td>
+      <td>01-PAL-VP01-012</td>
+      <td>VEGGFESTINGAR 50CM</td>
+      <td>4</td>
+      <td>4</td>
+      <td>4</td>
+      <td>4</td>
+      <td>16</td>
+      <td>3,00</td>
+      <td>48</td>
+    </tr>
+    <tr>
+      <td>971000121</td>
+      <td>01-PAL-VP01-047</td>
+      <td>VEGGFESTINGAR 80CM</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0</td>
+      <td>6,00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>97100017</td>
+      <td>01-PAL-VP01-017</td>
+      <td>ENDAHANDRIÐ 1MM</td>
+      <td>8</td>
+      <td>8</td>
+      <td>0</td>
+      <td>0</td>
+      <td>16</td>
+      <td>9,00</td>
+      <td>144</td>
+    </tr>
+    <tr>
+      <td>97100013</td>
+      <td>01-PAL-VP01-013</td>
+      <td>STÁLRÖR 1,2M</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0</td>
+      <td>5,00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>97100015</td>
+      <td>01-PAL-VP01-015</td>
+      <td>KLEMMUR</td>
+      <td>4</td>
+      <td>4</td>
+      <td>4</td>
+      <td>4</td>
+      <td>16</td>
+      <td>3,00</td>
+      <td>48</td>
+    </tr>
+    <tr>
+      <td>97100016</td>
+      <td>01-PAL-VP01-016</td>
+      <td>SNÚKLEMMUR</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0</td>
+      <td>3,00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>97100020</td>
+      <td>01-PAL-VP01-020</td>
+      <td>SPLITTI F/RAMMA</td>
+      <td>24</td>
+      <td>24</td>
+      <td>24</td>
+      <td>24</td>
+      <td>100</td>
+      <td>0,50</td>
+      <td>50</td>
+    </tr>
+    <tr>
+      <td>971000212</td>
+      <td>01-PAL-VP01-0212</td>
+      <td>REKKAR FYRIR RAMMA GALV.</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>2</td>
+      <td>81,00</td>
+      <td>162</td>
+    </tr>
+    <tr>
+      <td>97100021</td>
+      <td>01-PAL-VP01-021</td>
+      <td>REKKAR FYRIR RAMMA</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>0</td>
+      <td>81,00</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>97100077</td>
+      <td>01-PAL-VP01-077</td>
+      <td>REKKAR FYRIR GÓLF</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>2</td>
+      <td>64,00</td>
+      <td>128</td>
+    </tr>
+    <tr>
+      <td>971000109</td>
+      <td>01-PAL-VP01-0109</td>
+      <td>REKKAR F/TVÖF.HANDRIÐ</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>2</td>
+      <td>64,00</td>
+      <td>128</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  The React calculator should not hard-code these example quantities.
+  Instead, it must compute them from the user inputs using the same
+  formulas as in the Excel workbook.
+</p>
+
+<hr />
+
+<h2>3. Totals and known formulas</h2>
+
+<h3>3.1 Fermetrafjöldi (area)</h3>
+
+<p>
+  The workbook has a row labelled <b>Fermetrafjöldi:</b> with one value per
+  pallur and a total. In your example:
+</p>
+
+<ul>
+  <li>Pallur 1: 54 m²</li>
+  <li>Pallur 2: 54 m²</li>
+  <li>Pallur 3: 54 m²</li>
+  <li>Pallur 4: 54 m²</li>
+  <li>Total <b>Fermetrar</b>: 216 m²</li>
+</ul>
+
+<p>
+  The exact formula for Fermetrafjöldi must be taken from the Excel
+  workbook (likely based on bay length and working/standing height).
+  The code should:
+</p>
+<ul>
+  <li>Compute <b>Fermetrafjöldi per pallur</b> with the same formula as Excel.</li>
+  <li>Compute <b>Fermetrar</b> as the sum of all Fermetrafjöldi values.</li>
+</ul>
+
+<h3>3.2 Line totals and daily total</h3>
+
+<p>
+  For each item row:
+</p>
+<ul>
+  <li><b>Samtals magn</b> = sum of quantities across all pallar.</li>
+  <li><b>Línusamtals (dagleiga)</b> = Samtals magn × Ein.verð.</li>
+</ul>
+
+<p>Example checks from your data:</p>
+<ul>
+  <li>RAMMAR 2,0M: 50 × 19 = 950</li>
+  <li>GÓLFBORÐ 1,8M: 78 × 12 = 936</li>
+  <li>LAPPIR 50CM: 284 × 6 = 1.704</li>
+</ul>
+
+<p>
+  The <b>Samtals dagleiga með virðisaukaskatti</b> is the sum of all line
+  totals (including VAT), in your example:
+</p>
+
+<ul>
+  <li>Samtals dagleiga m/vsk: <b>5.654</b></li>
+</ul>
+
+<h3>3.3 Monthly rent</h3>
+
+<p>
+  The <b>Mánaðarleiga (30d) m/vsk</b> is computed by multiplying the daily
+  total with 30:
+</p>
+
+<ul>
+  <li>Mánaðarleiga (30d) m/vsk = 5.654 × 30 = 169.620</li>
+</ul>
+
+<p>
+  In code:
+</p>
+
+<pre><code>monthlyTotalWithVat = dailyTotalWithVat * 30;</code></pre>
+
+<hr />
+
+<h2>4. Mapping to React + TypeScript</h2>
+
+<p>
+  The VS Code agent should implement the following (or similar) types and functions:
+</p>
+
+<pre><code>type PallurInput = {
+  pallurNr: number;
+  einingafjoldi: number;
+  fjoldi2mHaeda: number;
+  fjoldi0_7mHaeda: number;
+  haestaStandhaed: number;
+  mestaVinnuhaed: number;
+  fjoldiEndalokana: number;
+};
+
+type ItemRow = {
+  salesCode: string;
+  rentalCode: string;
+  name: string;
+  quantitiesPerPallur: number[];
+  totalQuantity: number;
+  unitPrice: number;
+  lineTotal: number;
+};
+
+type ScaffoldResult = {
+  items: ItemRow[];
+  fermetrafjoldiPerPallur: number[];
+  totalFermetrar: number;
+  dailyTotalWithVat: number;
+  monthlyTotalWithVat: number;
+};</code></pre>
+
+<pre><code>function calculateScaffold(pallar: PallurInput[]): ScaffoldResult {
+  // 1. For each PallurInput, compute Fermetrafjöldi using the same formula
+  //    as in the Excel workbook.
+  // 2. For each item, compute quantitiesPerPallur from the pallar inputs
+  //    using the same formulas as in Excel.
+  // 3. totalQuantity = sum(quantitiesPerPallur).
+  // 4. lineTotal = totalQuantity * unitPrice.
+  // 5. dailyTotalWithVat = sum(lineTotal for all items).
+  // 6. monthlyTotalWithVat = dailyTotalWithVat * 30.
+}</code></pre>
+
+<p>
+  The React component should be implemented as
+  <code>ScaffoldDoubleGuardrailCalculator.tsx</code> using React 18
+  functional components and hooks, exposing:
+</p>
+<ul>
+  <li>Form inputs for all PallurInput fields per pallur.</li>
+  <li>A result table for the item rows and totals as described above.</li>
+</ul>
+
+</body>
+</html>

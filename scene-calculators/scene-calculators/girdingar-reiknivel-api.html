@@ -1,0 +1,541 @@
+<div id="fence-calculator-widget">
+    <style>
+        #fence-calculator-widget {
+            max-width: 800px;
+            margin: 2em auto;
+            padding: 1.5em;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-family: Arial, sans-serif;
+        }
+        #fence-calculator-widget h2 {
+            font-size: 2em;
+            margin-bottom: 0.5em;
+            color: #333;
+        }
+        #fence-calculator-widget p {
+            margin: 0 0 1.5em;
+            font-size: 1em;
+            color: #555;
+        }
+        #fence-calculator-widget .form-grid {
+            display: grid;
+            gap: 1em;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+        #fence-calculator-widget label {
+            display: flex;
+            flex-direction: column;
+            font-size: 1em;
+            color: #333;
+        }        #fence-calculator-widget input[type="number"],
+        #fence-calculator-widget input[type="date"],
+        #fence-calculator-widget input[type="text"] {
+            padding: 0.6em;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: border-color 0.2s;
+        }
+        #fence-calculator-widget input[type="number"]:focus,
+        #fence-calculator-widget input[type="date"]:focus,
+        #fence-calculator-widget input[type="text"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        #fence-calculator-widget .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1em;
+            margin-top: 0.5em;
+        }
+        #fence-calculator-widget .checkbox-group label {
+            flex-direction: row;
+            align-items: center;
+            gap: 0.4em;
+            font-size: 1em;
+            color: #333;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        #fence-calculator-widget .checkbox-group input[type="radio"] {
+            margin-right: 5px;
+        }
+        #fence-calculator-widget .date-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1em;
+            grid-column: 1 / -1;
+        }
+        #fence-calculator-widget #fenceTypeCheckboxes {
+            grid-column: 1 / -1;
+            gap: 2.5em;
+        }
+        #fence-calculator-widget #fenceTypeCheckboxes label {
+            font-weight: bold;
+            font-size: 1.5em;
+        }
+        #fence-calculator-widget button {
+            grid-column: 1 / -1;
+            padding: 0.8em 1.2em;
+            font-size: 1em;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #fence-calculator-widget button:hover:not(:disabled) {
+            background: #0056b3;
+        }
+        #fence-calculator-widget button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        #fence-calculator-widget .result-display {
+            margin-top: 1.5em;
+        }
+        #fence-calculator-widget .warning,
+        #fence-calculator-widget .error-message {
+            color: #d9534f;
+            font-weight: bold;
+            margin-top: 1em;
+        }
+        #fence-calculator-widget .success-message {
+            color: #28a745;
+            font-weight: bold;
+            margin-top: 1em;
+        }
+        #fence-calculator-widget .info-message {
+            color: #17a2b8;
+            font-size: 0.9em;
+            margin-top: 1em;
+        }
+        #fence-calculator-widget .hidden {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            #fence-calculator-widget h2 {
+                font-size: 1.6em;
+            }
+        }
+        @media (max-width: 480px) {
+            #fence-calculator-widget {
+                padding: 1em;
+            }
+            #fence-calculator-widget h2 {
+                font-size: 1.4em;
+            }
+        }
+    </style>    <h2>Girðingar reiknivél</h2>
+    <p>Veldu tegund af girðingu og fylltu inn valmöguleika til að sjá leiguverð.</p>
+
+    <form id="fenceCalculatorForm" class="form-grid">
+        <!-- Fence type selection -->        <div class="checkbox-group" id="fenceTypeCheckboxes">
+            <label>
+                Vinnustaðagirðingar
+                <input type="radio" name="fence_type" value="worksite" checked>
+            </label>
+            <label>
+                Biðraðagirðingar
+                <input type="radio" name="fence_type" value="crowd">
+            </label>
+            <label>
+                Vegatálmi
+                <input type="radio" name="fence_type" value="traffic">
+            </label>
+        </div>
+
+        <!-- Worksite fence configuration options -->
+        <div id="worksite-options">
+            <label id="height-section">Hæð í metrum
+                <div class="checkbox-group">
+                    <label><input type="radio" name="height" value="2.0" checked> 2,0 m</label>
+                    <label><input type="radio" name="height" value="1.2"> 1,2 m</label>
+                </div>
+            </label>
+            
+            <label id="accessories-section">Steinar
+                <div class="checkbox-group">
+                    <label><input type="radio" name="stone_type" value="01-BAT-GI01-054" checked> Steyptir steinar</label>
+                    <label><input type="radio" name="stone_type" value="01-BAT-GI01-0541"> PVC steinar</label>
+                </div>
+            </label>
+            
+            <label id="thickness-section">Þykkt á túbu (mm)
+                <div class="checkbox-group">
+                    <label><input type="radio" name="thickness" value="1.1" checked> 1,1 mm</label>
+                    <label><input type="radio" name="thickness" value="1.7"> 1,7 mm</label>
+                </div>
+            </label>
+        </div>
+
+        <!-- Total distance and rental period -->
+        <label>Samtals metrar
+            <input type="number" id="totalMeters" min="0" step="any" required>
+        </label>        <div class="date-group">
+            <label>Upphafsdagur
+                <input type="date" id="startDate" required>
+            </label>
+            <label>Áætlaður skiladagur
+                <input type="date" id="endDate" required>
+            </label>
+        </div>
+          <button type="submit">Reiknaðu leiguverð</button>
+    </form>
+
+    <div id="result-display" class="result-display">
+        <div id="error-message" class="error-message hidden"></div>
+        <div id="success-message" class="success-message hidden"></div>
+        <div id="info-message" class="info-message hidden"></div>
+    </div>
+
+    <script>        (function() {            // Configuration and pricing data
+            let config = {
+                minDays: 10,
+                // Default pricing structure (when API is unavailable)
+                pricing: {
+                    "01-BAT-GI01-015": { // Girðingar 3500X2000X1,1mm
+                        "1-30": 90,
+                        "30-60": 45,
+                        "60-90": 22,
+                        "90-120": 11,
+                        "120+": 11
+                    },
+                    "01-BAT-GI01-052": { // Girðingar 3500X1200X1,1mm
+                        "1-30": 72,
+                        "30-60": 36,
+                        "60-90": 18,
+                        "90-120": 9,
+                        "120+": 9
+                    },
+                    "01-BAT-GI01-053": { // Girðingar 3500X2000x1,7mm
+                        "1-30": 90,
+                        "30-60": 45,
+                        "60-90": 22,
+                        "90-120": 11,
+                        "120+": 11
+                    },
+                    "01-BAT-GI01-0541": { // PVC Steinar f/Girðingar
+                        "1-30": 40,
+                        "30-60": 20,
+                        "60-90": 10,
+                        "90-120": 5,
+                        "120+": 5
+                    },
+                    "01-BAT-GI01-054": { // Steinar f/Girðingar
+                        "1-30": 16,
+                        "30-60": 8,
+                        "60-90": 4,
+                        "90-120": 2,
+                        "120+": 2
+                    },
+                    "01-BAT-GI01-050": { // Biðraðagirðingar 2500x1200mm
+                        "1-30": 120,
+                        "30-60": 60,
+                        "60-90": 30,
+                        "90-120": 15,
+                        "120+": 15
+                    },
+                    "01-BAT-GI01-097": { // Klemmur f/girðingar
+                        "1-30": 1,
+                        "30-60": 1,
+                        "60-90": 0,
+                        "90-120": 0,
+                        "120+": 0
+                    },
+                    "01-BAT-VE01-265": { // Vegatálmi Rautt
+                        "1-30": 180,
+                        "30-60": 90,
+                        "60-90": 45,
+                        "90-120": 22,
+                        "120+": 22
+                    },
+                    "01-BAT-VE01-260": { // Vegatálmi hvítt
+                        "1-30": 180,
+                        "30-60": 90,
+                        "60-90": 45,
+                        "90-120": 22,
+                        "120+": 22
+                    }
+                }
+            };            // Format numbers using Icelandic conventions
+            function formatIcelandicNumber(number) {
+                return new Intl.NumberFormat('de-DE').format(number);
+            }
+
+            // Calculate days between two dates
+            function calculateDaysBetween(startDateString, endDateString) {
+                const startDate = new Date(startDateString + 'T12:00:00');
+                const endDate = new Date(endDateString + 'T12:00:00');
+                
+                const timeDiff = endDate.getTime() - startDate.getTime();
+                return Math.round(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+            }
+
+            // Convert date from YYYY-MM-DD to DD.MM.YYYY format
+            function formatIcelandicDate(dateInput) {
+                if (!dateInput) return '';
+                const [year, month, day] = dateInput.split('-');
+                return `${day}.${month}.${year}`;
+            }
+
+            // Check if date input has a value
+            function isValidDateInput(dateValue) {
+                return dateValue && dateValue.trim() !== '';
+            }
+
+            // Determine pricing tier based on rental duration
+            function getPriceTier(days) {
+                if (days <= 30) return "1-30";
+                if (days <= 60) return "30-60";
+                if (days <= 90) return "60-90";
+                if (days <= 120) return "90-120";
+                return "120+";
+            }            // API configuration and session management
+            let apiConfig = null;
+            let sessionID = null;
+
+            const dimensionMapping = {
+                "3.5_2.0_1.1": "01-BAT-GI01-015",
+                "3.5_2.0_1.7": "01-BAT-GI01-053",
+                "3.5_1.2_1.1": "01-BAT-GI01-052"
+            };
+
+            const widget = document.getElementById('fence-calculator-widget');
+            const form = widget.querySelector('#fenceCalculatorForm');
+            const worksiteOptions = widget.querySelector('#worksite-options');
+            const errorDiv = widget.querySelector('#error-message');
+            const successDiv = widget.querySelector('#success-message');
+            const infoDiv = widget.querySelector('#info-message');            // Load API configuration from external file
+            async function loadApiConfig() {
+                try {
+                    const response = await fetch('/insphire_api.json');
+                    if (response.ok) {
+                        apiConfig = await response.json();
+                        config.minDays = apiConfig.minDays || config.minDays;
+                        console.log('API configuration loaded');
+                        showInfo('Tengst við verðgrunninn...');
+                    } else {
+                        console.warn('API configuration not found, using default pricing');
+                        showInfo('Notar áætlað verð - hafðu samband fyrir nákvæmt tilboð');
+                    }
+                } catch (error) {
+                    console.warn('Could not load API configuration:', error.message);
+                    showInfo('Notar áætlað verð - hafðu samband fyrir nákvæmt tilboð');
+                }
+            }            // Authenticate with pricing API
+            async function logon() {
+                if (sessionID) return sessionID;
+                if (!apiConfig) throw new Error('API configuration not available');
+
+                const { endpoints, credentials, API_KEY } = apiConfig;
+                const { USERNAME, PASSWORD, DEPOT } = credentials;
+
+                const response = await fetch(endpoints.logon, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': API_KEY
+                    },
+                    body: JSON.stringify({ USERNAME, PASSWORD, DEPOT }),
+                });
+
+                if (!response.ok) throw new Error(`Authentication failed (${response.status})`);
+
+                const data = await response.json();
+                sessionID = data.SessionID;
+                return data.SessionID;
+            }            // Fetch data from API endpoint
+            async function fetchEntity(currentSessionID, entity, field, value) {
+                const { endpoints, API_KEY } = apiConfig;
+                const url = new URL(endpoints[entity]);
+                url.searchParams.append('$filter', `${field} eq '${value}'`);
+
+                const response = await fetch(url.toString(), {
+                    headers: {
+                        'SessionID': currentSessionID,
+                        'x-api-key': API_KEY
+                    },
+                });
+
+                if (!response.ok) throw new Error(`API request failed (${response.status})`);
+
+                const json = await response.json();
+                if (!json.value || !json.value.length) {
+                    throw new Error(`No data found for ${entity} with ${field}: ${value}`);
+                }
+
+                return json;
+            }            // Get pricing information with API fallback
+            async function getPricing(itemsToPrice, days) {
+                const tier = getPriceTier(days);
+                
+                if (!apiConfig) {
+                    // Use default pricing when API is not available
+                    let totalDailyRatePerUnit = 0;
+                    itemsToPrice.forEach(artNo => {
+                        const itemPricing = config.pricing[artNo];
+                        if (itemPricing && itemPricing[tier]) {
+                            totalDailyRatePerUnit += itemPricing[tier];
+                        }
+                    });
+                    return { rate: totalDailyRatePerUnit, source: 'fallback' };
+                }
+
+                try {
+                    // Attempt to get live pricing from API
+                    const currentSessionID = await logon();
+                    const ratePromises = itemsToPrice.map(artNo =>
+                        fetchEntity(currentSessionID, 'rates', 'Itemno', artNo)
+                    );
+                    const rateResults = await Promise.all(ratePromises);
+
+                    let totalDailyRatePerUnit = 0;
+                    rateResults.forEach(res => {
+                        totalDailyRatePerUnit += res.value[0].DailyRate;
+                    });
+
+                    return { rate: totalDailyRatePerUnit, source: 'api' };
+                } catch (error) {
+                    console.warn('API pricing unavailable, using default rates:', error.message);
+                    // Fall back to default pricing
+                    let totalDailyRatePerUnit = 0;
+                    itemsToPrice.forEach(artNo => {
+                        const itemPricing = config.pricing[artNo];
+                        if (itemPricing && itemPricing[tier]) {
+                            totalDailyRatePerUnit += itemPricing[tier];
+                        }
+                    });
+                    return { rate: totalDailyRatePerUnit, source: 'fallback' };
+                }
+            }
+
+            function showInfo(message) {
+                infoDiv.textContent = message;
+                infoDiv.classList.remove('hidden');
+                setTimeout(() => {
+                    infoDiv.classList.add('hidden');
+                }, 3000);
+            }
+
+            function handleFenceTypeChange() {
+                const fenceType = widget.querySelector('input[name="fence_type"]:checked').value;
+                if (fenceType === 'worksite') {
+                    worksiteOptions.style.display = 'contents';
+                } else {
+                    worksiteOptions.style.display = 'none';
+                }
+            }
+            widget.querySelectorAll('input[name="fence_type"]').forEach(radio => {
+                radio.addEventListener('change', handleFenceTypeChange);
+            });
+            handleFenceTypeChange();
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                  errorDiv.classList.add('hidden');
+                successDiv.classList.add('hidden');
+                infoDiv.classList.add('hidden');
+                
+                const submitButton = form.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.textContent;
+                submitButton.textContent = 'Reiknar...';
+                submitButton.disabled = true;
+
+                try {
+                    const fenceType = widget.querySelector("input[name='fence_type']:checked").value;
+                    const totalMeters = parseFloat(widget.querySelector('#totalMeters').value);
+                    const startDateValue = widget.querySelector('#startDate').value;
+                    const endDateValue = widget.querySelector('#endDate').value;
+                    
+                    if (isNaN(totalMeters) || totalMeters <= 0) {
+                        throw new Error('Heildarmetrar eru ógildir eða ekki fylltir inn.');
+                    }                    if (!startDateValue || !endDateValue) {
+                        throw new Error('Vinsamlegast veldu gilt tímabil.');
+                    }
+
+                    if (!isValidDateInput(startDateValue) || !isValidDateInput(endDateValue)) {
+                        throw new Error('Vinsamlegast veldu gildar dagsetningar.');
+                    }
+
+                    const startDate = new Date(startDateValue);
+                    const endDate = new Date(endDateValue);                    if (endDate < startDate) {
+                        throw new Error('Lokadagur getur ekki verið á undan upphafsdegi.');
+                    }
+                    
+                    const days = calculateDaysBetween(startDateValue, endDateValue);
+                    const showMinDaysWarning = days < config.minDays;
+                    
+                    let itemsToPrice = [];
+                    let unitLength;
+                    
+                    if (fenceType === 'crowd') {
+                        unitLength = 2.5;
+                        itemsToPrice.push('01-BAT-GI01-050');
+                    } else if (fenceType === 'traffic') {
+                        unitLength = 1.5;
+                        itemsToPrice.push('01-BAT-VE01-260');
+                        itemsToPrice.push('01-BAT-VE01-265');
+                    } else {
+                        unitLength = 3.5;
+                        const height = widget.querySelector('input[name="height"]:checked')?.value;
+                        const thickness = widget.querySelector('input[name="thickness"]:checked')?.value;
+                        const stoneType = widget.querySelector('input[name="stone_type"]:checked')?.value;
+                        
+                        if (!height || !thickness) {
+                            throw new Error('Vinsamlegast veldu hæð og þykkt.');
+                        }
+                        
+                        const fenceArtNo = dimensionMapping[`${unitLength}_${height}_${thickness}`];
+                        if (!fenceArtNo) {
+                            throw new Error('Valin samsetning á girðingu er ekki í boði.');
+                        }
+                        
+                        itemsToPrice.push(fenceArtNo);
+                        itemsToPrice.push('01-BAT-GI01-097');
+                        itemsToPrice.push(stoneType);                    }
+
+                    const pricingResult = await getPricing(itemsToPrice, days);
+                    let totalDailyRatePerUnit = pricingResult.rate;
+                    
+                    if (fenceType === 'traffic') {
+                        totalDailyRatePerUnit /= 2;
+                    }
+
+                    const numUnits = Math.ceil(totalMeters / unitLength);
+                    const totalCost = totalDailyRatePerUnit * numUnits * days;                    let resultMessage = `
+                        <strong>Áætlað verð fyrir ${totalMeters}m af girðingum í ${days} daga:</strong><br>
+                        <strong style="font-size: 1.2em;">${formatIcelandicNumber(totalCost)} kr.</strong><br><br>
+                        <em>Fjöldi eininga: ${numUnits} × ${unitLength}m</em><br>
+                        <em>Dagleg einingu-taxa: ${formatIcelandicNumber(totalDailyRatePerUnit)} kr.</em><br>
+                        <em>Leigutími: ${days} dagar (${formatIcelandicDate(startDateValue)} - ${formatIcelandicDate(endDateValue)})</em>
+                    `;
+                    
+                    if (pricingResult.source === 'fallback') {
+                        resultMessage += '<br><br><em style="color: #ff8800;"> Verð er áætlað - hafðu samband fyrir nákvæmt tilboð</em>';
+                    } else {
+                        resultMessage += '<br><br><em style="color: #28a745;">✓ Verð er live úr verðgrunni</em>';
+                    }
+                    
+                    if (showMinDaysWarning) {
+                        resultMessage += `<br><br><em style="color: #d9534f;"> Athugið: Lágmarksleigtími er ${config.minDays} dagar</em>`;
+                    }
+                    
+                    successDiv.innerHTML = resultMessage;
+                    successDiv.classList.remove('hidden');
+                      } catch (error) {
+                    errorDiv.textContent = `Villa: ${error.message}`;
+                    errorDiv.classList.remove('hidden');
+                } finally {
+                    submitButton.textContent = originalButtonText;
+                    submitButton.disabled = false;
+                }
+            });
+
+            loadApiConfig();
+        })();
+    </script>
+</div>

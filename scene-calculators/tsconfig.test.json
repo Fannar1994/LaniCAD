@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@byko/lib-api-rest": ["./__mocks__/@byko/lib-api-rest.ts"],
+      "@byko/lib-api-products": ["./__mocks__/@byko/lib-api-products.ts"],
+      "@byko/component-button": ["./__mocks__/@byko/component-button.tsx"],
+      "@byko/component-input": ["./__mocks__/@byko/component-input.tsx"],
+      "@byko/component-card": ["./__mocks__/@byko/component-card.tsx"],
+      "@byko/component-page-container": ["./__mocks__/@byko/component-page-container.tsx"]
+    }
+  },
+  "include": [
+    "test-app.tsx",
+    "test-main.tsx",
+    "src/scenes/fence/**/*",
+    "src/scenes/scaffold/**/*",
+    "src/scenes/shared/**/*",
+    "__mocks__/**/*"
+  ]
+}

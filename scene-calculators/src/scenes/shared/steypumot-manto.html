@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MANTO – Steypumót Calculator Spec</title>
+</head>
+<body>
+
+<h1>MANTO – Steypumót Calculator Specification</h1>
+
+<p>
+  This file defines a React + TypeScript calculator for
+  <b>Manto steypumót</b>. It must use only the items listed below from the
+  original Excel offer sheet (Tilboð í Leigu á Manto steypumótum) and
+  must not invent any panel types or other items.
+</p>
+
+<hr />
+
+<h2>1. Static item master (from Excel)</h2>
+
+<p>
+  All Manto items below come directly from the Excel. Use these as the
+  inventory. Do <b>not</b> create any additional panels or accessories
+  in code.
+</p>
+
+<h3>1.1 Grunneiningar (base panels & corners)</h3>
+
+<table border="1" cellpadding="4" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Erl.Vörunr.</th>
+      <th>Birgjakóði</th>
+      <th>Heiti</th>
+      <th>Þyngd (kg)</th>
+      <th>m2</th>
+      <th>Dagleiga m/vsk</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>01-MÓT-KM01-996</td>
+      <td>HM453996</td>
+      <td>Flekar 240x300</td>
+      <td>335,4</td>
+      <td>7,2</td>
+      <td>463</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-780</td>
+      <td>HM453780</td>
+      <td>Flekar 120x300</td>
+      <td>162,6</td>
+      <td>3,6</td>
+      <td>212</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-403</td>
+      <td>HM455403</td>
+      <td>Flekar 105x300</td>
+      <td>0</td>
+      <td>3,15</td>
+      <td>203</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-414</td>
+      <td>HM455414</td>
+      <td>Flekar 90x300</td>
+      <td>133,6</td>
+      <td>2,7</td>
+      <td>186</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-425</td>
+      <td>HM455425</td>
+      <td>Flekar 75x300</td>
+      <td>0</td>
+      <td>2,25</td>
+      <td>187</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-436</td>
+      <td>HM455436</td>
+      <td>Flekar 70x300</td>
+      <td></td>
+      <td>2,1</td>
+      <td>188</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-447</td>
+      <td>HM455447</td>
+      <td>Flekar 60x300</td>
+      <td>104</td>
+      <td>1,8</td>
+      <td>164</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-458</td>
+      <td>HM455458</td>
+      <td>Flekar 55x300</td>
+      <td></td>
+      <td>1,65</td>
+      <td>162</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-469</td>
+      <td>HM455469</td>
+      <td>Flekar 45x300</td>
+      <td>89,1</td>
+      <td>1,35</td>
+      <td>132</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-009</td>
+      <td>HM600009</td>
+      <td>Flekar 30x300</td>
+      <td></td>
+      <td>0,9</td>
+      <td>112</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-457</td>
+      <td>HM457457</td>
+      <td>Innhorn 35/300</td>
+      <td>108,9</td>
+      <td>2,1</td>
+      <td>232</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-175</td>
+      <td>HM458175</td>
+      <td>Veltihorn 35/300</td>
+      <td></td>
+      <td></td>
+      <td>266</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-245</td>
+      <td>HM458245</td>
+      <td>Flekar 75x120</td>
+      <td>38,2</td>
+      <td>0,54</td>
+      <td>95</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-234</td>
+      <td>HM458234</td>
+      <td>Flekar 90x120</td>
+      <td>42,8</td>
+      <td>0,66</td>
+      <td>102</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-223</td>
+      <td>HM458223</td>
+      <td>Flekar 60x120</td>
+      <td>44,9</td>
+      <td>0,72</td>
+      <td>85</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-212</td>
+      <td>HM458212</td>
+      <td>Flekar 70x120</td>
+      <td>49,5</td>
+      <td>0,84</td>
+      <td>90</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-197</td>
+      <td>HM458197</td>
+      <td>Flekar 120x120</td>
+      <td>58,4</td>
+      <td>1,08</td>
+      <td>120</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-012</td>
+      <td>HM535012</td>
+      <td>Innhorn 35x120</td>
+      <td>48,1</td>
+      <td>0,84</td>
+      <td>105</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM01-814</td>
+      <td>HM457814</td>
+      <td>Hornastillir 5x300</td>
+      <td></td>
+      <td>0,15</td>
+      <td>77</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>1.2 Samtengihlutir (connectors)</h3>
+
+<table border="1" cellpadding="4" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Erl.Vörunr.</th>
+      <th>Birgjakóði</th>
+      <th>Heiti</th>
+      <th>Þyngd (kg)</th>
+      <th>Dagleiga m/vsk</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>01-MÓT-KM21-000</td>
+      <td>HM448000</td>
+      <td>Manto Réttskeiðaklemmur</td>
+      <td>5,5</td>
+      <td>11</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM21-227</td>
+      <td>HM448227</td>
+      <td>Manto Úthornaklemmur</td>
+      <td>8,8</td>
+      <td>17</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM21-898</td>
+      <td>HM467898</td>
+      <td>Manto Stillanl. Réttsk.klemmur</td>
+      <td>6,0</td>
+      <td>13</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM21-010</td>
+      <td>HM448010</td>
+      <td>Manto Flekaklemmur</td>
+      <td>3,0</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-AH21-332</td>
+      <td>HA197332</td>
+      <td>Mótarær DW15</td>
+      <td>0,65</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-AH21-660</td>
+      <td>HA437660</td>
+      <td>Mótateinar 75cm</td>
+      <td>1,1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>HA24387</td>
+      <td>Mótateinar 100cm</td>
+      <td>1,44</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>HA20470</td>
+      <td>Mótateinar 175cm</td>
+      <td>2,5</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-AH21-600</td>
+      <td>HA464600</td>
+      <td>Manto Mótarær DW15</td>
+      <td>1,3</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>HA48344</td>
+      <td>Mótarær 130x230</td>
+      <td>2,4</td>
+      <td>4</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>1.3 Aukahlutir (accessories)</h3>
+
+<table border="1" cellpadding="4" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Erl.Vörunr.</th>
+      <th>Birgjakóði</th>
+      <th>Heiti</th>
+      <th>Þyngd (kg)</th>
+      <th>Dagleiga m/vsk</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>01-MÓT-AH21-410</td>
+      <td>HA454410</td>
+      <td>Dregarateinar (langir) 50cm</td>
+      <td>1,07</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-AH21-764</td>
+      <td>HA450764</td>
+      <td>Dregarar 100cm</td>
+      <td>13,1</td>
+      <td>17</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-AH21-053</td>
+      <td>HA452053</td>
+      <td>Dregarateinar 30cm</td>
+      <td>0,76</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-AH21-278</td>
+      <td>HA417278</td>
+      <td>Hornadregarar 170</td>
+      <td>19,5</td>
+      <td>38</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM21-205</td>
+      <td>HM448205</td>
+      <td>Manto Vinnupallaknekti</td>
+      <td>12,97</td>
+      <td>24</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-AH21-220</td>
+      <td>HA193220</td>
+      <td>TK-Handriðspóstar</td>
+      <td>4,5</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-AH21-114</td>
+      <td>HA565114</td>
+      <td>M-Skástífufestingar stórar</td>
+      <td>8,9</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-AH21-746</td>
+      <td>HA453746</td>
+      <td>Krækjufestingar (M-Bolt Connector)</td>
+      <td>0,8</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-AH21-103</td>
+      <td>HA565103</td>
+      <td>Ítalskar mótaskástífur</td>
+      <td>23,3</td>
+      <td>28</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>132559</td>
+      <td>Einfaldar skástífur</td>
+      <td>15,6</td>
+      <td>28</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-HM21-667</td>
+      <td>HR566667</td>
+      <td>Endaklossar MR</td>
+      <td>2,4</td>
+      <td>17</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-KM21-710</td>
+      <td>HM446710</td>
+      <td>Manto Kranakrókar</td>
+      <td>14,27</td>
+      <td>59</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-AH21-780</td>
+      <td>HA408780</td>
+      <td>Manto skröll</td>
+      <td>1</td>
+      <td>26</td>
+    </tr>
+    <tr>
+      <td>01-MÓT-AH21-480</td>
+      <td>HA548480</td>
+      <td>Fiskikör</td>
+      <td>71,79</td>
+      <td>50</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td>SEXKANTRÆR</td>
+      <td></td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td>Sökkulskór</td>
+      <td></td>
+      <td>15</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td></td>
+      <td>Innveggjaskór</td>
+      <td></td>
+      <td>15</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  In TypeScript, represent these as static arrays. Example type:
+</p>
+
+<pre><code>type MantoItem = {
+  erlVoruNr: string | null;     // e.g. "01-MÓT-KM01-996" or null for some rows
+  supplierCode: string;        // e.g. "HM453996"
+  name: string;
+  areaM2: number;              // use 'm2' column; 0 if blank
+  dailyPriceWithVat: number;   // Dagleiga m/vsk
+  group: "Grunneiningar" | "Samtengihlutir" | "Aukahlutir";
+};</code></pre>
+
+<hr />
+
+<h2>2. User inputs</h2>
+
+<table border="1" cellpadding="4" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Type</th>
+      <th>Unit</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>totalAreaM2</td>
+      <td>number</td>
+      <td>m²</td>
+      <td>
+        Total required formwork area (Fjöldi fermetra). User input.
+      </td>
+    </tr>
+    <tr>
+      <td>formworkHeightM</td>
+      <td>number</td>
+      <td>m</td>
+      <td>
+        Hæð steypumóta. Example sheet value is 3 m. Used to decide which panel
+        heights can be used (300cm vs 120cm).
+      </td>
+    </tr>
+    <tr>
+      <td>rentalDays</td>
+      <td>number</td>
+      <td>days</td>
+      <td>Chargeable rental period.</td>
+    </tr>
+    <tr>
+      <td>vatRate</td>
+      <td>number</td>
+      <td>-</td>
+      <td>VAT as a fraction (e.g. 0.24 for 24%).</td>
+    </tr>
+  </tbody>
+</table>
+
+<pre><code>type MantoInputs = {
+  totalAreaM2: number;
+  formworkHeightM: number; // e.g. 3
+  rentalDays: number;
+  vatRate: number;         // e.g. 0.24
+};</code></pre>
+
+<hr />
+
+<h2>3. Calculations</h2>
+
+<h3>3.1 Panel selection (Grunneiningar only)</h3>
+
+<p>
+  Use <b>only</b> rows from the Grunneiningar group as panels. For panel area,
+  use the <b>m2</b> column directly (no guessing).
+</p>
+
+<p>
+  For a given <code>formworkHeightM</code>:
+</p>
+<ul>
+  <li>If <code>formworkHeightM = 3</code>, prefer panels whose description contains <code>x300</code>.</li>
+  <li>If <code>formworkHeightM = 1.2</code>, prefer panels with <code>x120</code>.</li>
+</ul>
+
+<p>Algorithm (simple greedy by panel area):</p>
+
+<pre><code>// 1. Filter panels that match height
+const panels = allItems.filter(
+  i =&gt; i.group === "Grunneiningar"
+    &amp;&amp; i.areaM2 &gt; 0
+    &amp;&amp; (formworkHeightM === 3
+         ? i.name.includes("x300")
+         : formworkHeightM === 1.2
+           ? i.name.includes("x120")
+           : true // fallback: allow all if height does not match standard
+       )
+);
+
+// 2. Sort by area descending for greedy fit
+panels.sort((a, b) =&gt; b.areaM2 - a.areaM2);
+
+// 3. Greedy selection
+let remainingArea = totalAreaM2;
+const panelQuantities = new Map&lt;string, number&gt;(); // key = erlVoruNr
+
+for (let i = 0; i &lt; panels.length; i++) {
+  const p = panels[i];
+  const area = p.areaM2;
+  if (area &lt;= 0) continue;
+
+  if (i &lt; panels.length - 1) {
+    // For all except the smallest panel: take as many whole panels as possible
+    const count = Math.floor(remainingArea / area);
+    if (count &gt; 0) {
+      panelQuantities.set(p.erlVoruNr!, count);
+      remainingArea -= count * area;
+    }
+  } else {
+    // For the last (smallest) panel: if any area remains, cover it with 1 panel
+    if (remainingArea &gt; 0) {
+      const prev = panelQuantities.get(p.erlVoruNr!) || 0;
+      panelQuantities.set(p.erlVoruNr!, prev + 1);
+      remainingArea = 0;
+    }
+  }
+}
+</code></pre>
+
+<p>
+  This ensures the sum of panel areas (using the <b>m2</b> field) is
+  greater than or equal to <code>totalAreaM2</code> and uses only the
+  panel types you have defined.
+</p>
+
+<h3>3.2 Accessories & connectors quantities</h3>
+
+<p>
+  For Samtengihlutir and Aukahlutir, quantity should be derived from total
+  area and/or total number of panels, using configurable factors (set by you).
+  The calculator should expose these factors in a configuration object, not
+  hard-coded magic numbers.
+</p>
+
+<pre><code>type MantoFactors = {
+  // examples, actual values decided by you:
+  connectorsPerPanel: number;  // e.g. 2 Manto Flekaklemmur per panel
+  tiesPerM2: number;           // e.g. 0.5 ties per m²
+  bracesPer10m: number;        // e.g. 1 brace per 10 m wall
+};
+
+// After computing panelQuantities:
+const totalPanels = Array.from(panelQuantities.values())
+  .reduce((sum, c) =&gt; sum + c, 0);
+
+const totalArea = totalAreaM2;
+
+// Example quantity rules (to be refined by you):
+// - Flekaklemmur: factors.connectorsPerPanel * totalPanels
+// - Mótarær DW15: factors.tiesPerM2 * totalArea
+// - Ítalskar mótaskástífur: factors.bracesPer10m * (totalArea / formworkHeightM / 10)
+</code></pre>
+
+<p>
+  The agent must not invent the factors themselves; they are configuration
+  inputs (or read from the Excel if you later add them there).
+</p>
+
+<h3>3.3 Pricing</h3>
+
+<p>
+  For any item with a quantity <code>q</code> and a daily price with VAT
+  <code>dailyPriceWithVat</code>:
+</p>
+
+<pre><code>lineDailyWithVat   = q * dailyPriceWithVat;
+lineDailyExVat     = lineDailyWithVat / (1 + vatRate);
+lineTotalWithVat   = lineDailyWithVat * rentalDays;
+lineTotalExVat     = lineTotalWithVat / (1 + vatRate);
+</code></pre>
+
+<p>
+  Overall totals:
+</p>
+
+<pre><code>totalDailyWithVat = sum(lineDailyWithVat for all items);
+totalDailyExVat   = sum(lineDailyExVat for all items);
+totalWithVat      = sum(lineTotalWithVat for all items);
+totalExVat        = sum(lineTotalExVat for all items);
+</code></pre>
+
+<h3>3.4 Result types</h3>
+
+<pre><code>type MantoItemResult = {
+  erlVoruNr: string | null;
+  supplierCode: string;
+  name: string;
+  group: "Grunneiningar" | "Samtengihlutir" | "Aukahlutir";
+  quantity: number;
+  dailyPriceWithVat: number;
+  lineDailyWithVat: number;
+  lineDailyExVat: number;
+  lineTotalWithVat: number;
+  lineTotalExVat: number;
+};
+
+type MantoTotals = {
+  totalAreaM2: number;
+  totalDailyWithVat: number;
+  totalDailyExVat: number;
+  totalTotalWithVat: number;
+  totalTotalExVat: number;
+};
+
+type MantoResult = {
+  inputs: MantoInputs;
+  items: MantoItemResult[];
+  totals: MantoTotals;
+};</code></pre>
+
+<h3>3.5 Core calculation function</h3>
+
+<pre><code>function calculateMantoOffer(
+  items: MantoItem[],      // static list from this spec
+  inputs: MantoInputs,
+  factors: MantoFactors
+): MantoResult {
+  // 1) Select panel types (Grunneiningar) that match formworkHeightM
+  // 2) Compute panelQuantities using the greedy algorithm above
+  // 3) Compute accessory & connector quantities based on factors
+  // 4) Combine all quantities into MantoItemResult[]
+  // 5) Apply pricing formulas to get lineDaily and lineTotal values
+  // 6) Sum into MantoTotals and return MantoResult
+}
+</code></pre>
+
+<hr />
+
+<h2>4. React component</h2>
+
+<p>
+  Implement a React component <code>MantoFormworkCalculator.tsx</code>:
+</p>
+
+<ul>
+  <li>React 18, TypeScript, functional component with hooks.</li>
+  <li>Inputs:
+    <ul>
+      <li>totalAreaM2</li>
+      <li>formworkHeightM (defaults to 3)</li>
+      <li>rentalDays</li>
+      <li>vatRate</li>
+      <li>MantoFactors (either hard-coded or editable UI).</li>
+    </ul>
+  </li>
+  <li>On change, call <code>calculateMantoOffer</code> and render:
+    <ul>
+      <li>Table of all items with quantity and prices.</li>
+      <li>Summary with total area and totals ex./inc. VAT.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>
+  The calculator must never reference any panel or accessory that is
+  not in the tables in section 1. All item codes and names come from
+  this spec (i.e. from your Excel).
+</p>
+
+</body>
+</html>

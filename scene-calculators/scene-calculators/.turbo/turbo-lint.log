@@ -1,0 +1,5 @@
+
+
+> @byko/scene-calculators@1.0.0 lint /Users/runarlj/byko/code/byko-next-frontend-new/packages/scene-calculators
+> eslint --ext .js,.jsx,.ts,.tsx src --color --cache
+

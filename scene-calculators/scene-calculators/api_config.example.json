@@ -1,0 +1,21 @@
+{
+  "apiUrl": "https://your-inriver-pim-api.com",
+  "apiKey": "YOUR_API_KEY_HERE",
+  "minDays": 10,
+  "credentials": {
+    "username": "YOUR_USERNAME",
+    "password": "YOUR_PASSWORD",
+    "depot": "YOUR_DEPOT_ID"
+  },
+  "endpoints": {
+    "logon": "https://your-inriver-pim-api.com/logon",
+    "rates": "https://your-inriver-pim-api.com/rates"
+  },
+  "_comments": {
+    "apiUrl": "Base URL for your Inriver PIM API",
+    "apiKey": "API key for authentication (x-api-key header)",
+    "minDays": "Minimum rental period in days",
+    "credentials": "Login credentials for Inriver PIM",
+    "endpoints": "Specific API endpoints for logon and rate queries"
+  }
+}

@@ -29,8 +29,9 @@ function loadSession(): { user: UserProfile; token: string } | null {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(() => loadSession()?.user ?? null)
-  const [token, setToken] = useState<string | null>(() => loadSession()?.token ?? null)
+  const initial = loadSession()
+  const [user, setUser] = useState<UserProfile | null>(initial?.user ?? null)
+  const [token, setToken] = useState<string | null>(initial?.token ?? null)
 
   // Verify token is still valid on mount (skip for offline sessions)
   useEffect(() => {
@@ -49,13 +50,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(SESSION_KEY, JSON.stringify(u))
       })
       .catch(() => {
-        // Token expired or invalid — clear session
         localStorage.removeItem(TOKEN_KEY)
         localStorage.removeItem(SESSION_KEY)
         setUser(null)
         setToken(null)
       })
   }, [token])
+
+  // Auto-logout when any API call returns 401
+  useEffect(() => {
+    const handleExpired = () => {
+      localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(SESSION_KEY)
+      setUser(null)
+      setToken(null)
+    }
+    window.addEventListener('lanicad:auth-expired', handleExpired)
+    return () => window.removeEventListener('lanicad:auth-expired', handleExpired)
+  }, [])
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     const apiUrl = getApiUrl()
@@ -87,8 +99,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Offline fallback: allow default admin when API is unreachable
-    if (email === 'admin@lanicad.is' && password === 'admin123') {
+    // Offline fallback: allow default admin only on localhost (dev mode)
+    const isLocalhost = typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    if (isLocalhost && email === 'admin@lanicad.is' && password === 'admin123') {
       const offlineUser: UserProfile = {
         id: 'offline',
         email: 'admin@lanicad.is',

@@ -32,7 +32,7 @@ function LazyFallback() {
 const AuditLogPage = lazy(() => import('@/pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })))
 
 export function App() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isAdmin } = useAuth()
 
   if (!isAuthenticated) {
     return (
@@ -59,7 +59,7 @@ export function App() {
         <Route path="schematics" element={<Suspense fallback={<LazyFallback />}><SchematicsPage /></Suspense>} />
         <Route path="templates" element={<Suspense fallback={<LazyFallback />}><TemplatesPage /></Suspense>} />
         <Route path="settings" element={<Suspense fallback={<LazyFallback />}><SettingsPage /></Suspense>} />
-        <Route path="audit-log" element={<Suspense fallback={<LazyFallback />}><AuditLogPage /></Suspense>} />
+        <Route path="audit-log" element={isAdmin ? <Suspense fallback={<LazyFallback />}><AuditLogPage /></Suspense> : <Navigate to="/" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
       <Route path="/login" element={<Navigate to="/" replace />} />

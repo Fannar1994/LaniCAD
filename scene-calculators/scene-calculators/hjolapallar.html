@@ -1,0 +1,1057 @@
+<div id="scaffold-calculator-widget">
+    <style>
+        #scaffold-calculator-widget {
+            max-width: 800px;
+            margin: 2em auto;
+            padding: 1.5em;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-family: Arial, sans-serif;
+        }
+        #scaffold-calculator-widget h2 {
+            font-size: 2em;
+            margin-bottom: 0.5em;
+            color: #333;
+        }
+        #scaffold-calculator-widget p {
+            margin: 0 0 1.5em;
+            font-size: 1em;
+            color: #555;
+        }
+        #scaffold-calculator-widget .form-grid {
+            display: grid;
+            gap: 1em;
+            grid-template-columns: 1fr;
+        }
+        #scaffold-calculator-widget label {
+            display: flex;
+            flex-direction: column;
+            font-size: 1em;
+            color: #333;
+        }
+        #scaffold-calculator-widget input[type="date"] {
+            padding: 0.6em;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: border-color 0.2s;
+        }
+        #scaffold-calculator-widget input[type="date"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        #scaffold-calculator-widget .scaffold-type-group {
+            grid-column: 1 / -1;
+            margin-bottom: 1em;
+        }
+        #scaffold-calculator-widget .scaffold-type-group h3 {
+            margin: 0 0 1em;
+            font-size: 1.2em;
+            color: #333;
+        }
+        #scaffold-calculator-widget .type-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5em;
+            margin-bottom: 1.5em;
+        }
+        #scaffold-calculator-widget .type-options label {
+            flex-direction: row;
+            align-items: center;
+            gap: 0.5em;
+            font-size: 1em;
+            color: #333;
+            cursor: pointer;
+            font-weight: bold;
+        }        #scaffold-calculator-widget .height-options {
+            grid-column: 1 / -1;
+            margin-bottom: 1em;
+        }
+        #scaffold-calculator-widget .height-options h3 {
+            margin: 0 0 1em;
+            font-size: 1.2em;
+            color: #333;
+        }
+        #scaffold-calculator-widget .support-legs-options {
+            grid-column: 1 / -1;
+            margin-bottom: 1em;
+        }
+        #scaffold-calculator-widget .support-legs-options h3 {
+            margin: 0 0 1em;
+            font-size: 1.2em;
+            color: #333;
+        }
+        #scaffold-calculator-widget .height-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1em;
+        }
+        #scaffold-calculator-widget .height-grid label {
+            flex-direction: row;
+            align-items: center;
+            gap: 0.5em;
+            font-size: 1em;
+            color: #333;
+            cursor: pointer;
+            padding: 0.5em;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        #scaffold-calculator-widget .height-grid label:hover {
+            background: #f8f9fa;
+            border-color: #007bff;
+        }
+        #scaffold-calculator-widget input[type="radio"],
+        #scaffold-calculator-widget input[type="checkbox"] {
+            appearance: none;
+            width: 1.2em;
+            height: 1.2em;
+            border: 2px solid #007bff;
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        #scaffold-calculator-widget input[type="checkbox"] {
+            border-radius: 3px;
+        }
+        #scaffold-calculator-widget input[type="radio"]:checked::before,
+        #scaffold-calculator-widget input[type="checkbox"]:checked::before {
+            content: '';
+            width: 0.6em;
+            height: 0.6em;
+            background: #007bff;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        #scaffold-calculator-widget input[type="checkbox"]:checked::before {
+            border-radius: 2px;
+        }
+        #scaffold-calculator-widget .date-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1em;
+            grid-column: 1 / -1;
+        }
+        #scaffold-calculator-widget button {
+            grid-column: 1 / -1;
+            padding: 0.8em 1.2em;
+            font-size: 1em;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #scaffold-calculator-widget button:hover:not(:disabled) {
+            background: #0056b3;
+        }
+        #scaffold-calculator-widget button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        #scaffold-calculator-widget .result-display {
+            margin-top: 1.5em;
+        }
+        #scaffold-calculator-widget .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        #scaffold-calculator-widget .result-table th,
+        #scaffold-calculator-widget .result-table td {
+            border: 1px solid #e0e0e0;
+            padding: 0.8em;
+            text-align: left;
+            font-size: 0.9em;
+        }
+        #scaffold-calculator-widget .result-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        #scaffold-calculator-widget .result-table tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        #scaffold-calculator-widget .warning,
+        #scaffold-calculator-widget .error-message {
+            color: #d9534f;
+            font-weight: bold;
+            margin-top: 1em;
+        }
+        #scaffold-calculator-widget .success-message {
+            color: #28a745;
+            font-weight: bold;
+            margin-top: 1em;
+        }
+        #scaffold-calculator-widget .info-message {
+            color: #17a2b8;
+            font-size: 0.9em;
+            margin-top: 1em;
+        }
+        #scaffold-calculator-widget .hidden {
+            display: none;
+          }        #scaffold-calculator-widget .separator {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 1.5em 0;
+        }
+        #scaffold-calculator-widget .terms-section {
+            margin-top: 2em;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        #scaffold-calculator-widget .terms-header {
+            background: #f8f9fa;
+            padding: 1em;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            color: #333;
+        }
+        #scaffold-calculator-widget .terms-header:hover {
+            background: #e9ecef;
+        }
+        #scaffold-calculator-widget .terms-content {
+            padding: 1.5em;
+            background: #fff;
+            line-height: 1.6;
+            font-size: 0.9em;
+            color: #555;
+            display: none;
+        }
+        #scaffold-calculator-widget .terms-content.show {
+            display: block;
+        }
+        #scaffold-calculator-widget .terms-content h4 {
+            color: #333;
+            margin: 1.5em 0 0.5em 0;
+            font-size: 1.1em;
+        }
+        #scaffold-calculator-widget .terms-content h4:first-child {
+            margin-top: 0;
+        }
+        #scaffold-calculator-widget .terms-content ul {
+            margin: 0.5em 0;
+            padding-left: 1.5em;
+        }
+        #scaffold-calculator-widget .terms-content li {
+            margin: 0.3em 0;
+        }
+        #scaffold-calculator-widget .terms-toggle {
+            font-size: 1.2em;
+            transition: transform 0.3s;
+        }
+        #scaffold-calculator-widget .terms-toggle.rotated {
+            transform: rotate(180deg);
+        }
+        @media (max-width: 768px) {
+            #scaffold-calculator-widget h2 {
+                font-size: 1.6em;
+            }
+            #scaffold-calculator-widget .type-options {
+                flex-direction: column;
+                gap: 1em;
+            }
+            #scaffold-calculator-widget .height-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 480px) {
+            #scaffold-calculator-widget {
+                padding: 1em;
+            }
+            #scaffold-calculator-widget h2 {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+
+    <h2>Hjólapallar reiknivél</h2>
+    <p>Veldu tegund af hjólapalli og fylltu inn valmöguleika til að sjá leiguverð.</p>
+
+    <form id="scaffoldCalculatorForm" class="form-grid">
+        <!-- Scaffold type selection -->
+        <div class="scaffold-type-group">
+            <h3>Veldu tegund hjólapalls</h3>
+            <div class="type-options">
+                <label>
+                    <input type="radio" name="scaffold_type" value="model2" required>
+                    Hjólapallur mjór
+                </label>
+                <label>
+                    <input type="radio" name="scaffold_type" value="model3">
+                    Hjólapallur breiður
+                </label>
+                <label>
+                    <input type="radio" name="scaffold_type" value="model1">
+                    Quicky pallur – Standhæð/vinnuhæð 2,0/4,0 mtr.
+                </label>
+            </div>
+        </div>
+
+        <hr class="separator">        <!-- Height options -->
+        <div class="height-options" id="heightOptions">
+            <h3>Veldu vinnuhæð (aðeins fyrir mjóan og breiðan pall)</h3>
+            <div class="height-grid">
+                <label>
+                    <input type="radio" name="height_option" value="2.5">
+                    Standhæð/vinnuhæð 2,5/4,5 mtr.
+                </label>
+                <label>
+                    <input type="radio" name="height_option" value="3.5">
+                    Standhæð/vinnuhæð 3,5/5,5 mtr.
+                </label>
+                <label>
+                    <input type="radio" name="height_option" value="4.5">
+                    Standhæð/vinnuhæð 4,5/6,5 mtr.
+                </label>
+                <label>
+                    <input type="radio" name="height_option" value="5.5">
+                    Standhæð/vinnuhæð 5,5/7,5 mtr.
+                </label>
+                <label>
+                    <input type="radio" name="height_option" value="6.5">
+                    Standhæð/vinnuhæð 6,5/8,5 mtr.
+                </label>
+                <label>
+                    <input type="radio" name="height_option" value="7.5">
+                    Standhæð/vinnuhæð 7,5/9,5 mtr.
+                </label>
+                <label>
+                    <input type="radio" name="height_option" value="8.5">
+                    Standhæð/vinnuhæð 8,5/10,5 mtr.
+                </label>
+                <label>
+                    <input type="radio" name="height_option" value="9.5">
+                    Standhæð/vinnuhæð 9,5/11,5 mtr.
+                </label>
+                <label>
+                    <input type="radio" name="height_option" value="10.5">
+                    Standhæð/vinnuhæð 10,5/12,5 mtr.
+                </label>
+            </div>
+        </div>
+
+        <!-- Support legs option -->
+        <div class="support-legs-options" id="supportLegsOptions">
+            <h3>Viðbót</h3>
+            <div class="type-options">
+                <label>
+                    <input type="checkbox" name="support_legs" value="true">
+                    Stuðningsfætur (sérstakt leigugjald)
+                </label>
+            </div>
+        </div>
+
+        <!-- Rental period -->
+        <div class="date-group">
+            <label>Upphafsdagur
+                <input type="date" id="startDate" required>
+            </label>
+            <label>Áætlaður skiladagur
+                <input type="date" id="endDate" required>
+            </label>
+        </div>
+
+        <button type="submit">Reiknaðu leiguverð</button>
+    </form>
+
+    <div id="result-display" class="result-display">
+        <div id="error-message" class="error-message hidden"></div>
+        <div id="success-message" class="success-message hidden"></div>
+        <div id="info-message" class="info-message hidden"></div>        <table id="result-table" class="result-table hidden">
+            <thead>
+                <tr>
+                    <th>Leigunúmer</th>
+                    <th>Lýsing</th>
+                    <th>Magn</th>
+                </tr>
+            </thead>
+            <tbody>            </tbody>
+        </table>
+    </div>
+
+    <!-- Terms and Conditions Section -->
+    <div class="terms-section">
+        <div class="terms-header" onclick="toggleTerms()">
+            <span>Skilmálar og talningar</span>
+            <span class="terms-toggle">▼</span>
+        </div>
+        <div class="terms-content" id="termsContent">
+            <h4>ALMENNT</h4>
+            <ul>
+                <li>Leigutími hjólapalla er að lágmarki 24 klst. og er farið í hálfa viku (3,5 daga) ef leiga fer yfir 3 daga.</li>
+                <li>Verð er háð breytingum án fyrirvara.</li>
+                <li>Öll verð eru í íslenskum krónum og með virðisaukaskatti.</li>
+                <li>Viðskiptavinur ber ábyrgð á öllu leigutæki frá því að hann tekur það við og þangað til það er skilað.</li>
+            </ul>
+
+            <h4>TRYGGING</h4>
+            <ul>
+                <li>Trygging (deposit) er krafist fyrir öll leigutæki og skal greidd við afhendingu.</li>
+                <li>Trygging er endurgreidd að fullu við skil á óskemmdu tæki.</li>
+                <li>Sé tæki skemmt eða glatað er dregið af tryggingu samkvæmt matsverði skemmda.</li>
+                <li>Ef matsverð skemmda fer yfir tryggingu skal viðskiptavinur greiða mismuninn.</li>
+            </ul>
+
+            <h4>SKIL OG AFHENDING</h4>
+            <ul>
+                <li>Tæki skal skila hreinu og í sama ástandi og það var við afhendingu.</li>
+                <li>Ef tæki er ekki skilað á umsömdum tíma eru rukkuð aukadagagjöld.</li>
+                <li>Viðskiptavinur ber kostnað við sótt og skil ef utan þjónustusvæðis.</li>
+                <li>Byko áskilur sér rétt til að innheimta tæki ef það er ekki skilað á réttum tíma.</li>
+            </ul>
+
+            <h4>ÁBYRGÐ OG TRYGGINGAR</h4>
+            <ul>
+                <li>Viðskiptavinur ber ábyrgð á því að nota tæki á réttan hátt og samkvæmt leiðbeiningum.</li>
+                <li>Byko ber ekki ábyrgð á tjóni sem hlýst af rangri notkun leigutækis.</li>
+                <li>Mælt er með því að viðskiptavinur hafi tryggingu sem nær til leigutækis.</li>
+                <li>Leigutaki ber ábyrgð á þjófnaði eða skemmdum á leigutæki.</li>
+            </ul>
+
+            <h4>GREIÐSLUSKILMÁLAR</h4>
+            <ul>
+                <li>Greiðsla skal fara fram við afhendingu tækis.</li>
+                <li>Viðurkenndar eru reiðufé, greiðslukort og millifærsla.</li>
+                <li>Ef leiga lengist eða bætist við tæki skal greiða viðbót strax.</li>
+                <li>Ef greiðsla berst ekki á réttum tíma eru rukkuð dráttarvextir.</li>
+            </ul>
+
+            <h4>SAMNINGSSLIT</h4>
+            <ul>
+                <li>Byko áskilur sér rétt til að slíta samningi án fyrirvara ef:</li>
+                <li>- Greiðsla berst ekki á réttum tíma</li>
+                <li>- Tæki er notað á rangan hátt eða óvarlega</li>
+                <li>- Viðskiptavinur brýtur gegn öðrum skilmálum samnings</li>
+                <li>Ef samningi er slitið ber viðskiptavinur kostnað við endurheimt tækis.</li>
+            </ul>
+
+            <p><strong>Með því að nota þessa reiknivél samþykkir þú ofangreinda skilmála og talningar.</strong></p>
+        </div>
+    </div><script>
+        (function() {            // Configuration and pricing data
+            let config = {
+                minDays: 1,
+                // Pricing based on actual rental fee tables for different scaffold types
+                
+                // Hjólapallur mjór (0.75m) - Heights correspond to working heights: 2.5m->4.5m, 3.5m->5.5m, etc.
+                narrowScaffoldPricing: {
+                    // Working height 4.5m (Stand height 2.5m)
+                    "2.5": {
+                        "24h": 4717,        // 24 klst.
+                        "extra": 2359,      // Viðbótardagur (extra day)
+                        "week": 11794,      // Vika (week)
+                        "deposit": 10000    // Trygging (deposit)
+                    },
+                    // Working height 5.5m (Stand height 3.5m)
+                    "3.5": {
+                        "24h": 5942,
+                        "extra": 2971,
+                        "week": 14855,
+                        "deposit": 12000
+                    },
+                    // Working height 6.5m (Stand height 4.5m)
+                    "4.5": {
+                        "24h": 7620,
+                        "extra": 3810,
+                        "week": 19051,
+                        "deposit": 15000
+                    },
+                    // Working height 7.5m (Stand height 5.5m)
+                    "5.5": {
+                        "24h": 8845,
+                        "extra": 4423,
+                        "week": 22113,
+                        "deposit": 16500
+                    },
+                    // Working height 8.5m (Stand height 6.5m)
+                    "6.5": {
+                        "24h": 10524,
+                        "extra": 5262,
+                        "week": 26309,
+                        "deposit": 19500
+                    },
+                    // Working height 9.5m (Stand height 7.5m)
+                    "7.5": {
+                        "24h": 11748,
+                        "extra": 5874,
+                        "week": 29371,
+                        "deposit": 21000
+                    },
+                    // Working height 10.5m (Stand height 8.5m)
+                    "8.5": {
+                        "24h": 13427,
+                        "extra": 6713,
+                        "week": 33566,
+                        "deposit": 24000
+                    },
+                    // Working height 11.5m (Stand height 9.5m)
+                    "9.5": {
+                        "24h": 15649,
+                        "extra": 7825,
+                        "week": 39123,
+                        "deposit": 25000
+                    },
+                    // Working height 12.5m (Stand height 10.5m)
+                    "10.5": {
+                        "24h": 16647,
+                        "extra": 8324,
+                        "week": 41618,
+                        "deposit": 28000
+                    }
+                },
+                
+                // Hjólapallur breiður (1.35m)
+                wideScaffoldPricing: {
+                    // Working height 4.5m (Stand height 2.5m)
+                    "2.5": {
+                        "24h": 5443,        // 24 klst.
+                        "extra": 2722,      // Viðbótardagur (extra day)
+                        "week": 13608,      // Vika (week)
+                        "deposit": 12000    // Trygging (deposit)
+                    },
+                    // Working height 5.5m (Stand height 3.5m)
+                    "3.5": {
+                        "24h": 6713,
+                        "extra": 3357,
+                        "week": 16783,
+                        "deposit": 14000
+                    },
+                    // Working height 6.5m (Stand height 4.5m)
+                    "4.5": {
+                        "24h": 8346,
+                        "extra": 4173,
+                        "week": 20866,
+                        "deposit": 17000
+                    },
+                    // Working height 7.5m (Stand height 5.5m)
+                    "5.5": {
+                        "24h": 9616,
+                        "extra": 4808,
+                        "week": 24041,
+                        "deposit": 19000
+                    },
+                    // Working height 8.5m (Stand height 6.5m)
+                    "6.5": {
+                        "24h": 11249,
+                        "extra": 5625,
+                        "week": 28123,
+                        "deposit": 22000
+                    },
+                    // Working height 9.5m (Stand height 7.5m)
+                    "7.5": {
+                        "24h": 12519,
+                        "extra": 6260,
+                        "week": 31298,
+                        "deposit": 24000
+                    },
+                    // Working height 10.5m (Stand height 8.5m)
+                    "8.5": {
+                        "24h": 14152,
+                        "extra": 7076,
+                        "week": 35381,
+                        "deposit": 27000
+                    },
+                    // Working height 11.5m (Stand height 9.5m)
+                    "9.5": {
+                        "24h": 16330,
+                        "extra": 8165,
+                        "week": 40824,
+                        "deposit": 28000
+                    },
+                    // Working height 12.5m (Stand height 10.5m)
+                    "10.5": {
+                        "24h": 17373,
+                        "extra": 8686,
+                        "week": 43432,
+                        "deposit": 31000
+                    }
+                },
+                  // Quicky pallur pricing (4m working height, 2m stand height)
+                quickyPricing: {
+                    "24h": 4082,      // 24 klst.
+                    "extra": 2041,    // Viðbótardagur (extra day)
+                    "week": 10206,    // Vika (week)
+                    "deposit": 10000  // Trygging (deposit)
+                },                // Support legs pricing (separate from main scaffold rental)
+                // 01-PAL-HP01-115	Stuðningsfætur Stillanlegar	453,60	680,40	907,20	1.134,00	226,80
+                supportLegsPricing: {
+                    "24h": 453,       // 24 klst. (453,60 rounded correctly)
+                    "extra": 227,     // Viðbótardagur (226,80 rounded)
+                    "week": 1134,     // Vika (1.134,00)
+                    "deposit": 0      // No separate deposit for support legs
+                }
+            };            // API configuration and session management
+            let apiConfig = null;
+            let sessionID = null;
+
+            // Scaffold component configurations
+            const quickyItems = [
+                { itemno: '01-PAL-HP01-127', name: 'Quickly Grunneining Án Hjóla', qty: 1 },
+                { itemno: '01-PAL-HP01-126', name: 'Gólfborð M/Opi PB20', qty: 1 },
+                { itemno: '01-PAL-HP01-124', name: 'Handrið H20', qty: 2 },
+                { itemno: '01-PAL-HP01-107', name: 'Álrammar B5 1,05M', qty: 2 }
+            ];
+            
+            const scaffoldItems = [
+                { itemno: '01-PAL-HP01-106', name: 'Álrammar B1 2,1M', vals: { '2.5': 2, '3.5': 4, '4.5': 4, '5.5': 6, '6.5': 6, '7.5': 8, '8.5': 8, '9.5': 10, '10.5': 10 } },
+                { itemno: '01-PAL-HP01-107', name: 'Álrammar B5 1,05M', vals: { '2.5': 2, '3.5': 0, '4.5': 2, '5.5': 0, '6.5': 2, '7.5': 0, '8.5': 2, '9.5': 0, '10.5': 2 } },
+                { itemno: '01-PAL-HP01-117', name: 'Gólfborð M/Opi PB25', vals: { '2.5': 1, '3.5': 1, '4.5': 2, '5.5': 2, '6.5': 3, '7.5': 3, '8.5': 4, '9.5': 5, '10.5': 5 } },
+                { itemno: '01-PAL-HP01-108', name: 'Handrið H25', vals: { '2.5': 4, '3.5': 4, '4.5': 6, '5.5': 6, '6.5': 8, '7.5': 8, '8.5': 10, '9.5': 12, '10.5': 14 } },
+                { itemno: '01-PAL-HP01-109', name: 'Skástífur D25', vals: { '2.5': 4, '3.5': 8, '4.5': 8, '5.5': 12, '6.5': 12, '7.5': 16, '8.5': 16, '9.5': 20, '10.5': 20 } },
+                { itemno: '01-PAL-HP01-111', name: 'Hjól 200MM', vals: { '2.5': 4, '3.5': 4, '4.5': 4, '5.5': 4, '6.5': 4, '7.5': 4, '8.5': 4, '9.5': 4, '10.5': 4 } },
+                { itemno: '01-PAL-HP01-115', name: 'Álstífur Stillanlegar', vals: { '4.5': 2, '5.5': 2, '6.5': 2, '7.5': 2, '8.5': 2, '9.5': 2, '10.5': 2 } }
+            ];
+
+            const widget = document.getElementById('scaffold-calculator-widget');
+            const form = widget.querySelector('#scaffoldCalculatorForm');
+            const heightOptions = widget.querySelector('#heightOptions');
+            const errorDiv = widget.querySelector('#error-message');
+            const successDiv = widget.querySelector('#success-message');
+            const infoDiv = widget.querySelector('#info-message');
+            const resultTable = widget.querySelector('#result-table');
+            const tbody = resultTable.querySelector('tbody');
+
+            // Format numbers using Icelandic conventions
+            function formatIcelandicNumber(number) {
+                return new Intl.NumberFormat('de-DE').format(number);
+            }
+
+            // Calculate days between two dates
+            function calculateDaysBetween(startDateString, endDateString) {
+                const startDate = new Date(startDateString + 'T12:00:00');
+                const endDate = new Date(endDateString + 'T12:00:00');
+                
+                const timeDiff = endDate.getTime() - startDate.getTime();
+                return Math.max(1, Math.round(timeDiff / (1000 * 60 * 60 * 24)) + 1);
+            }
+
+            // Convert date from YYYY-MM-DD to DD.MM.YYYY format
+            function formatIcelandicDate(dateInput) {
+                if (!dateInput) return '';
+                const [year, month, day] = dateInput.split('-');
+                return `${day}.${month}.${year}`;
+            }
+
+            // Load API configuration from external file
+            async function loadApiConfig() {
+                try {
+                    const response = await fetch('/api_config.json');
+                    if (response.ok) {
+                        apiConfig = await response.json();
+                        config.minDays = apiConfig.minDays || config.minDays;
+                        console.log('API configuration loaded');
+                        showInfo('Tengst við verðgrunninn...');
+                    } else {
+                        console.warn('API configuration not found, using default pricing');
+                        showInfo('Notar áætlað verð - hafðu samband fyrir nákvæmt tilboð');
+                    }
+                } catch (error) {
+                    console.warn('Could not load API configuration:', error.message);
+                    showInfo('Notar áætlað verð - hafðu samband fyrir nákvæmt tilboð');
+                }
+            }
+
+            // Authenticate with pricing API
+            async function logon() {
+                if (sessionID) return sessionID;
+                if (!apiConfig) throw new Error('API configuration not available');
+
+                const { endpoints, credentials, API_KEY } = apiConfig;
+                const { USERNAME, PASSWORD, DEPOT } = credentials;
+
+                const response = await fetch(endpoints.logon, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': API_KEY
+                    },
+                    body: JSON.stringify({ USERNAME, PASSWORD, DEPOT }),
+                });
+
+                if (!response.ok) throw new Error(`Authentication failed (${response.status})`);
+
+                const data = await response.json();
+                sessionID = data.SessionID;
+                return data.SessionID;
+            }
+
+            // Fetch rate for a specific item
+            async function fetchRate(itemno) {
+                const { endpoints, API_KEY } = apiConfig;
+                const url = new URL(endpoints.rates);
+                url.searchParams.append('$filter', `Itemno eq '${itemno}'`);
+
+                const response = await fetch(url.toString(), {
+                    headers: {
+                        'SessionID': sessionID,
+                        'x-api-key': API_KEY
+                    },
+                });
+
+                if (!response.ok) throw new Error(`API request failed (${response.status})`);
+
+                const json = await response.json();
+                if (!json.value || !json.value.length) {
+                    throw new Error(`No data found for ${itemno}`);
+                }                return json.value[0].DailyRate;
+            }            // Calculate pricing based on form data using rental fee table
+            function calculatePricing(formData) {
+                let rentalCost = 0;
+                let deposit = 0;
+                
+                // Check scaffold type and use appropriate pricing
+                if (formData.type === 'Quicky') {
+                    // Use Quicky pricing
+                    deposit = config.quickyPricing.deposit;
+                      if (formData.days === 1) {
+                        rentalCost = config.quickyPricing["24h"];
+                    } else if (formData.days >= 2 && formData.days <= 6) {
+                        // Use 24h rate plus extra days rate for each additional day
+                        rentalCost = config.quickyPricing["24h"] + (config.quickyPricing.extra * (formData.days - 1));                    } else {
+                        // For 7+ days: calculate as (full weeks × week rate) + (extra days × 24h rate)
+                        const fullWeeks = Math.floor(formData.days / 7);
+                        const extraDays = formData.days % 7;
+                        console.log(`Quicky - Calculating for ${formData.days} days: ${fullWeeks} full weeks + ${extraDays} extra days`);
+                        console.log(`Quicky - Week rate: ${config.quickyPricing.week}, 24h rate: ${config.quickyPricing["24h"]}`);
+                        
+                        // Week pricing + 24h pricing for extra days
+                        const weekCost = config.quickyPricing.week * fullWeeks;
+                        const dailyCost = config.quickyPricing["24h"] * extraDays;
+                        rentalCost = weekCost + dailyCost;
+                        
+                        console.log(`Quicky - Final cost: (${config.quickyPricing.week} × ${fullWeeks}) + (${config.quickyPricing["24h"]} × ${extraDays}) = ${weekCost} + ${dailyCost} = ${rentalCost}`);
+                    }
+                    
+                } else {
+                    // Regular scaffold pricing based on type and height
+                    let heightPricing;
+                    
+                    // Select the correct pricing table based on scaffold type
+                    if (formData.type === 'Narrow') {
+                        heightPricing = config.narrowScaffoldPricing[formData.height];
+                    } else if (formData.type === 'Wide') {
+                        heightPricing = config.wideScaffoldPricing[formData.height];
+                    }
+                    
+                    if (!heightPricing) {
+                        console.error(`No pricing found for type: ${formData.type}, height: ${formData.height}`);
+                        return null;
+                    }
+                    
+                    deposit = heightPricing.deposit;
+                    
+                    if (formData.days === 1) {
+                        rentalCost = heightPricing["24h"];
+                    } else if (formData.days >= 2 && formData.days <= 6) {
+                        // Use 24h rate plus extra days rate for each additional day
+                        rentalCost = heightPricing["24h"] + (heightPricing.extra * (formData.days - 1));                    } else {
+                        // For 7+ days: calculate as (full weeks × week rate) + (extra days × 24h rate)
+                        const fullWeeks = Math.floor(formData.days / 7);
+                        const extraDays = formData.days % 7;
+                        console.log(`Calculating for ${formData.days} days: ${fullWeeks} full weeks + ${extraDays} extra days`);
+                        console.log(`Week rate: ${heightPricing.week}, 24h rate: ${heightPricing["24h"]}`);
+                        
+                        // Week pricing + 24h pricing for extra days
+                        const weekCost = heightPricing.week * fullWeeks;
+                        const dailyCost = heightPricing["24h"] * extraDays;
+                        rentalCost = weekCost + dailyCost;
+                        
+                        console.log(`Final cost: (${heightPricing.week} × ${fullWeeks}) + (${heightPricing["24h"]} × ${extraDays}) = ${weekCost} + ${dailyCost} = ${rentalCost}`);
+                    }
+                }
+                
+                return {
+                    rentalCost: rentalCost,
+                    deposit: deposit,
+                    total: rentalCost + deposit
+                };
+            }            // Calculate support legs pricing separately
+            function calculateSupportLegsPrice(days) {
+                let rentalCost = 0;
+                let deposit = config.supportLegsPricing.deposit;
+                
+                if (days === 1) {
+                    rentalCost = config.supportLegsPricing["24h"] * 2; // 2 support legs
+                } else if (days >= 2 && days <= 6) {
+                    rentalCost = (config.supportLegsPricing["24h"] + (config.supportLegsPricing.extra * (days - 1))) * 2; // 2 support legs                } else {
+                    // For 7+ days: calculate as (full weeks × week rate) + (extra days × 24h rate)
+                    const fullWeeks = Math.floor(days / 7);
+                    const extraDays = days % 7;
+                    
+                    // Week pricing + 24h pricing for extra days
+                    const weekCost = config.supportLegsPricing.week * fullWeeks;
+                    const dailyCost = config.supportLegsPricing["24h"] * extraDays;
+                    rentalCost = (weekCost + dailyCost) * 2; // 2 support legs
+                }
+                
+                return {
+                    rentalCost: rentalCost,
+                    deposit: deposit,
+                    total: rentalCost + deposit
+                };
+            }            function showInfo(message) {
+                infoDiv.textContent = message;
+                infoDiv.classList.remove('hidden');
+                setTimeout(() => {
+                    infoDiv.classList.add('hidden');
+                }, 3000);
+            }function handleScaffoldTypeChange() {
+                const scaffoldType = widget.querySelector('input[name="scaffold_type"]:checked')?.value;
+                const supportLegsOptions = widget.querySelector('#supportLegsOptions');
+                
+                if (scaffoldType === 'model1') { // Quicky
+                    heightOptions.style.display = 'none';
+                    supportLegsOptions.style.display = 'none';
+                    // Uncheck all height options and support legs when Quicky is selected
+                    widget.querySelectorAll('input[name="height_option"]').forEach(radio => radio.checked = false);
+                    widget.querySelector('input[name="support_legs"]').checked = false;
+                } else {
+                    heightOptions.style.display = 'block';
+                    supportLegsOptions.style.display = 'block';
+                }
+            }
+
+            // Initialize date inputs with today's date
+            function initializeDates() {
+                const today = new Date();
+                const isoDate = today.toISOString().split('T')[0];
+                widget.querySelector('#startDate').value = isoDate;
+                widget.querySelector('#endDate').value = isoDate;
+            }            // Event listeners
+            widget.querySelectorAll('input[name="scaffold_type"]').forEach(radio => {
+                radio.addEventListener('change', handleScaffoldTypeChange);
+            });
+            
+            // Add event listener for support legs checkbox to auto-calculate
+            widget.querySelector('input[name="support_legs"]').addEventListener('change', function() {
+                // Only auto-calculate if form is already filled out
+                const scaffoldType = widget.querySelector('input[name="scaffold_type"]:checked')?.value;
+                const startDate = widget.querySelector('#startDate').value;
+                const endDate = widget.querySelector('#endDate').value;
+                
+                if (scaffoldType && startDate && endDate) {
+                    // Check if height is required and selected (for non-Quicky types)
+                    if (scaffoldType === 'model1' || widget.querySelector('input[name="height_option"]:checked')) {
+                        // Trigger form submission to update prices
+                        form.dispatchEvent(new Event('submit'));
+                    }
+                }
+            });form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                errorDiv.classList.add('hidden');
+                successDiv.classList.add('hidden');
+                infoDiv.classList.add('hidden');
+                resultTable.classList.add('hidden');
+                tbody.innerHTML = '';
+                
+                const submitButton = form.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.textContent;
+                submitButton.textContent = 'Reiknar...';
+                submitButton.disabled = true;
+
+                try {                    const scaffoldType = widget.querySelector('input[name="scaffold_type"]:checked')?.value;
+                    const startDateValue = widget.querySelector('#startDate').value;
+                    const endDateValue = widget.querySelector('#endDate').value;
+                    const supportLegsSelected = widget.querySelector('input[name="support_legs"]')?.checked || false;
+                    
+                    if (!scaffoldType) {
+                        throw new Error('Vinsamlegast veldu tegund hjólapalls.');
+                    }
+
+                    if (!startDateValue || !endDateValue) {
+                        throw new Error('Vinsamlegast veldu gilt tímabil.');
+                    }
+
+                    const startDate = new Date(startDateValue);
+                    const endDate = new Date(endDateValue);
+
+                    if (endDate < startDate) {
+                        throw new Error('Lokadagur getur ekki verið á undan upphafsdegi.');
+                    }
+                    
+                    const days = calculateDaysBetween(startDateValue, endDateValue);
+                      // Prepare form data for pricing calculation
+                    let formData = {
+                        days: days
+                    };
+                    
+                    // Determine scaffold type and add height if needed
+                    if (scaffoldType === 'model1') {
+                        formData.type = 'Quicky';
+                    } else {
+                        const selectedHeight = widget.querySelector('input[name="height_option"]:checked')?.value;
+                        
+                        if (!selectedHeight) {
+                            throw new Error('Vinsamlegast veldu vinnuhæð fyrir mjóan eða breiðan pall.');
+                        }
+                        
+                        formData.height = selectedHeight;
+                        
+                        // Set scaffold type based on selection
+                        if (scaffoldType === 'model2') {
+                            formData.type = 'Narrow'; // Hjólapallur mjór (0.75m)
+                        } else if (scaffoldType === 'model3') {
+                            formData.type = 'Wide';   // Hjólapallur breiður (1.35m)
+                        }
+                    }
+                      // Calculate pricing using the new structure
+                    const pricing = calculatePricing(formData);
+                    
+                    if (!pricing) {
+                        throw new Error('Gat ekki reiknað verð fyrir valda uppsetningu.');
+                    }
+                    
+                    // Calculate support legs pricing if selected
+                    let supportLegsPrice = null;
+                    if (supportLegsSelected && formData.type !== 'Quicky') {
+                        supportLegsPrice = calculateSupportLegsPrice(formData.days);
+                    }// Display material breakdown - each item gets its own row
+                    let materialList = [];
+                    let scaffoldDescription;
+                    
+                    if (formData.type === 'Quicky') {
+                        scaffoldDescription = 'Quicky hjólapallur (4m vinnuhæð)';
+                        materialList = [
+                            { itemno: '01-PAL-HP01-127', name: 'Quickly Grunneining Án Hjóla', qty: 1 },
+                            { itemno: '01-PAL-HP01-126', name: 'Gólfborð M/Opi PB20', qty: 1 },
+                            { itemno: '01-PAL-HP01-124', name: 'Handrið H20', qty: 2 },
+                            { itemno: '01-PAL-HP01-107', name: 'Álrammar B5 1,05M', qty: 2 }
+                        ];
+                    } else {
+                        if (formData.type === 'Narrow') {
+                            scaffoldDescription = `Hjólapallur mjór 0,75m (${formData.height}m standhæð/${parseFloat(formData.height) + 2}m vinnuhæð)`;
+                        } else if (formData.type === 'Wide') {
+                            scaffoldDescription = `Hjólapallur breiður 1,35m (${formData.height}m standhæð/${parseFloat(formData.height) + 2}m vinnuhæð)`;
+                        }
+                        
+                        // Calculate material quantities based on height
+                        const height = formData.height;
+                        let tempList = [
+                            { itemno: '01-PAL-HP01-106', name: 'Álrammar B1 2,1M', qty: scaffoldItems[0].vals[height] || 0 },
+                            { itemno: '01-PAL-HP01-107', name: 'Álrammar B5 1,05M', qty: scaffoldItems[1].vals[height] || 0 },
+                            { itemno: '01-PAL-HP01-117', name: 'Gólfborð M/Opi PB25', qty: scaffoldItems[2].vals[height] || 0 },
+                            { itemno: '01-PAL-HP01-108', name: 'Handrið H25', qty: scaffoldItems[3].vals[height] || 0 },
+                            { itemno: '01-PAL-HP01-109', name: 'Skástífur D25', qty: scaffoldItems[4].vals[height] || 0 },
+                            { itemno: '01-PAL-HP01-111', name: 'Hjól 200MM', qty: scaffoldItems[5].vals[height] || 0 }
+                        ];
+                        
+                        // Add adjustable legs for heights 4.5m and above
+                        if (parseFloat(height) >= 4.5) {
+                            tempList.push({ itemno: '01-PAL-HP01-115', name: 'Álstífur Stillanlegar', qty: scaffoldItems[6].vals[height] || 0 });
+                        }
+                        
+                        // Filter out zero quantities
+                        materialList = tempList.filter(item => item.qty > 0);                    }                    // Add support legs row if selected
+                    if (supportLegsPrice) {                        const supportLegsRow = document.createElement('tr');
+                        supportLegsRow.style.fontWeight = 'bold';
+                        supportLegsRow.style.backgroundColor = '#fff3cd';
+                        supportLegsRow.innerHTML = `
+                            <td>01-PAL-HP01-115</td>
+                            <td>Stuðningsfætur Stillanlegar</td>
+                            <td>2</td>
+                        `;
+                        tbody.appendChild(supportLegsRow);
+                    }
+                    
+                    // Add material rows
+                    materialList.forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${item.itemno}</td>
+                            <td>${item.name}</td>
+                            <td>${item.qty}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                    
+                    resultTable.classList.remove('hidden');                    // Determine pricing description
+                    let periodDescription;
+                    if (days === 1) {
+                        periodDescription = "24 klst. verð";
+                    } else if (days >= 2 && days <= 6) {
+                        periodDescription = `24 klst. + ${days - 1} viðbótardagar`;                    } else {
+                        // For 7+ days: show as weeks + extra days
+                        const fullWeeks = Math.floor(days / 7);
+                        const extraDays = days % 7;
+                        if (extraDays === 0) {
+                            if (fullWeeks === 1) {
+                                periodDescription = "viku verð";
+                            } else {
+                                periodDescription = `${fullWeeks} vikur verð`;
+                            }                        } else {
+                            if (fullWeeks === 1) {
+                                periodDescription = `viku verð + ${extraDays} dagur`;
+                            } else {
+                                periodDescription = `${fullWeeks} vikur verð + ${extraDays} dagur`;
+                            }
+                        }                    }let totalRentalCost = pricing.rentalCost;
+                    if (supportLegsPrice) {
+                        totalRentalCost += supportLegsPrice.rentalCost;
+                    }
+
+                    let resultMessage = `
+                        <strong>Leiguverð fyrir hjólapall í ${days} daga:</strong><br>
+                        <strong style="font-size: 1.2em;">${formatIcelandicNumber(totalRentalCost)} kr.</strong><br>`;
+                      if (supportLegsPrice && supportLegsPrice.rentalCost > 0) {
+                        resultMessage += `<em>(stuðningsfætur: ${formatIcelandicNumber(supportLegsPrice.rentalCost)} kr.)</em><br>`;
+                    }
+                      resultMessage += `<br>
+                        <em>Leigutími: ${days} dagar (${formatIcelandicDate(startDateValue)} - ${formatIcelandicDate(endDateValue)})</em><br>                        <em>Verðskrá: ${periodDescription}</em><br><br>
+                        <em style="color: #17a2b8;">Trygging: ${formatIcelandicNumber(pricing.deposit)} kr. (endurgreitt við skil)</em>`;
+                    
+                    resultMessage += '<br><br><em style="color: #ff8800;"> Verð er áætlað - hafðu samband við leiga@byko.is eða í síma 515-4020 fyrir tilboð</em>';
+                    
+                    if (days < config.minDays) {
+                        resultMessage += `<br><br><em style="color: #d9534f;"> Athugið: Lágmarksleigtími er ${config.minDays} dagar</em>`;
+                    } else {
+                        resultMessage += '<br><br><em style="color: #17a2b8;"> Lágmarks leigutími er 24 klst.</em>';
+                    }
+                    
+                    successDiv.innerHTML = resultMessage;
+                    successDiv.classList.remove('hidden');
+
+                } catch (error) {
+                    errorDiv.textContent = `Villa: ${error.message}`;
+                    errorDiv.classList.remove('hidden');
+                } finally {
+                    submitButton.textContent = originalButtonText;
+                    submitButton.disabled = false;
+                }
+            });            // Initialize the widget
+            initializeDates();
+            handleScaffoldTypeChange();
+            loadApiConfig();
+        })();
+
+        // Function to toggle terms and conditions
+        function toggleTerms() {
+            const content = document.getElementById('termsContent');
+            const toggle = document.querySelector('.terms-toggle');
+            
+            if (content.classList.contains('show')) {
+                content.classList.remove('show');
+                toggle.classList.remove('rotated');
+            } else {
+                content.classList.add('show');
+                toggle.classList.add('rotated');
+            }
+        }
+    </script>
+</div>

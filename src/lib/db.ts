@@ -101,6 +101,10 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     },
   })
   if (!res.ok) {
+    if (res.status === 401) {
+      // Notify auth system that token is invalid
+      window.dispatchEvent(new CustomEvent('lanicad:auth-expired'))
+    }
     const body = await res.json().catch(() => ({}))
     throw new Error(body.error || `API villa (${res.status})`)
   }

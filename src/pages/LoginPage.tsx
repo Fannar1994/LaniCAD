@@ -89,7 +89,7 @@ export function LoginPage() {
         </form>
 
         <p className="mt-4 text-center text-xs text-gray-400">
-          Sjálfgefinn aðgangur: admin@lanicad.is / admin123
+          LániCAD — BYKO Leiga
         </p>
       </div>
     </div>

@@ -1,4 +1,4 @@
-# LániCAD — Session Log
+# LÃ¡niCAD â€” Session Log
 
 > This file tracks the current session's progress, decisions, and context.
 
@@ -6,26 +6,30 @@
 
 ## Current State (2026-07)
 
-### Project Status: Feature Complete (Core)
-LániCAD is a fully functional 2D/3D CAD system for construction equipment rental with 5 calculators, project management, templates, AI chat, and 2D/3D visualization.
+### Project Status: Phase 1 â€” Stabilize & Ship (In Progress)
+LÃ¡niCAD is a fully functional 2D/3D CAD system for construction equipment rental with 5 calculators, project management, templates, AI chat, and 2D/3D visualization. Currently stabilizing for real-world use at BYKO Leiga.
 
-### Latest Session Work
-1. **Templates Management UI** — Created TemplatesPage with list/filter/delete, Vista snidmat button in all 5 calculators, template loading into calculators via location.state, sidebar + route added
-2. **Save Project Feature** — All 5 calculators can save/update projects to PostgreSQL (with toast feedback)
-3. **Dashboard Rewrite** — Stats, 5 calculator links, 2 tool links, recent projects feed
-4. **Toast Notifications** — Installed sonner, integrated into AppShell
+### Latest Session Work (45eb031)
+1. **Professional PDF Template** â€” Complete rewrite of export-pdf.ts with BYKO Leiga branding, two-column client/period layout, terms section, dark total box with gold text
+2. **Offline Save Queue** â€” Added localStorage-based queue in db.ts that catches network failures on mutations, auto-retries on reconnect
+3. **FormworkCalculator State Restore** â€” Fixed 26 mode A-F state variables that were saved but never restored from initData
+4. **Responsive Breakpoints** â€” Changed all `sm:grid-cols-3` to `md:grid-cols-3` in DateRangePicker, ScaffoldCalculator, FormworkCalculator for better tablet layout
+5. **TemplateNameDialog** â€” Replaced all prompt() calls with modal dialogs across all 5 calculators (previous commit 04ad846)
+6. **Kennitala Validation** â€” Added format validation in ClientInfoPanel
+7. **Accessibility** â€” Added aria-labels to ExportButtons, zero-price warnings in scaffold calculator
 
 ### Architecture
 | Layer | Tech | Status |
 |---|---|---|
 | Frontend | Vite 6 + React 19 + TypeScript + Tailwind + shadcn/ui | Complete |
-| Backend | Express + PostgreSQL (port 3001 to 54937) | Complete |
+| Backend | Express + Turso (libSQL) | Complete |
 | Auth | JWT + localStorage AuthProvider | Complete |
-| 2D Engine | Maker.js to SVG | Complete |
+| 2D Engine | Maker.js â†’ SVG | Complete |
 | 3D Engine | Three.js + React Three Fiber | Complete |
-| AI Chat | Claude Sonnet 4 via Express | Complete |
-| Tests | Vitest — 108/108 passing | Complete |
-| CI/CD | GitHub Actions to GitHub Pages | Complete |
+| PDF Export | jsPDF + jspdf-autotable (professional template) | Complete |
+| Offline | Service worker PWA + save queue | Complete |
+| Tests | Vitest â€” 178/178 passing | Complete |
+| CI/CD | GitHub Actions â†’ GitHub Pages | Complete |
 
 ### 10 Routes
 `/` Dashboard, `/projects`, `/templates`, `/calculator/{fence,scaffolding,rolling,ceiling,formwork}`, `/drawing`, `/schematics`, `/settings`, `/login`

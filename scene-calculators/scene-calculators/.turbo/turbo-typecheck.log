@@ -1,0 +1,5 @@
+
+
+> @byko/scene-calculators@1.0.0 typecheck /Users/runarlj/byko/code/byko-next-frontend-new/packages/scene-calculators
+> tsc --noEmit --incremental --tsBuildInfoFile .tsbuild
+

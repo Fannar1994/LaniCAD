@@ -1,0 +1,13 @@
+{
+  "include": ["src/**/*.ts*", "../lib-core/src/index.d.ts", "../lib-analytics/globals.d.ts"],
+  "exclude": ["src/build.ts", "dist/*"],
+  "compilerOptions": {
+    "jsx": "react",
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "noEmit": false,
+    "declaration": true,
+    "outDir": "./dist",
+    "declarationDir": "./dist"
+  }
+}

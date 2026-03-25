@@ -35,7 +35,7 @@
 - [x] Code-split large bundle (dynamic imports for Three.js, PDF.js, Tesseract)
 - [ ] Real user testing & bug fixes
 - [x] Responsive / mobile layout improvements
-- [ ] Print-friendly PDF layouts for all calculators
+- [x] Print-friendly PDF layouts for all calculators
 - [x] Role-based access control (restrict routes by role)
 - [x] Audit log (track user actions in PostgreSQL)
 - [x] Unit tests for new features (DXF parser, i18n, catalog sync)
@@ -43,3 +43,9 @@
 - [x] Product image uploads in Settings > Vörur
 - [ ] Multi-project comparison / reporting dashboard
 - [ ] Client portal (read-only link sharing)
+- [x] Offline save queue with auto-flush on reconnect
+- [x] FormworkCalculator state restore (all 26 mode A-F variables)
+- [x] Professional PDF invoice template (BYKO Leiga branding)
+- [x] Replace all prompt() with modal dialogs
+- [x] Kennitala validation in ClientInfoPanel
+- [x] Accessibility improvements (aria-labels, warnings)
