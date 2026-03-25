@@ -309,14 +309,14 @@ export function DrawingPage() {
     e.target.value = ''
   }, [cad])
   const handleImportPdf = useCallback(() => { setPdfDialogOpen(true) }, [])
-  const handlePdfImported = useCallback((result: { svgContent: string; width: number; height: number; ocrText: string }) => {
-    // Add the PDF page as a rect with SVG background on the equipment layer
+  const handlePdfImported = useCallback((result: { imageDataUrl: string; svgContent: string; width: number; height: number; ocrText: string }) => {
+    // Add the PDF page as a visible image on the equipment layer
     cad.importObjects([{
       id: cadId(),
       layerId: 'equipment',
-      style: { stroke: '#999', strokeWidth: 0.5, fill: 'none', opacity: 0.6 },
-      locked: false,
-      geometry: { type: 'rect', origin: { x: 0, y: 0 }, width: result.width, height: result.height, rotation: 0 },
+      style: { stroke: 'none', strokeWidth: 0, fill: 'none', opacity: 0.8 },
+      locked: true,
+      geometry: { type: 'image', origin: { x: 0, y: 0 }, width: result.width, height: result.height, dataUrl: result.imageDataUrl },
     }], [])
     setStatus(`PDF innflutt (${Math.round(result.width)}×${Math.round(result.height)})${result.ocrText ? ' + OCR texti' : ''}`)
   }, [cad])

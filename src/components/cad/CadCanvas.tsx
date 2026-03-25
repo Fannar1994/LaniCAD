@@ -547,6 +547,16 @@ function CadObjectSvg({ object, selected, pixelScale }: { object: CadObject; sel
       const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z'
       return <path d={d} {...common} />
     }
+    case 'image':
+      return (
+        <image
+          href={geo.dataUrl}
+          x={geo.origin.x} y={geo.origin.y}
+          width={geo.width} height={geo.height}
+          opacity={style.opacity}
+          preserveAspectRatio="none"
+        />
+      )
   }
 }
 
@@ -719,6 +729,10 @@ function hitTestObject(obj: CadObject, pt: Point2D, threshold: number): boolean 
         if (distToSegment(pt, a, b) < threshold) return true
       }
       return false
+    }
+    case 'image': {
+      const { origin: o, width: w, height: h } = geo
+      return pt.x >= o.x && pt.x <= o.x + w && pt.y >= o.y && pt.y <= o.y + h
     }
   }
 }

@@ -120,6 +120,13 @@ function getSnapPoints(obj: CadObject): SnapResult[] {
       r.push({ point: geo.start, type: 'endpoint' })
       r.push({ point: geo.end, type: 'endpoint' })
       break
+    case 'image':
+      r.push({ point: geo.origin, type: 'endpoint' })
+      r.push({ point: { x: geo.origin.x + geo.width, y: geo.origin.y }, type: 'endpoint' })
+      r.push({ point: { x: geo.origin.x, y: geo.origin.y + geo.height }, type: 'endpoint' })
+      r.push({ point: { x: geo.origin.x + geo.width, y: geo.origin.y + geo.height }, type: 'endpoint' })
+      r.push({ point: { x: geo.origin.x + geo.width / 2, y: geo.origin.y + geo.height / 2 }, type: 'center' })
+      break
   }
   return r
 }

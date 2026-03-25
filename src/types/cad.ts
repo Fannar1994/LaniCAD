@@ -31,11 +31,12 @@ export interface TextGeometry { type: 'text'; position: Point2D; content: string
 export interface DimensionGeometry { type: 'dimension'; start: Point2D; end: Point2D; offset: number }
 export interface EllipseGeometry { type: 'ellipse'; center: Point2D; rx: number; ry: number; rotation: number }
 export interface PolygonGeometry { type: 'polygon'; center: Point2D; radius: number; sides: number; rotation: number }
+export interface ImageGeometry { type: 'image'; origin: Point2D; width: number; height: number; dataUrl: string }
 
 export type CadGeometry =
   | LineGeometry | RectGeometry | CircleGeometry | ArcGeometry
   | PolylineGeometry | TextGeometry | DimensionGeometry
-  | EllipseGeometry | PolygonGeometry
+  | EllipseGeometry | PolygonGeometry | ImageGeometry
 
 // ── Style, Object, Layer ──
 
@@ -177,6 +178,8 @@ export function getBoundingBox(obj: CadObject): { minX: number; minY: number; ma
       for (const p of pts) { if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y; if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y }
       return { minX, minY, maxX, maxY }
     }
+    case 'image':
+      return { minX: geo.origin.x, minY: geo.origin.y, maxX: geo.origin.x + geo.width, maxY: geo.origin.y + geo.height }
   }
 }
 
@@ -200,6 +203,8 @@ export function moveGeometry(geo: CadGeometry, dx: number, dy: number): CadGeome
       return { ...geo, center: { x: geo.center.x + dx, y: geo.center.y + dy } }
     case 'polygon':
       return { ...geo, center: { x: geo.center.x + dx, y: geo.center.y + dy } }
+    case 'image':
+      return { ...geo, origin: { x: geo.origin.x + dx, y: geo.origin.y + dy } }
   }
 }
 
@@ -235,6 +240,11 @@ export function rotateGeometry(geo: CadGeometry, pivot: Point2D, angleDeg: numbe
     case 'polygon': return { ...geo, center: rotPt(geo.center), rotation: (geo.rotation || 0) + angleDeg }
     case 'text': return { ...geo, position: rotPt(geo.position), rotation: (geo.rotation || 0) + angleDeg }
     case 'dimension': return { ...geo, start: rotPt(geo.start), end: rotPt(geo.end) }
+    case 'image': {
+      const c = { x: geo.origin.x + geo.width / 2, y: geo.origin.y + geo.height / 2 }
+      const nc = rotPt(c)
+      return { ...geo, origin: { x: nc.x - geo.width / 2, y: nc.y - geo.height / 2 } }
+    }
   }
 }
 
@@ -254,6 +264,7 @@ export function scaleGeometry(geo: CadGeometry, pivot: Point2D, factor: number):
     case 'polygon': return { ...geo, center: scalePt(geo.center), radius: geo.radius * factor }
     case 'text': return { ...geo, position: scalePt(geo.position), fontSize: geo.fontSize * factor }
     case 'dimension': return { ...geo, start: scalePt(geo.start), end: scalePt(geo.end), offset: geo.offset * factor }
+    case 'image': return { ...geo, origin: scalePt(geo.origin), width: geo.width * factor, height: geo.height * factor }
   }
 }
 
@@ -278,6 +289,10 @@ export function mirrorGeometry(geo: CadGeometry, axis: 'x' | 'y', pivot: Point2D
     case 'polygon': return { ...geo, center: mirrorPt(geo.center) }
     case 'text': return { ...geo, position: mirrorPt(geo.position) }
     case 'dimension': return { ...geo, start: mirrorPt(geo.start), end: mirrorPt(geo.end), offset: axis === 'x' ? -geo.offset : geo.offset }
+    case 'image': {
+      const np = mirrorPt({ x: geo.origin.x + (axis === 'y' ? geo.width : 0), y: geo.origin.y + (axis === 'x' ? geo.height : 0) })
+      return { ...geo, origin: np }
+    }
   }
 }
 

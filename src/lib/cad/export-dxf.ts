@@ -151,6 +151,9 @@ export function exportDxf(objects: CadObject[], layers: CadLayer[]): string {
         }
         break
       }
+      case 'image':
+        // Images cannot be exported to basic DXF — skip
+        break
     }
   }
   w('0'); w('ENDSEC')
