@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
   NARROW_PRICING, WIDE_PRICING, QUICKLY_PRICING, SUPPORT_LEGS_PRICING,
@@ -21,6 +21,7 @@ const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '
 
 export function RollingScaffoldCalculator() {
   const location = useLocation()
+  const navigate = useNavigate()
   const loadedProject = location.state?.project as { id: string; name: string; data: Record<string, unknown>; client: ClientInfo } | undefined
   const loadedTemplate = location.state?.template as { id: string; name: string; config: Record<string, unknown> } | undefined
   const initData = loadedProject?.data ?? loadedTemplate?.config ?? {}
@@ -267,6 +268,7 @@ export function RollingScaffoldCalculator() {
           />
         }
         cameraPosition={[3, parseFloat(height) / 2, 5]}
+        onOpenInDrawing={() => navigate('/drawing', { state: { equipmentType: 'rolling', params: { height: parseFloat(height), width: scaffoldType === 'wide' ? 'wide' : 'narrow' } } })}
       />
 
       {/* Component breakdown (narrow scaffolds only) */}

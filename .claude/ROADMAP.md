@@ -49,12 +49,13 @@ L├íniCAD is a 2D/3D CAD system for construction equipment rental. It serves f
 > Goal: Make the 2D drawing and PDF import features production-ready
 
 ### 2.1 2D Drawing Generators
-- [ ] Fence layout drawing (Maker.js) ΓÇö top-down panel arrangement with gates
-- [ ] Scaffolding elevation drawing ΓÇö side view with levels, braces, platforms
-- [ ] Formwork plan drawing ΓÇö panel layout with corners, tie bars
-- [ ] Rolling scaffold drawing ΓÇö front/side elevation
-- [ ] Ceiling props grid drawing ΓÇö floor plan with prop positions and beam spans
-- [ ] Wire each generator to its calculator's "Sko├░a teikningu" button
+- [x] Fence layout drawing (Maker.js) — top-down panel arrangement with gates
+- [x] Scaffolding elevation drawing — side view with levels, braces, platforms
+- [x] Formwork plan drawing — panel layout with corners, tie bars
+- [x] Rolling scaffold drawing — front/side elevation
+- [x] Ceiling props grid drawing — floor plan with prop positions and beam spans
+- [x] Wire each generator to its calculator's "Opna í teikniborði" button
+- [x] Scale bars and LániCAD branding on all drawing generators
 
 ### 2.2 PDF Import & OCR
 - [ ] Complete PDF ΓåÆ SVG background layer in Drawing page
@@ -63,8 +64,8 @@ L├íniCAD is a 2D/3D CAD system for construction equipment rental. It serves f
 - [ ] Build UI for placing equipment on imported floor plans
 
 ### 2.3 DXF Integration
-- [ ] Add "Import DXF" button to Drawing page (parser already exists)
-- [ ] Add "Export DXF" button for calculator drawings
+- [x] Add "Import DXF" button to Drawing page (parser already exists)
+- [x] Add "Export DXF" button for calculator drawings
 - [ ] Test with real DXF files from architects
 
 ---

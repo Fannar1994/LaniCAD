@@ -17,6 +17,9 @@ LániCAD is a fully functional 2D/3D CAD system for construction equipment renta
 5. **TemplateNameDialog** — Replaced all prompt() calls with modal dialogs across all 5 calculators (previous commit 04ad846)
 6. **Kennitala Validation** — Added format validation in ClientInfoPanel
 7. **Accessibility** — Added aria-labels to ExportButtons, zero-price warnings in scaffold calculator
+8. **Auth Security** — Hardened: localhost-only offline bypass, 401 auto-logout, admin route guards, JWT secret warning (commit cef04ad)
+9. **Phase 2.1 Drawing Generators** — FormworkCalculator ViewerPanel visible for all 6 systems, scale bars + LániCAD branding on Fence/Rolling/Ceiling drawings (commit c88dd8f)
+10. **Calculator → DrawingPage Bridge** — Added "Opna í teikniborði" button to all 5 calculators, DrawingPage reads navigation state to pre-fill equipment params
 
 ### Architecture
 | Layer | Tech | Status |

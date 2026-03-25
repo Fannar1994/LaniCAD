@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { FENCE_PRODUCTS, FENCE_TYPES, MIN_RENTAL_DAYS, type FenceProductData } from '@/data/fence'
 import { calcFenceRental } from '@/lib/calculations/rental'
@@ -27,6 +27,7 @@ interface LineItem {
 
 export function FenceCalculator() {
   const location = useLocation()
+  const navigate = useNavigate()
   const loadedProject = location.state?.project as { id: string; name: string; data: Record<string, unknown>; client: ClientInfo } | undefined
   const loadedTemplate = location.state?.template as { id: string; name: string; config: Record<string, unknown> } | undefined
   const initData = loadedProject?.data ?? loadedTemplate?.config ?? {}
@@ -441,6 +442,7 @@ export function FenceCalculator() {
             includeGate={includeGate}
           />
         }
+        onOpenInDrawing={() => navigate('/drawing', { state: { equipmentType: 'fence', params: { panels: geometry.panels, panelWidth: fenceType.fenceLength, panelHeight: fenceType.key === 'standard-low' ? 1.2 : fenceType.key === 'queue' ? 1.1 : 2.0, includeGate } } })}
       />
 
       {/* Materials table */}

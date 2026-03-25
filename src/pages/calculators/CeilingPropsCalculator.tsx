@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { LOFTASTODIR, MOTABITAR, AUKAHLUTIR, CLASS_INFO } from '@/data/ceiling-props'
 import { calcStandardRental } from '@/lib/calculations/rental'
@@ -24,6 +24,7 @@ interface LineItem {
 
 export function CeilingPropsCalculator() {
   const location = useLocation()
+  const navigate = useNavigate()
   const loadedProject = location.state?.project as { id: string; name: string; data: Record<string, unknown>; client: ClientInfo } | undefined
   const loadedTemplate = location.state?.template as { id: string; name: string; config: Record<string, unknown> } | undefined
   const initData = loadedProject?.data ?? loadedTemplate?.config ?? {}
@@ -342,6 +343,7 @@ export function CeilingPropsCalculator() {
             roomWidth={Math.max(4, propQty * 1.2)}
           />
         }
+        onOpenInDrawing={() => navigate('/drawing', { state: { equipmentType: 'ceiling', params: { propCount: propQty, propHeight: (selectedProp.minHeight + selectedProp.maxHeight) / 2, beamCount: beamQty, roomWidth: Math.max(4, propQty * 1.2) } } })}
       />
 
       {/* Materials table */}

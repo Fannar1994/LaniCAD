@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { SCAFFOLD_SYSTEMS, getScaffoldItems, hasScaffoldPricing } from '@/data/scaffolding'
 import type { ScaffoldSystemKey } from '@/data/scaffolding'
@@ -27,6 +27,7 @@ interface Facade {
 
 export function ScaffoldCalculator() {
   const location = useLocation()
+  const navigate = useNavigate()
   const loadedProject = location.state?.project as { id: string; name: string; data: Record<string, unknown>; client: ClientInfo } | undefined
   const loadedTemplate = location.state?.template as { id: string; name: string; config: Record<string, unknown> } | undefined
   const initData = loadedProject?.data ?? loadedTemplate?.config ?? {}
@@ -323,6 +324,7 @@ export function ScaffoldCalculator() {
           />
         }
         cameraPosition={[facades[0].length / 2, facades[0].height, facades[0].length]}
+        onOpenInDrawing={() => navigate('/drawing', { state: { equipmentType: 'scaffold', params: { length: facades[0].length, levels2m: primaryLevels.levels2m, levels07m: primaryLevels.levels07m, legType: primaryLevels.legType } } })}
       />
 
       {/* Materials table */}

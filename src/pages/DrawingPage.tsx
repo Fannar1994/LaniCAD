@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useCadState } from '@/hooks/useCadState'
 import { useScene3D } from '@/hooks/useScene3D'
 import { useChatCad } from '@/contexts/ChatCadContext'
@@ -34,6 +35,12 @@ import { cadId } from '@/types/cad'
 
 type EquipmentType = 'fence' | 'scaffold' | 'rolling' | 'formwork' | 'ceiling' | 'protecto'
 type ViewMode = 'cad' | '3d' | '3d-scene'
+
+/** State passed via navigate() from calculators to pre-fill drawing params */
+export interface DrawingPageState {
+  equipmentType: EquipmentType
+  params: Record<string, unknown>
+}
 
 const equipmentOptions: { value: EquipmentType; label: string }[] = [
   { value: 'fence', label: 'Girðingar' },
@@ -86,6 +93,51 @@ export function DrawingPage() {
   const [protectoLength, setProtectoLength] = useState(8)
   const [protectoHeight, setProtectoHeight] = useState(1.1)
   const [protectoPostSpacing, setProtectoPostSpacing] = useState(2.0)
+
+  // Calculator → DrawingPage bridge: read navigation state
+  const location = useLocation()
+  useEffect(() => {
+    const state = location.state as DrawingPageState | null
+    if (!state?.equipmentType) return
+    const p = state.params
+    const n = (key: string) => typeof p[key] === 'number' ? p[key] as number : undefined
+    const s = (key: string) => typeof p[key] === 'string' ? p[key] as string : undefined
+
+    setEquipmentType(state.equipmentType)
+    switch (state.equipmentType) {
+      case 'fence':
+        if (n('panels') !== undefined) setFencePanels(n('panels')!)
+        if (n('panelWidth') !== undefined) setFencePanelWidth(n('panelWidth')!)
+        if (n('panelHeight') !== undefined) setFencePanelHeight(n('panelHeight')!)
+        if (p.includeGate !== undefined) setFenceIncludeGate(!!p.includeGate)
+        if (s('fenceStyle')) setFenceStyle(s('fenceStyle') as FenceStyle)
+        break
+      case 'scaffold':
+        if (n('length') !== undefined) setScaffoldLength(n('length')!)
+        if (n('levels2m') !== undefined) setScaffoldLevels2m(n('levels2m')!)
+        if (n('levels07m') !== undefined) setScaffoldLevels07m(n('levels07m')!)
+        if (s('legType')) setScaffoldLegType(s('legType') as '50cm' | '100cm')
+        break
+      case 'rolling':
+        if (n('height') !== undefined) setRollingHeight(n('height')!)
+        if (s('width')) setRollingWidth(s('width') as 'narrow' | 'wide')
+        break
+      case 'formwork':
+        if (n('length') !== undefined) setFormworkLength(n('length')!)
+        if (n('height') !== undefined) setFormworkHeight(n('height')!)
+        if (s('system')) setFormworkSystem(s('system') as FormworkDrawingSystem)
+        break
+      case 'ceiling':
+        if (n('propCount') !== undefined) setCeilingPropCount(n('propCount')!)
+        if (n('propHeight') !== undefined) setCeilingPropHeight(n('propHeight')!)
+        if (n('beamCount') !== undefined) setCeilingBeamCount(n('beamCount')!)
+        if (n('roomWidth') !== undefined) setCeilingRoomWidth(n('roomWidth')!)
+        break
+    }
+    setStatus(`Gildi flutt úr reiknivél`)
+    // Clear location state so refresh doesn't re-apply
+    window.history.replaceState({}, '')
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Chat → CAD bridge: consume pending actions from AI chat
   const { pendingAction, clearPendingAction } = useChatCad()

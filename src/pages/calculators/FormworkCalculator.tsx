@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { FORMWORK_SYSTEMS, MANTO_HEIGHTS, TIE_BAR_OPTIONS } from '@/data/formwork'
 import type { ID15Combo } from '@/data/formwork'
@@ -32,6 +32,7 @@ type SystemKey = 'manto' | 'rasto' | 'alufort' | 'id15' | 'robusto' | 'column'
 
 export function FormworkCalculator() {
   const location = useLocation()
+  const navigate = useNavigate()
   const loadedProject = location.state?.project as { id: string; name: string; data: Record<string, unknown>; client: ClientInfo } | undefined
   const loadedTemplate = location.state?.template as { id: string; name: string; config: Record<string, unknown> } | undefined
   const initData = loadedProject?.data ?? loadedTemplate?.config ?? {}
@@ -642,6 +643,7 @@ export function FormworkCalculator() {
             model3D={
               <FormworkModel3D wallLength={drawLength} wallHeight={drawHeight} system={drawSystem} />
             }
+            onOpenInDrawing={() => navigate('/drawing', { state: { equipmentType: 'formwork', params: { length: drawLength, height: drawHeight, system: drawSystem } } })}
           />
         )
       })()}

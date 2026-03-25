@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Viewer2D } from './Viewer2D'
 import { Viewer3D } from './Viewer3D'
+import { Maximize } from 'lucide-react'
 
 type ViewMode = '2d' | '3d'
 
@@ -8,9 +9,10 @@ interface ViewerPanelProps {
   svgContent: string
   model3D: React.ReactNode
   cameraPosition?: [number, number, number]
+  onOpenInDrawing?: () => void
 }
 
-export function ViewerPanel({ svgContent, model3D, cameraPosition }: ViewerPanelProps) {
+export function ViewerPanel({ svgContent, model3D, cameraPosition, onOpenInDrawing }: ViewerPanelProps) {
   const [mode, setMode] = useState<ViewMode>('2d')
 
   return (
@@ -36,6 +38,15 @@ export function ViewerPanel({ svgContent, model3D, cameraPosition }: ViewerPanel
         >
           3D Sýning
         </button>
+        {onOpenInDrawing && (
+          <button
+            onClick={onOpenInDrawing}
+            className="ml-auto flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-md bg-[#f5c800] text-[#404042] hover:bg-[#e0b700] transition-colors"
+          >
+            <Maximize size={14} />
+            Opna í teikniborði
+          </button>
+        )}
       </div>
 
       {mode === '2d' ? (

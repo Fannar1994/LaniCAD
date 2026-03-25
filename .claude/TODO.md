@@ -49,3 +49,6 @@
 - [x] Replace all prompt() with modal dialogs
 - [x] Kennitala validation in ClientInfoPanel
 - [x] Accessibility improvements (aria-labels, warnings)
+- [x] FormworkCalculator ViewerPanel for all 6 systems
+- [x] Scale bars + LániCAD branding on all 2D drawing generators
+- [x] Calculator → DrawingPage bridge ("Opna í teikniborði" button)
