@@ -103,6 +103,16 @@ function createWallFormworkDrawing(wallLength: number, wallHeight: number, syste
   // Title
   model.models!['title'] = makerjs.model.addCaption({}, `Steypumót — ${system} ${wallLength}m × ${wallHeight}m`, [0, h + 15], [w, h + 15])
 
+  // Scale bar (1m reference)
+  const sby = -55
+  const scaleLen = 1 * scale
+  model.paths!['scale_line'] = new makerjs.paths.Line([0, sby], [scaleLen, sby])
+  model.paths!['scale_l'] = new makerjs.paths.Line([0, sby - 4], [0, sby + 4])
+  model.paths!['scale_r'] = new makerjs.paths.Line([scaleLen, sby - 4], [scaleLen, sby + 4])
+  model.models!['scale_text'] = makerjs.model.addCaption({}, '1 m', [5, sby - 12], [scaleLen - 5, sby - 12])
+  // LániCAD branding
+  model.models!['brand'] = makerjs.model.addCaption({}, 'LániCAD  ·  BYKO Leiga', [w - 60, sby - 12], [w + 15, sby - 12])
+
   return makerjs.exporter.toSVG(model, {
     stroke: system === 'Robusto' ? '#6a3a1a' : '#404042',
     strokeWidth: '1.2', fill: 'none', fontSize: '10px',
@@ -167,6 +177,16 @@ function createShoringTowerDrawing(towerWidth: number, towerHeight: number, syst
   // Title
   const sysName = system === 'ST60' ? 'ST 60 Stoðturn' : 'ID-15 Stoðturn'
   model.models!['title'] = makerjs.model.addCaption({}, `${sysName} — ${towerWidth}m × ${towerHeight}m`, [0, frameH + 25], [frameW, frameH + 25])
+
+  // Scale bar (1m reference)
+  const sby2 = -50
+  const scaleLen2 = 1 * scale
+  model.paths!['scale_line'] = new makerjs.paths.Line([0, sby2], [scaleLen2, sby2])
+  model.paths!['scale_l'] = new makerjs.paths.Line([0, sby2 - 4], [0, sby2 + 4])
+  model.paths!['scale_r'] = new makerjs.paths.Line([scaleLen2, sby2 - 4], [scaleLen2, sby2 + 4])
+  model.models!['scale_text'] = makerjs.model.addCaption({}, '1 m', [5, sby2 - 12], [scaleLen2 - 5, sby2 - 12])
+  // LániCAD branding
+  model.models!['brand'] = makerjs.model.addCaption({}, 'LániCAD  ·  BYKO Leiga', [frameW - 60, sby2 - 12], [frameW + 15, sby2 - 12])
 
   return makerjs.exporter.toSVG(model, {
     stroke: system === 'ST60' ? '#2a6a2a' : '#2a4a8a',
@@ -233,6 +253,16 @@ function createSlabFormworkDrawing(slabWidth: number, slabDepth: number): string
 
   model.models!['title'] = makerjs.model.addCaption({}, `Alufort Plötumót — ${slabWidth}m × ${slabDepth}m`, [0, d + 15], [w, d + 15])
 
+  // Scale bar (1m reference)
+  const sby3 = -60
+  const scaleLen3 = 1 * scale
+  model.paths!['scale_line'] = new makerjs.paths.Line([0, sby3], [scaleLen3, sby3])
+  model.paths!['scale_l'] = new makerjs.paths.Line([0, sby3 - 4], [0, sby3 + 4])
+  model.paths!['scale_r'] = new makerjs.paths.Line([scaleLen3, sby3 - 4], [scaleLen3, sby3 + 4])
+  model.models!['scale_text'] = makerjs.model.addCaption({}, '1 m', [5, sby3 - 12], [scaleLen3 - 5, sby3 - 12])
+  // LániCAD branding
+  model.models!['brand'] = makerjs.model.addCaption({}, 'LániCAD  ·  BYKO Leiga', [w - 60, sby3 - 12], [w + 15, sby3 - 12])
+
   return makerjs.exporter.toSVG(model, {
     stroke: '#5a5a8a', strokeWidth: '1.2', fill: 'none', fontSize: '10px',
     units: makerjs.unitType.Millimeter,
@@ -279,6 +309,16 @@ function createColumnFormworkDrawing(columnSize: number, columnHeight: number): 
   model.models!['wdim_text'] = makerjs.model.addCaption({}, `${columnSize}m`, [5, -30], [s - 5, -30])
 
   model.models!['title'] = makerjs.model.addCaption({}, `Súlumót — ${columnSize}m × ${columnSize}m × ${columnHeight}m hæð`, [-20, s + 20], [s + 20, s + 20])
+
+  // Scale bar (1m reference)
+  const sby4 = -45
+  const scaleLen4 = 1 * scale
+  model.paths!['scale_line'] = new makerjs.paths.Line([0, sby4], [scaleLen4, sby4])
+  model.paths!['scale_l'] = new makerjs.paths.Line([0, sby4 - 4], [0, sby4 + 4])
+  model.paths!['scale_r'] = new makerjs.paths.Line([scaleLen4, sby4 - 4], [scaleLen4, sby4 + 4])
+  model.models!['scale_text'] = makerjs.model.addCaption({}, '1 m', [5, sby4 - 12], [scaleLen4 - 5, sby4 - 12])
+  // LániCAD branding
+  model.models!['brand'] = makerjs.model.addCaption({}, 'LániCAD  ·  BYKO Leiga', [s - 20, sby4 - 12], [s + 60, sby4 - 12])
 
   return makerjs.exporter.toSVG(model, {
     stroke: '#6a4a2a', strokeWidth: '1.5', fill: 'none', fontSize: '10px',
