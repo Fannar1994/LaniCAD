@@ -1,6 +1,6 @@
 # LániCAD — Construction Equipment CAD System
 
-LániCAD is a general-purpose 2D/3D CAD system for construction equipment rental and sales. It provides interactive calculators, 2D plan generation (SVG), 3D visualization, and PDF import/export — built for BYKO Leiga’s product catalog (scaffolding, mobile fences, concrete formwork, mobile scaffolding, ceiling props).
+LániCAD is a general-purpose 2D/3D CAD system for construction equipment rental and sales. It provides interactive calculators, 2D plan generation (SVG), 3D visualization, and PDF import/export — built for BYKO Leiga's product catalog (scaffolding, mobile fences, concrete formwork, mobile scaffolding, ceiling props).
 
 > **Project Identity**: LániCAD (Icelandic *láni* = rental/loan + CAD). This is a **standalone, fresh project** — not "Leigukerfi."
 
@@ -37,19 +37,24 @@ npm run preview      # Preview production build locally
 
 ```
 .claude/
-  CLAUDE.md          # This file — project instructions for AI agents
-  SESSION.md         # Current session context and progress
-  TODO.md            # Active task tracking
-  AI-MISTAKES.md     # Lessons learned from AI mistakes
-  API.md             # PostgreSQL schema and REST API reference
-  DEPLOYMENT.md      # Deployment and hosting instructions
-  skills/            # Skill files for AI token efficiency
+  CLAUDE.md                          # This file — project instructions for AI agents
+  SESSION.md                         # Current session context and progress
+  TODO.md                            # Active task tracking
+  AI-MISTAKES.md                     # Lessons learned from AI mistakes
+  API.md                             # PostgreSQL schema and REST API reference
+  DEPLOYMENT.md                      # Deployment and hosting instructions
+  ROADMAP.md                         # Project phases and feature roadmap
+  AUDIT.md                           # Comprehensive application audit
+  PROMPTING-GUIDE.md                 # How to write effective prompts for this project
+  skills/                            # Skill files for AI token efficiency
     calculator-patterns/SKILL.md
     frontend-patterns/SKILL.md
     cad-engine/SKILL.md
     data-models/SKILL.md
     git-workflow/SKILL.md
     debugging/SKILL.md
+    construction-engineering/SKILL.md
+    icelandic-translator/SKILL.md
 
 
 Reiknivelar-main/    # Original HTML calculators (reference — being ported to React)
@@ -136,6 +141,6 @@ GitHub (main) → GitHub Pages (frontend SPA, auto-deploy via GitHub Actions)
 5. **Turso backend** — Express API in `server/`, @libsql/client, JWT auth, no PostgreSQL
 6. **Icelandic UI** — all user-facing text in Icelandic
 7. **LániCAD branding** — use the established design tokens (dark gray + yellow accent)
-8. **Skills first** — always check `.claude/skills/` before writing code, to save tokens
+8. **Skills first** — always check `.claude/skills/` before writing code: calculator-patterns, frontend-patterns, cad-engine, data-models, git-workflow, debugging, construction-engineering, icelandic-translator
 9. **Track everything** — update SESSION.md, TODO.md, and AI-MISTAKES.md as you work
 10. **Transparency** — every action, mistake, and decision gets documented
