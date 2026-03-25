@@ -30,6 +30,12 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+      - run: npm test
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run E2E tests
+        run: npx playwright test
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

@@ -25,6 +25,12 @@ Thumbs.db
 # Build
 *.tsbuildinfo
 
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
 # Reference data (keep in repo but not in build)
 # Reiknivelar-main/  — original calculators (reference)
 # Steypumót/         — PDF manuals (reference)
