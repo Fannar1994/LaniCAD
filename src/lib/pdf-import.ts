@@ -1,5 +1,6 @@
 // ── PDF Import: renders PDF pages to image + optional OCR ──
 // Uses pdfjs-dist for rendering and tesseract.js for OCR
+// Supports native text extraction + measurement pattern parsing
 
 import * as pdfjsLib from 'pdfjs-dist'
 
@@ -15,6 +16,12 @@ export interface PdfPage {
   height: number
 }
 
+export interface ExtractedMeasurement {
+  text: string
+  valueMm: number
+  unit: string
+}
+
 export interface PdfImportResult {
   /** Data URL of the rendered page (PNG) */
   imageDataUrl: string
@@ -22,8 +29,55 @@ export interface PdfImportResult {
   svgContent: string
   /** OCR text extracted (empty string if OCR not run) */
   ocrText: string
+  /** Native PDF text (from born-digital PDFs) */
+  nativeText: string
+  /** Combined text for display (native text preferred, OCR fallback) */
+  allText: string
+  /** Extracted measurements from text */
+  measurements: ExtractedMeasurement[]
   width: number
   height: number
+}
+
+// ── Measurement Extraction ──
+
+function parseNumber(raw: string): number {
+  const cleaned = raw.replace(/\s/g, '').replace(',', '.')
+  return parseFloat(cleaned)
+}
+
+export function extractMeasurements(text: string): ExtractedMeasurement[] {
+  const results: ExtractedMeasurement[] = []
+  const seen = new Set<string>()
+
+  // mm pattern
+  for (const match of text.matchAll(/(\d[\d\s.]*)\s*mm\b/gi)) {
+    const val = parseNumber(match[1])
+    if (!isNaN(val) && val > 0) {
+      const key = `${val}mm`
+      if (!seen.has(key)) { seen.add(key); results.push({ text: match[0].trim(), valueMm: val, unit: 'mm' }) }
+    }
+  }
+
+  // m pattern (not "mm")
+  for (const match of text.matchAll(/(\d[\d,.\s]*)\s*m\b(?!m)/gi)) {
+    const val = parseNumber(match[1])
+    if (!isNaN(val) && val > 0 && val < 10000) {
+      const key = `${val}m`
+      if (!seen.has(key)) { seen.add(key); results.push({ text: match[0].trim(), valueMm: val * 1000, unit: 'm' }) }
+    }
+  }
+
+  // cm pattern
+  for (const match of text.matchAll(/(\d[\d\s.]*)\s*cm\b/gi)) {
+    const val = parseNumber(match[1])
+    if (!isNaN(val) && val > 0) {
+      const key = `${val}cm`
+      if (!seen.has(key)) { seen.add(key); results.push({ text: match[0].trim(), valueMm: val * 10, unit: 'cm' }) }
+    }
+  }
+
+  return results
 }
 
 /** Load a PDF file and return page info */
@@ -39,6 +93,32 @@ export async function loadPdf(file: File): Promise<{ pageCount: number; pages: P
   }
 
   return { pageCount: pdf.numPages, pages }
+}
+
+/** Extract native text content from a PDF page (for born-digital PDFs) */
+async function extractNativeText(
+  pdf: pdfjsLib.PDFDocumentProxy,
+  pageNum: number,
+): Promise<string> {
+  const page = await pdf.getPage(pageNum)
+  const content = await page.getTextContent()
+  const lines: string[] = []
+  let currentLine = ''
+  let lastY: number | null = null
+
+  for (const item of content.items) {
+    if ('str' in item) {
+      const y = (item as any).transform?.[5] ?? 0
+      if (lastY !== null && Math.abs(y - lastY) > 2) {
+        if (currentLine.trim()) lines.push(currentLine.trim())
+        currentLine = ''
+      }
+      currentLine += item.str
+      lastY = y
+    }
+  }
+  if (currentLine.trim()) lines.push(currentLine.trim())
+  return lines.join('\n')
 }
 
 /** Render a specific PDF page to an image and optionally run OCR */
@@ -69,7 +149,10 @@ export async function renderPdfPage(
   <image href="${imageDataUrl}" x="0" y="0" width="${width}" height="${height}" />
 </svg>`
 
-  // OCR if requested
+  // Extract native text from PDF (fast, works for born-digital PDFs)
+  const nativeText = await extractNativeText(pdf, pageNum)
+
+  // OCR if requested (for scanned PDFs or to supplement native text)
   let ocrText = ''
   if (runOcr) {
     try {
@@ -83,5 +166,9 @@ export async function renderPdfPage(
     }
   }
 
-  return { imageDataUrl, svgContent, ocrText, width, height }
+  // Combine texts — prefer native, supplement with OCR
+  const allText = [nativeText, ocrText].filter(Boolean).join('\n---\n')
+  const measurements = extractMeasurements(allText)
+
+  return { imageDataUrl, svgContent, ocrText, nativeText, allText, measurements, width, height }
 }

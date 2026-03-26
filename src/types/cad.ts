@@ -109,6 +109,7 @@ export interface SnapResult {
 // ── Defaults ──
 
 export const DEFAULT_LAYERS: CadLayer[] = [
+  { id: 'pdf-background', name: 'PDF bakgrunnur', color: '#94a3b8', visible: true, locked: true, lineWidth: 0 },
   { id: 'equipment', name: 'Búnaður', color: '#404042', visible: true, locked: true, lineWidth: 1 },
   { id: 'annotation', name: 'Athugasemdir', color: '#2563eb', visible: true, locked: false, lineWidth: 1 },
   { id: 'dimension', name: 'Mál', color: '#dc2626', visible: true, locked: false, lineWidth: 0.5 },

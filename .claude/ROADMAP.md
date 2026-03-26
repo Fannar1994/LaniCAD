@@ -58,10 +58,10 @@ L├íniCAD is a 2D/3D CAD system for construction equipment rental. It serves f
 - [x] Scale bars and LániCAD branding on all drawing generators
 
 ### 2.2 PDF Import & OCR
-- [ ] Complete PDF ΓåÆ SVG background layer in Drawing page
-- [ ] Integrate Tesseract.js OCR for text extraction from uploaded plans
-- [ ] Add measurement extraction from architectural PDFs
-- [ ] Build UI for placing equipment on imported floor plans
+- [x] Complete PDF → SVG background layer in Drawing page
+- [x] Integrate Tesseract.js OCR for text extraction from uploaded plans
+- [x] Add measurement extraction from architectural PDFs
+- [x] Build UI for placing equipment on imported floor plans
 
 ### 2.3 DXF Integration
 - [x] Add "Import DXF" button to Drawing page (parser already exists)

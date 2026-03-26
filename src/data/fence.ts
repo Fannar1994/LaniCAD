@@ -23,7 +23,7 @@ export const FENCE_PRODUCTS: Record<string, FenceProductData> = {
   'walking-gate': { key: 'walking-gate', rentalNo: '01-BAT-GI01-096', saleNo: '97100096', description: 'Gönguhlið 1,2m', rates: [100, 50, 25, 13, 13, 13, 13, 13, 13, 13, 13, 13], salePrice: 20312, discountPrice: 14200 },
   'wheels': { key: 'wheels', rentalNo: '01-BAT-GI01-099', saleNo: '97100099', description: 'Hjól f/girðingar', rates: [110, 55, 28, 14, 14, 14, 14, 14, 14, 14, 14, 14], salePrice: 18395, discountPrice: 6900 },
   'lock': { key: 'lock', rentalNo: '01-BAT-GI01-101', saleNo: '971000981', description: 'Efri læsing f/hlið', rates: [50, 25, 13, 6, 6, 6, 6, 6, 6, 6, 6, 6], salePrice: 4858, discountPrice: 3900 },
-  'warning-sign': { key: 'warning-sign', rentalNo: '01-BAT-GI01-045', saleNo: '0295245', description: 'Gátaskjöldur 1,3×0,31m', rates: [40, 20, 10, 5, 5, 5, 5, 5, 5, 5, 5, 5], salePrice: 9995, discountPrice: 6900 },
+  'warning-sign': { key: 'warning-sign', rentalNo: '01-BAT-GI01-045', saleNo: '0295245', description: 'Gátskjöldur 1,3×0,31m', rates: [40, 20, 10, 5, 5, 5, 5, 5, 5, 5, 5, 5], salePrice: 9995, discountPrice: 6900 },
 }
 
 export const FENCE_TYPES = [
@@ -32,7 +32,7 @@ export const FENCE_TYPES = [
   { key: 'standard-low', label: 'Girðing 3,5×1,2m', productKey: 'fence-3500x1200x1.1', fenceLength: 3.5 },
   { key: 'queue', label: 'Biðraðagirðing 2,5m', productKey: 'queue-barrier', fenceLength: 2.5 },
   { key: 'plastic', label: 'Plastgirðing 2,1m', productKey: 'plastic-fence', fenceLength: 2.1 },
-  { key: 'warning', label: 'Gátaskjöldur 1,3m', productKey: 'warning-sign', fenceLength: 1.3 },
+  { key: 'warning', label: 'Gátskjöldur 1,3m', productKey: 'warning-sign', fenceLength: 1.3 },
 ]
 
 export const MIN_RENTAL_DAYS = 10

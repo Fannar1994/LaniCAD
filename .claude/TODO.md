@@ -53,3 +53,5 @@
 - [x] Scale bars + LániCAD branding on all 2D drawing generators
 - [x] Calculator → DrawingPage bridge ("Opna í teikniborði" button)
 - [x] Advanced 3D: ground plane, measurement tools, screenshot export
+- [x] PDF Import: background layer, native text extraction, measurement parsing
+- [x] Gátskjöldur naming consistency fix in fence data

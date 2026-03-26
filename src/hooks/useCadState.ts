@@ -192,7 +192,7 @@ export function useCadState() {
 
   const deleteLayer = useCallback((layerId: string) => {
     // Don't delete default layers
-    if (['equipment', 'annotation', 'dimension', 'construction', 'custom'].includes(layerId)) return
+    if (['pdf-background', 'equipment', 'annotation', 'dimension', 'construction', 'custom'].includes(layerId)) return
     // Move objects from deleted layer to 'annotation'
     setObjects(prev => prev.map(obj => obj.layerId === layerId ? { ...obj, layerId: 'annotation' } : obj))
     setLayers(prev => prev.filter(l => l.id !== layerId))

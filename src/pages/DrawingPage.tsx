@@ -311,16 +311,18 @@ export function DrawingPage() {
     e.target.value = ''
   }, [cad])
   const handleImportPdf = useCallback(() => { setPdfDialogOpen(true) }, [])
-  const handlePdfImported = useCallback((result: { imageDataUrl: string; svgContent: string; width: number; height: number; ocrText: string }) => {
-    // Add the PDF page as a visible image on the equipment layer
+  const handlePdfImported = useCallback((result: { imageDataUrl: string; svgContent: string; width: number; height: number; ocrText: string; nativeText?: string; allText?: string; measurements?: { text: string; valueMm: number; unit: string }[] }) => {
+    // Add the PDF page as a background image on the dedicated pdf-background layer
     cad.importObjects([{
       id: cadId(),
-      layerId: 'equipment',
-      style: { stroke: 'none', strokeWidth: 0, fill: 'none', opacity: 0.8 },
+      layerId: 'pdf-background',
+      style: { stroke: 'none', strokeWidth: 0, fill: 'none', opacity: 0.6 },
       locked: true,
       geometry: { type: 'image', origin: { x: 0, y: 0 }, width: result.width, height: result.height, dataUrl: result.imageDataUrl },
     }], [])
-    setStatus(`PDF innflutt (${Math.round(result.width)}×${Math.round(result.height)})${result.ocrText ? ' + OCR texti' : ''}`)
+    const textInfo = result.allText || result.ocrText
+    const measCount = result.measurements?.length ?? 0
+    setStatus(`PDF innflutt (${Math.round(result.width)}×${Math.round(result.height)})${textInfo ? ' + texti' : ''}${measCount > 0 ? ` + ${measCount} mál` : ''}`)
   }, [cad])
 
   // Export handlers

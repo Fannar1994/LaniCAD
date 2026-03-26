@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
-import { Upload, FileText, Eye, X, Loader2 } from 'lucide-react'
-import { loadPdf, renderPdfPage, type PdfPage, type PdfImportResult } from '@/lib/pdf-import'
+import { Upload, FileText, Eye, X, Loader2, Ruler, ChevronDown, ChevronUp } from 'lucide-react'
+import { loadPdf, renderPdfPage, type PdfPage, type PdfImportResult, type ExtractedMeasurement } from '@/lib/pdf-import'
 
 interface PdfImportDialogProps {
   open: boolean
@@ -17,6 +17,9 @@ export function PdfImportDialog({ open, onClose, onImport }: PdfImportDialogProp
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('')
   const [preview, setPreview] = useState<string | null>(null)
+  const [extractedText, setExtractedText] = useState('')
+  const [measurements, setMeasurements] = useState<ExtractedMeasurement[]>([])
+  const [showText, setShowText] = useState(false)
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -55,6 +58,9 @@ export function PdfImportDialog({ open, onClose, onImport }: PdfImportDialogProp
     setStatus(runOcr ? 'Flyt inn og keyri OCR...' : 'Flyt inn síðu...')
     try {
       const result = await renderPdfPage(file, selectedPage, { scale: 2, runOcr })
+      setExtractedText(result.allText)
+      setMeasurements(result.measurements)
+      if (result.allText) setShowText(true)
       onImport(result)
       onClose()
     } catch {
@@ -123,6 +129,44 @@ export function PdfImportDialog({ open, onClose, onImport }: PdfImportDialogProp
                 className="rounded border-gray-300 text-brand-accent focus:ring-brand-accent" />
               Keyra OCR textalestur (Tesseract.js — íslenska + enska)
             </label>
+          )}
+
+          {/* Native text info */}
+          {pages.length > 0 && (
+            <p className="text-xs text-gray-500">
+              💡 Texti úr PDF skjölum er lesinn sjálfkrafa (OCR aðeins nauðsynlegt fyrir skannaðar teikningar).
+            </p>
+          )}
+
+          {/* Extracted measurements */}
+          {measurements.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1 text-xs font-medium text-gray-700">
+                <Ruler size={12} /> Mál fundin í texta ({measurements.length})
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {measurements.map((m, i) => (
+                  <span key={i} className="inline-flex items-center px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded border border-blue-200">
+                    {m.text}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Extracted text collapsible */}
+          {extractedText && (
+            <div>
+              <button onClick={() => setShowText(v => !v)} className="flex items-center gap-1 text-xs text-gray-600 hover:text-gray-800">
+                {showText ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                {showText ? 'Fela texta' : 'Sýna útdreginn texta'}
+              </button>
+              {showText && (
+                <pre className="mt-1 p-2 bg-gray-50 border rounded text-xs text-gray-700 max-h-[150px] overflow-auto whitespace-pre-wrap font-mono">
+                  {extractedText}
+                </pre>
+              )}
+            </div>
           )}
 
           {/* Status */}
