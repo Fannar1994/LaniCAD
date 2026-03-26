@@ -76,7 +76,7 @@ L├íniCAD is a 2D/3D CAD system for construction equipment rental. It serves f
 ### 3.1 Client Portal
 - [x] Generate shareable read-only links for quotes/projects
 - [x] Client can view quote, PDF, and 3D visualization without login
-- [ ] Optional: client approval workflow (accept/reject quote)
+- [x] Client approval workflow (accept/reject quote with optional name + comment)
 
 ### 3.2 Multi-Project Reporting
 - [x] Side-by-side comparison of multiple quotes

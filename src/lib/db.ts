@@ -175,6 +175,10 @@ export interface ShareInfo {
   shared: boolean
   token?: string
   created_at?: string
+  status?: 'pending' | 'approved' | 'rejected'
+  client_name?: string | null
+  client_comment?: string | null
+  responded_at?: string | null
 }
 
 export async function getShareStatus(projectId: string): Promise<ShareInfo> {
@@ -200,6 +204,10 @@ export interface SharedProject {
   created_at: string
   updated_at: string
   owner_name: string
+  share_status?: 'pending' | 'approved' | 'rejected'
+  share_client_name?: string | null
+  share_client_comment?: string | null
+  share_responded_at?: string | null
 }
 
 export async function fetchSharedProject(token: string): Promise<SharedProject> {
@@ -211,6 +219,25 @@ export async function fetchSharedProject(token: string): Promise<SharedProject> 
     throw new Error(body.error || `Villa (${res.status})`)
   }
   return res.json()
+}
+
+export async function respondToShare(
+  token: string,
+  status: 'approved' | 'rejected',
+  clientName?: string,
+  clientComment?: string,
+): Promise<void> {
+  const apiUrl = getApiUrl()
+  if (!apiUrl) throw new Error('API URL er ekki stillt')
+  const res = await fetch(`${apiUrl}/shared/${encodeURIComponent(token)}/respond`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status, client_name: clientName, client_comment: clientComment }),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `Villa (${res.status})`)
+  }
 }
 
 // ── Templates ──

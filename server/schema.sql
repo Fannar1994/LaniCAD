@@ -127,6 +127,10 @@ CREATE TABLE IF NOT EXISTS project_shares (
   token TEXT NOT NULL UNIQUE,
   created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   expires_at TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  client_name TEXT,
+  client_comment TEXT,
+  responded_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

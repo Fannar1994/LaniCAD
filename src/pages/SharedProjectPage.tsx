@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import { FileText, Package, DollarSign, User, Building2, Calendar } from 'lucide-react'
-import { fetchSharedProject } from '@/lib/db'
+import { FileText, Package, DollarSign, User, Building2, Calendar, CheckCircle2, XCircle, MessageSquare } from 'lucide-react'
+import { fetchSharedProject, respondToShare } from '@/lib/db'
 import { formatKr, formatNumber, formatDate } from '@/lib/format'
 import type { ClientInfo, LineItem, CalculatorType } from '@/types'
 
@@ -25,7 +25,14 @@ export function SharedProjectPage() {
     created_at: string
     updated_at: string
     owner_name: string
+    share_status?: 'pending' | 'approved' | 'rejected'
+    share_client_name?: string | null
+    share_client_comment?: string | null
+    share_responded_at?: string | null
   } | null>(null)
+  const [respondName, setRespondName] = useState('')
+  const [respondComment, setRespondComment] = useState('')
+  const [responding, setResponding] = useState(false)
 
   useEffect(() => {
     if (!token) {
@@ -43,6 +50,10 @@ export function SharedProjectPage() {
           created_at: data.created_at,
           updated_at: data.updated_at,
           owner_name: data.owner_name,
+          share_status: data.share_status || 'pending',
+          share_client_name: data.share_client_name,
+          share_client_comment: data.share_client_comment,
+          share_responded_at: data.share_responded_at,
         })
       })
       .catch(err => setError(err.message))
@@ -68,6 +79,25 @@ export function SharedProjectPage() {
     if (!project?.line_items) return 0
     return project.line_items.reduce((s, item) => s + (item.quantity || 0), 0)
   }, [project])
+
+  const handleRespond = async (status: 'approved' | 'rejected') => {
+    if (!token) return
+    setResponding(true)
+    try {
+      await respondToShare(token, status, respondName || undefined, respondComment || undefined)
+      setProject(prev => prev ? {
+        ...prev,
+        share_status: status,
+        share_client_name: respondName || null,
+        share_client_comment: respondComment || null,
+        share_responded_at: new Date().toISOString(),
+      } : null)
+    } catch {
+      // silently fail — status unchanged
+    } finally {
+      setResponding(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -187,6 +217,82 @@ export function SharedProjectPage() {
             )}
           </div>
         </div>
+
+        {/* Approval section */}
+        {project.share_status === 'pending' ? (
+          <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-5 shadow-sm">
+            <h2 className="mb-3 flex items-center gap-2 font-condensed text-sm font-bold text-[#404042]">
+              <MessageSquare className="h-4 w-4" /> Samþykki tilboðs
+            </h2>
+            <p className="mb-4 text-sm text-gray-600">
+              Skoðaðu tilboðið hér að ofan og samþykktu eða hafnaðu.
+            </p>
+            <div className="mb-4 grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600">Nafn þitt (valfrjálst)</label>
+                <input
+                  value={respondName}
+                  onChange={e => setRespondName(e.target.value)}
+                  className="w-full rounded border border-gray-200 bg-white px-3 py-2 text-sm"
+                  placeholder="Nafn"
+                  maxLength={200}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600">Athugasemd (valfrjálst)</label>
+                <input
+                  value={respondComment}
+                  onChange={e => setRespondComment(e.target.value)}
+                  className="w-full rounded border border-gray-200 bg-white px-3 py-2 text-sm"
+                  placeholder="Athugasemd"
+                  maxLength={1000}
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleRespond('approved')}
+                disabled={responding}
+                className="flex items-center gap-1.5 rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                <CheckCircle2 className="h-4 w-4" /> Samþykkja
+              </button>
+              <button
+                onClick={() => handleRespond('rejected')}
+                disabled={responding}
+                className="flex items-center gap-1.5 rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                <XCircle className="h-4 w-4" /> Hafna
+              </button>
+            </div>
+          </div>
+        ) : project.share_status === 'approved' ? (
+          <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-green-700">
+              <CheckCircle2 className="h-5 w-5" />
+              <span className="font-condensed text-sm font-bold">Tilboð samþykkt</span>
+              {project.share_client_name && (
+                <span className="text-xs text-green-600">— {project.share_client_name}</span>
+              )}
+            </div>
+            {project.share_client_comment && (
+              <p className="mt-2 text-sm text-green-600">„{project.share_client_comment}"</p>
+            )}
+          </div>
+        ) : project.share_status === 'rejected' ? (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-red-700">
+              <XCircle className="h-5 w-5" />
+              <span className="font-condensed text-sm font-bold">Tilboði hafnað</span>
+              {project.share_client_name && (
+                <span className="text-xs text-red-600">— {project.share_client_name}</span>
+              )}
+            </div>
+            {project.share_client_comment && (
+              <p className="mt-2 text-sm text-red-600">„{project.share_client_comment}"</p>
+            )}
+          </div>
+        ) : null}
 
         {/* Line items table */}
         {project.line_items.length > 0 && (

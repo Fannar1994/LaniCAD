@@ -507,7 +507,16 @@ app.get('/api/projects/:id/share', authenticate, async (req, res) => {
       args: [req.params.id, req.user.id],
     })
     if (rows.length === 0) return res.json({ shared: false })
-    res.json({ shared: true, token: rows[0].token, created_at: rows[0].created_at })
+    const row = rows[0]
+    res.json({
+      shared: true,
+      token: row.token,
+      created_at: row.created_at,
+      status: row.status || 'pending',
+      client_name: row.client_name || null,
+      client_comment: row.client_comment || null,
+      responded_at: row.responded_at || null,
+    })
   } catch (err) {
     console.error('Get share status error:', err)
     res.status(500).json({ error: 'Villa' })
@@ -519,7 +528,9 @@ app.get('/api/shared/:token', async (req, res) => {
   try {
     const { rows } = await db.execute({
       sql: `SELECT p.name, p.type, p.client, p.data, p.line_items, p.created_at, p.updated_at,
-                   u.name as owner_name
+                   u.name as owner_name,
+                   ps.status as share_status, ps.client_name as share_client_name,
+                   ps.client_comment as share_client_comment, ps.responded_at as share_responded_at
             FROM project_shares ps
             JOIN projects p ON p.id = ps.project_id
             JOIN users u ON u.id = p.user_id
@@ -531,6 +542,34 @@ app.get('/api/shared/:token', async (req, res) => {
   } catch (err) {
     console.error('Shared project fetch error:', err)
     res.status(500).json({ error: 'Villa við að sækja deilt verkefni' })
+  }
+})
+
+// Public: Client responds to shared project (approve/reject)
+app.put('/api/shared/:token/respond', async (req, res) => {
+  try {
+    const { status, client_name, client_comment } = req.body
+    if (!status || !['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Ógilt svar — verður að vera "approved" eða "rejected"' })
+    }
+    // Validate string lengths
+    const name = typeof client_name === 'string' ? client_name.slice(0, 200) : null
+    const comment = typeof client_comment === 'string' ? client_comment.slice(0, 1000) : null
+
+    const { rows } = await db.execute({
+      sql: 'SELECT id, project_id FROM project_shares WHERE token = ?',
+      args: [req.params.token],
+    })
+    if (rows.length === 0) return res.status(404).json({ error: 'Hlekkur fannst ekki' })
+
+    await db.execute({
+      sql: `UPDATE project_shares SET status = ?, client_name = ?, client_comment = ?, responded_at = datetime('now') WHERE token = ?`,
+      args: [status, name, comment, req.params.token],
+    })
+    res.json({ ok: true, status })
+  } catch (err) {
+    console.error('Share respond error:', err)
+    res.status(500).json({ error: 'Villa við að skrá svar' })
   }
 })
 

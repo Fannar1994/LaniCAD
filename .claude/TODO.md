@@ -55,3 +55,4 @@
 - [x] Advanced 3D: ground plane, measurement tools, screenshot export
 - [x] PDF Import: background layer, native text extraction, measurement parsing
 - [x] Gátskjöldur naming consistency fix in fence data
+- [x] Client approval workflow (accept/reject quotes on shared project pages)

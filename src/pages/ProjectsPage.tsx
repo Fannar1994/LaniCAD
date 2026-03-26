@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Trash2, ExternalLink, Share2, Link2, X, Check, Copy } from 'lucide-react'
+import { Trash2, ExternalLink, Share2, Link2, X, Check, Copy, CheckCircle2, XCircle, Clock } from 'lucide-react'
 import { isApiConfigured, fetchProjects, deleteProject, shareProject, unshareProject, getShareStatus, type ShareInfo } from '@/lib/db'
 import type { Project } from '@/types'
 
@@ -210,6 +210,30 @@ export function ProjectsPage() {
             ) : shareInfo?.shared && shareInfo.token ? (
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">Verkefnið er deilt. Allir með hlekkinn geta séð það.</p>
+
+                {/* Approval status */}
+                {shareInfo.status === 'approved' ? (
+                  <div className="flex items-center gap-2 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    <span className="font-medium">Samþykkt</span>
+                    {shareInfo.client_name && <span className="text-green-600">— {shareInfo.client_name}</span>}
+                  </div>
+                ) : shareInfo.status === 'rejected' ? (
+                  <div className="flex items-center gap-2 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    <XCircle className="h-4 w-4 shrink-0" />
+                    <span className="font-medium">Hafnað</span>
+                    {shareInfo.client_name && <span className="text-red-600">— {shareInfo.client_name}</span>}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                    <Clock className="h-4 w-4 shrink-0" />
+                    <span className="font-medium">Bíður svars</span>
+                  </div>
+                )}
+                {shareInfo.client_comment && (
+                  <p className="text-xs text-gray-500 italic">„{shareInfo.client_comment}"</p>
+                )}
+
                 <div className="flex items-center gap-2">
                   <input
                     readOnly
