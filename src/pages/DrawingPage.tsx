@@ -11,6 +11,7 @@ import { PropertiesPanel } from '@/components/cad/PropertiesPanel'
 import { CommandBar } from '@/components/cad/CommandBar'
 import { PdfImportDialog } from '@/components/cad/PdfImportDialog'
 import { Scene3DCanvas } from '@/components/cad/Scene3DCanvas'
+import type { Scene3DCanvasHandle } from '@/components/cad/Scene3DCanvas'
 import { Scene3DToolbar } from '@/components/cad/Scene3DToolbar'
 import { Scene3DObjectList } from '@/components/cad/Scene3DObjectList'
 import { Viewer3D } from '@/components/viewer/Viewer3D'
@@ -54,6 +55,7 @@ const equipmentOptions: { value: EquipmentType; label: string }[] = [
 export function DrawingPage() {
   const cad = useCadState()
   const scene3d = useScene3D()
+  const canvasRef = useRef<Scene3DCanvasHandle>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('cad')
   const [cursorPos, setCursorPos] = useState<Point2D>({ x: 0, y: 0 })
   const [status, setStatus] = useState('')
@@ -366,14 +368,14 @@ export function DrawingPage() {
           </div>
 
           {/* 3D Scene toolbar (only in 3d-scene mode) */}
-          {viewMode === '3d-scene' && <Scene3DToolbar scene={scene3d} />}
+          {viewMode === '3d-scene' && <Scene3DToolbar scene={scene3d} canvasRef={canvasRef} />}
 
           {/* Canvas or 3D */}
           {viewMode === 'cad' ? (
             <CadCanvas cad={cad} equipmentSvg={svgContent} onCursorChange={setCursorPos} onStatusChange={setStatus} />
           ) : viewMode === '3d-scene' ? (
             <div className="flex-1 overflow-hidden">
-              <Scene3DCanvas scene={scene3d} />
+              <Scene3DCanvas ref={canvasRef} scene={scene3d} />
             </div>
           ) : (
             <div className="flex-1 overflow-hidden">

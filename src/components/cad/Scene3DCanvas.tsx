@@ -2,11 +2,11 @@
  * Interactive 3D scene builder for placing equipment on a construction site.
  * Users can place, select, move, rotate, and delete equipment objects.
  */
-import { useRef, useCallback, useState, useEffect } from 'react'
+import { useRef, useCallback, useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
-import { OrbitControls, TransformControls, Grid, GizmoHelper, GizmoViewport } from '@react-three/drei'
+import { OrbitControls, TransformControls, Grid, GizmoHelper, GizmoViewport, Line, Html } from '@react-three/drei'
 import * as THREE from 'three'
-import type { Scene3DState, SceneObject, EquipmentKind } from '@/hooks/useScene3D'
+import type { Scene3DState, SceneObject, EquipmentKind, Measurement, SceneMode } from '@/hooks/useScene3D'
 import { FenceModel3D } from '@/components/viewer/models/FenceModel3D'
 import { ScaffoldModel3D } from '@/components/viewer/models/ScaffoldModel3D'
 import { RollingScaffoldModel3D } from '@/components/viewer/models/RollingScaffoldModel3D'
@@ -76,6 +76,71 @@ function GroundPlane({ onPlace }: { onPlace: (pos: [number, number, number]) => 
   )
 }
 
+/* ── Visible ground plane with texture ── */
+function SiteGround({ size }: { size: number }) {
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
+      <planeGeometry args={[size, size]} />
+      <meshStandardMaterial color="#8fbc8f" roughness={0.95} metalness={0} transparent opacity={0.35} />
+    </mesh>
+  )
+}
+
+/* ── Measurement line with distance label ── */
+function MeasurementLine({ measurement }: { measurement: Measurement }) {
+  const midpoint: [number, number, number] = [
+    (measurement.start[0] + measurement.end[0]) / 2,
+    (measurement.start[1] + measurement.end[1]) / 2 + 0.3,
+    (measurement.start[2] + measurement.end[2]) / 2,
+  ]
+  return (
+    <group>
+      <Line
+        points={[measurement.start, measurement.end]}
+        color="#f5c800"
+        lineWidth={2.5}
+      />
+      {/* Start/end markers */}
+      <mesh position={measurement.start}>
+        <sphereGeometry args={[0.08, 8, 8]} />
+        <meshBasicMaterial color="#f5c800" />
+      </mesh>
+      <mesh position={measurement.end}>
+        <sphereGeometry args={[0.08, 8, 8]} />
+        <meshBasicMaterial color="#f5c800" />
+      </mesh>
+      {/* Distance label */}
+      <Html position={midpoint} center distanceFactor={15}>
+        <div className="pointer-events-none rounded bg-[#404042] px-2 py-0.5 text-xs font-bold text-[#f5c800] shadow whitespace-nowrap">
+          {measurement.distance.toFixed(2)} m
+        </div>
+      </Html>
+    </group>
+  )
+}
+
+/* ── Pending measure marker ── */
+function MeasurePendingMarker({ point }: { point: [number, number, number] }) {
+  return (
+    <mesh position={point}>
+      <sphereGeometry args={[0.12, 12, 12]} />
+      <meshBasicMaterial color="#f5c800" transparent opacity={0.8} />
+    </mesh>
+  )
+}
+
+/* ── Screenshot helper ── */
+function ScreenshotCapture({ onReady }: { onReady: (fn: () => string) => void }) {
+  const { gl, scene: threeScene, camera } = useThree()
+  useEffect(() => {
+    onReady(() => {
+      gl.render(threeScene, camera)
+      return gl.domElement.toDataURL('image/png')
+    })
+  }, [gl, threeScene, camera, onReady])
+  return null
+}
+
 /* ── Selectable / transformable scene object wrapper ── */
 function SceneItem({
   obj,
@@ -88,7 +153,7 @@ function SceneItem({
 }: {
   obj: SceneObject
   isSelected: boolean
-  mode: 'select' | 'place' | 'move' | 'rotate'
+  mode: SceneMode
   onSelect: (id: string) => void
   onPositionChange: (id: string, pos: [number, number, number]) => void
   onRotationChange: (id: string, rot: [number, number, number]) => void
@@ -173,18 +238,36 @@ function CameraSetup({ objectCount }: { objectCount: number }) {
 }
 
 /* ── Main canvas ── */
+export interface Scene3DCanvasHandle {
+  captureScreenshot: () => void
+}
+
 interface Scene3DCanvasProps {
   scene: Scene3DState
 }
 
-export function Scene3DCanvas({ scene }: Scene3DCanvasProps) {
+export const Scene3DCanvas = forwardRef<Scene3DCanvasHandle, Scene3DCanvasProps>(function Scene3DCanvas({ scene }, ref) {
   const orbitRef = useRef<any>(null)
   const [showHints, setShowHints] = useState(true)
+  const screenshotFnRef = useRef<(() => string) | null>(null)
+
+  useImperativeHandle(ref, () => ({
+    captureScreenshot: () => {
+      if (screenshotFnRef.current) {
+        const dataUrl = screenshotFnRef.current()
+        const a = document.createElement('a')
+        a.href = dataUrl
+        a.download = `lanicad-3d-${Date.now()}.png`
+        a.click()
+      }
+    }
+  }), [])
 
   const handleGroundPlace = useCallback((pos: [number, number, number]) => {
     if (scene.mode === 'place') {
       scene.addObject(scene.placeKind, pos, scene.placeParams)
-      // Stay in place mode for rapid placement
+    } else if (scene.mode === 'measure') {
+      scene.addMeasurePoint(pos)
     } else if (scene.mode === 'select') {
       scene.selectObject(null)
     }
@@ -213,6 +296,7 @@ export function Scene3DCanvas({ scene }: Scene3DCanvasProps) {
         if (e.key === 'g') scene.setMode('move')
         if (e.key === 'r') scene.setMode('rotate')
         if (e.key === 'p') scene.setMode('place')
+        if (e.key === 'm') scene.setMode('measure')
       }
     }
     window.addEventListener('keydown', handler)
@@ -242,11 +326,13 @@ export function Scene3DCanvas({ scene }: Scene3DCanvasProps) {
       <Canvas
         camera={{ position: [12, 8, 12], fov: 50 }}
         shadows
+        gl={{ preserveDrawingBuffer: true }}
         onPointerMissed={() => {
           if (scene.mode === 'select') scene.selectObject(null)
         }}
       >
         <CameraSetup objectCount={scene.objects.length} />
+        <ScreenshotCapture onReady={fn => { screenshotFnRef.current = fn }} />
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 15, 10]} intensity={1.2} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
         <directionalLight position={[-5, 5, -5]} intensity={0.3} />
@@ -279,6 +365,15 @@ export function Scene3DCanvas({ scene }: Scene3DCanvasProps) {
         {/* Invisible ground plane for click-to-place */}
         <GroundPlane onPlace={handleGroundPlace} />
 
+        {/* Visible ground plane */}
+        {scene.showGround && <SiteGround size={scene.groundSize} />}
+
+        {/* Measurement lines */}
+        {scene.measurements.map(m => (
+          <MeasurementLine key={m.id} measurement={m} />
+        ))}
+        {scene.measureStart && <MeasurePendingMarker point={scene.measureStart} />}
+
         {/* Scene objects */}
         {scene.objects.map(obj => (
           <SceneItem
@@ -295,4 +390,4 @@ export function Scene3DCanvas({ scene }: Scene3DCanvasProps) {
       </Canvas>
     </div>
   )
-}
+})

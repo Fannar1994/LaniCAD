@@ -28,7 +28,7 @@ export function createFenceDrawing(params: {
     standard: 'Stálgirðing',
     plastic: 'Plastgirðing',
     queue: 'Biðraðagirðing',
-    warning: 'Viðvörunarskilti',
+    warning: 'Gátskjöldur',
   }
 
   // Draw panels per type

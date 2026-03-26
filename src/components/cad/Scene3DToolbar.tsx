@@ -3,9 +3,11 @@
  * Provides mode switching, object manipulation, and scene controls.
  */
 import type { Scene3DState, EquipmentKind } from '@/hooks/useScene3D'
+import type { Scene3DCanvasHandle } from '@/components/cad/Scene3DCanvas'
 import {
   Pointer, Box, Move3d, RotateCw,
   Trash2, Copy, Undo2, Redo, XCircle,
+  Ruler, Camera, Layers, Eraser,
 } from 'lucide-react'
 
 const MODES = [
@@ -13,6 +15,7 @@ const MODES = [
   { key: 'place' as const, icon: Box, label: 'Setja (P)', shortcut: 'P' },
   { key: 'move' as const, icon: Move3d, label: 'Færa (G)', shortcut: 'G' },
   { key: 'rotate' as const, icon: RotateCw, label: 'Snúa (R)', shortcut: 'R' },
+  { key: 'measure' as const, icon: Ruler, label: 'Mæla (M)', shortcut: 'M' },
 ]
 
 const EQUIPMENT_OPTIONS: { value: EquipmentKind; label: string }[] = [
@@ -25,9 +28,10 @@ const EQUIPMENT_OPTIONS: { value: EquipmentKind; label: string }[] = [
 
 interface Scene3DToolbarProps {
   scene: Scene3DState
+  canvasRef?: React.RefObject<Scene3DCanvasHandle | null>
 }
 
-export function Scene3DToolbar({ scene }: Scene3DToolbarProps) {
+export function Scene3DToolbar({ scene, canvasRef }: Scene3DToolbarProps) {
   return (
     <div className="flex items-center gap-1 px-2 py-1 bg-white border-b">
       {/* Mode buttons */}
@@ -102,6 +106,37 @@ export function Scene3DToolbar({ scene }: Scene3DToolbarProps) {
         className="p-1.5 text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
       >
         <XCircle className="h-4 w-4" />
+      </button>
+
+      <div className="w-px h-5 bg-gray-200 mx-1" />
+
+      {/* Ground plane toggle */}
+      <button
+        onClick={scene.toggleGround}
+        title={scene.showGround ? 'Fela grunnflöt' : 'Sýna grunnflöt'}
+        className={`p-1.5 rounded transition-colors ${scene.showGround ? 'bg-green-100 text-green-700' : 'text-gray-600 hover:bg-gray-100'}`}
+      >
+        <Layers className="h-4 w-4" />
+      </button>
+
+      {/* Clear measurements */}
+      {scene.measurements.length > 0 && (
+        <button
+          onClick={scene.clearMeasurements}
+          title="Hreinsa mælingar"
+          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded"
+        >
+          <Eraser className="h-4 w-4" />
+        </button>
+      )}
+
+      {/* Screenshot export */}
+      <button
+        onClick={() => canvasRef?.current?.captureScreenshot()}
+        title="Vista skjáskot (PNG)"
+        className="p-1.5 text-gray-600 hover:bg-gray-100 rounded"
+      >
+        <Camera className="h-4 w-4" />
       </button>
 
       {/* Status */}

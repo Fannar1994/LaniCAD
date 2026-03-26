@@ -52,3 +52,4 @@
 - [x] FormworkCalculator ViewerPanel for all 6 systems
 - [x] Scale bars + LániCAD branding on all 2D drawing generators
 - [x] Calculator → DrawingPage bridge ("Opna í teikniborði" button)
+- [x] Advanced 3D: ground plane, measurement tools, screenshot export

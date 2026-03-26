@@ -15,12 +15,27 @@ export interface SceneObject {
   params: Record<string, unknown>
 }
 
+export type SceneMode = 'select' | 'place' | 'move' | 'rotate' | 'measure'
+
+export interface Measurement {
+  id: string
+  start: [number, number, number]
+  end: [number, number, number]
+  distance: number
+}
+
 export interface Scene3DState {
   objects: SceneObject[]
   selectedId: string | null
-  mode: 'select' | 'place' | 'move' | 'rotate'
+  mode: SceneMode
   placeKind: EquipmentKind
   placeParams: Record<string, unknown>
+  // Measurements
+  measurements: Measurement[]
+  measureStart: [number, number, number] | null
+  // Ground & site
+  showGround: boolean
+  groundSize: number
   // Actions
   addObject: (kind: EquipmentKind, position: [number, number, number], params: Record<string, unknown>) => string
   removeObject: (id: string) => void
@@ -28,7 +43,7 @@ export interface Scene3DState {
   updateRotation: (id: string, rotation: [number, number, number]) => void
   updateParams: (id: string, params: Record<string, unknown>) => void
   selectObject: (id: string | null) => void
-  setMode: (mode: 'select' | 'place' | 'move' | 'rotate') => void
+  setMode: (mode: SceneMode) => void
   setPlaceKind: (kind: EquipmentKind) => void
   setPlaceParams: (params: Record<string, unknown>) => void
   duplicateObject: (id: string) => void
@@ -37,6 +52,12 @@ export interface Scene3DState {
   redo: () => void
   canUndo: boolean
   canRedo: boolean
+  // Measurement actions
+  addMeasurePoint: (point: [number, number, number]) => void
+  clearMeasurements: () => void
+  removeMeasurement: (id: string) => void
+  // Ground toggle
+  toggleGround: () => void
 }
 
 let nextId = 1
@@ -67,9 +88,13 @@ const MAX_HISTORY = 30
 export function useScene3D(): Scene3DState {
   const [objects, setObjects] = useState<SceneObject[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [mode, setMode] = useState<'select' | 'place' | 'move' | 'rotate'>('select')
+  const [mode, setMode] = useState<SceneMode>('select')
   const [placeKind, setPlaceKind] = useState<EquipmentKind>('scaffold')
   const [placeParams, setPlaceParams] = useState<Record<string, unknown>>(DEFAULT_PARAMS.scaffold)
+  const [measurements, setMeasurements] = useState<Measurement[]>([])
+  const [measureStart, setMeasureStart] = useState<[number, number, number] | null>(null)
+  const [showGround, setShowGround] = useState(true)
+  const [groundSize] = useState(40)
 
   // Undo/redo
   const historyRef = useRef<SceneObject[][]>([])
@@ -175,6 +200,37 @@ export function useScene3D(): Scene3DState {
     setPlaceParams(DEFAULT_PARAMS[kind])
   }, [])
 
+  const addMeasurePoint = useCallback((point: [number, number, number]) => {
+    if (!measureStart) {
+      setMeasureStart(point)
+    } else {
+      const dx = point[0] - measureStart[0]
+      const dy = point[1] - measureStart[1]
+      const dz = point[2] - measureStart[2]
+      const distance = Math.sqrt(dx * dx + dy * dy + dz * dz)
+      setMeasurements(prev => [...prev, {
+        id: sceneId(),
+        start: measureStart,
+        end: point,
+        distance,
+      }])
+      setMeasureStart(null)
+    }
+  }, [measureStart])
+
+  const clearMeasurements = useCallback(() => {
+    setMeasurements([])
+    setMeasureStart(null)
+  }, [])
+
+  const removeMeasurement = useCallback((id: string) => {
+    setMeasurements(prev => prev.filter(m => m.id !== id))
+  }, [])
+
+  const toggleGround = useCallback(() => {
+    setShowGround(prev => !prev)
+  }, [])
+
   return {
     objects,
     selectedId,
@@ -196,5 +252,15 @@ export function useScene3D(): Scene3DState {
     redo,
     canUndo: historyRef.current.length > 0,
     canRedo: futureRef.current.length > 0,
+    // Measurements
+    measurements,
+    measureStart,
+    addMeasurePoint,
+    clearMeasurements,
+    removeMeasurement,
+    // Ground
+    showGround,
+    groundSize,
+    toggleGround,
   }
 }

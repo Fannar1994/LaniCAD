@@ -85,10 +85,10 @@ L├íniCAD is a 2D/3D CAD system for construction equipment rental. It serves f
 - [x] Export consolidated reports as PDF/Excel
 
 ### 3.3 Advanced 3D Features
-- [ ] Site context (ground plane, building outline import)
-- [ ] Measurement tools in 3D view (distances, angles)
-- [ ] Screenshot/render export from 3D scene
-- [ ] Multi-equipment scene composition (fence + scaffold on same site)
+- [x] Site context (ground plane, building outline import)
+- [x] Measurement tools in 3D view (distances, angles)
+- [x] Screenshot/render export from 3D scene
+- [x] Multi-equipment scene composition (fence + scaffold on same site)
 
 ### 3.4 E2E Testing
 - [x] Set up Playwright
