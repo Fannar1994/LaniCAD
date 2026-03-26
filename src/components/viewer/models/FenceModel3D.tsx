@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import * as THREE from 'three'
+import { FENCE } from '@/lib/geometry-config'
 
 export type FenceStyle3D = 'standard' | 'plastic' | 'queue' | 'warning'
 
@@ -11,10 +12,10 @@ interface FenceModel3DProps {
   fenceStyle?: FenceStyle3D
 }
 
-const FRAME_R = 0.021   // 42mm OD frame tube
-const WIRE_R = 0.002    // 4mm wire diameter
-const FRAME_COLOR = '#888'
-const WIRE_COLOR = '#aaa'
+const FRAME_R = FENCE.frameRadius
+const WIRE_R = FENCE.wireRadius
+const FRAME_COLOR = FENCE.colors.frame
+const WIRE_COLOR = FENCE.colors.wire
 
 function Tube({ start, end, radius = FRAME_R, color = FRAME_COLOR }: {
   start: [number, number, number]

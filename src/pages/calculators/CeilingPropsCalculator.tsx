@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { LOFTASTODIR, MOTABITAR, AUKAHLUTIR, CLASS_INFO } from '@/data/ceiling-props'
@@ -11,6 +11,8 @@ import { createProject, updateProject, createTemplate } from '@/lib/db'
 import { ViewerPanel } from '@/components/viewer/ViewerPanel'
 import { createCeilingPropsDrawing } from '@/components/viewer/drawings/CeilingPropsDrawing2D'
 import { CeilingPropsModel3D } from '@/components/viewer/models/CeilingPropsModel3D'
+import { useCanvas2D, type CanvasObject } from '@/hooks/useCanvas2D'
+import { CEILING, EQUIPMENT_COLORS } from '@/lib/geometry-config'
 import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
@@ -48,6 +50,45 @@ export function CeilingPropsCalculator() {
 
   const selectedProp = LOFTASTODIR[selectedPropIdx]
   const selectedBeam = MOTABITAR[selectedBeamIdx]
+
+  // Interactive 2D canvas
+  const canvas = useCanvas2D()
+  const roomWidth = Math.max(4, propQty * 1.2)
+
+  // Generate canvas objects from form parameters
+  useEffect(() => {
+    const objs: CanvasObject[] = []
+    const spacing = roomWidth / Math.max(propQty, 1)
+    for (let i = 0; i < propQty; i++) {
+      objs.push({
+        id: `prop_${i}`,
+        type: 'prop',
+        label: `Stoð ${i + 1}`,
+        x: spacing * 0.5 + i * spacing,
+        y: 2,
+        width: CEILING.propOuterRadius * 4,
+        height: CEILING.propOuterRadius * 4,
+        rotation: 0,
+        color: EQUIPMENT_COLORS.ceiling,
+      })
+    }
+    const beamSpacing = roomWidth / Math.max(beamQty + 1, 1)
+    for (let i = 0; i < beamQty; i++) {
+      objs.push({
+        id: `beam_${i}`,
+        type: 'beam',
+        label: `Biti ${i + 1}`,
+        x: beamSpacing * (i + 1) - 0.5,
+        y: 0.5,
+        width: selectedBeam.length_m,
+        height: CEILING.beamWebWidth,
+        rotation: 0,
+        color: CEILING.colors.outerTube,
+      })
+    }
+    canvas.setObjects(objs)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propQty, beamQty, selectedBeamIdx, roomWidth])
 
   const lines = useMemo(() => {
     const items: LineItem[] = []
@@ -343,6 +384,9 @@ export function CeilingPropsCalculator() {
             roomWidth={Math.max(4, propQty * 1.2)}
           />
         }
+        canvas={canvas}
+        placementType="prop"
+        placementDefaults={{ label: 'Ný stoð', width: CEILING.propOuterRadius * 4, height: CEILING.propOuterRadius * 4, color: EQUIPMENT_COLORS.ceiling }}
         onOpenInDrawing={() => navigate('/drawing', { state: { equipmentType: 'ceiling', params: { propCount: propQty, propHeight: (selectedProp.minHeight + selectedProp.maxHeight) / 2, beamCount: beamQty, roomWidth: Math.max(4, propQty * 1.2) } } })}
       />
 

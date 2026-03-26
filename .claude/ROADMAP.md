@@ -127,6 +127,34 @@ L├íniCAD is a 2D/3D CAD system for construction equipment rental. It serves f
 
 ---
 
+## Phase 5: Interactive Drawing & Editing (Weeks 14-18)
+> Goal: Transform static drawings into interactive, editable canvases where users sketch and adjust layouts directly
+
+### 5.1 Interactive 2D Canvas
+- [ ] Integrate React-Konva for interactive 2D drawing (replace static SVG rendering)
+- [ ] Represent equipment (props, beams, panels) as draggable Konva objects in component state
+- [ ] Add mouse/touch handlers for creating new items on the canvas (click to place)
+- [ ] Keyboard shortcuts and context menus for deletion/duplication
+- [ ] Snap-to-grid for precise positioning
+- [ ] Export interactive canvas state back to Maker.js/SVG for high-quality PDF output
+- [ ] Bidirectional sync between control panel inputs and canvas objects
+
+### 5.2 Interactive 3D Editing
+- [ ] Refactor 3D models to store editable geometry state (position, rotation, dimensions per object)
+- [ ] Add Drei TransformControls/DragControls for click-and-drag editing of 3D meshes
+- [ ] Snap-to-grid and constraint enforcement (props stay vertical, beams rest on props)
+- [ ] Raycasting-based creation tools (click floor grid to place new props/beams)
+- [ ] Selection and deletion tools in 3D viewport
+- [ ] Synchronize 3D scene changes with calculator form fields and rental cost recomputation
+
+### 5.3 Shared Infrastructure
+- [ ] Centralize geometry parameters (dimensions, colors, spacing) in shared configuration
+- [ ] Add undo/redo stack for interactive 2D and 3D drawing state
+- [ ] Persist interactive geometry (object positions/dimensions) in project save/load
+- [ ] Unify 2D and 3D object models so both views reference the same state
+
+---
+
 ## Priority Matrix
 
 | Feature | Impact | Effort | Priority |
@@ -142,6 +170,9 @@ L├íniCAD is a 2D/3D CAD system for construction equipment rental. It serves f
 | Multi-project reporting | Medium | Medium | **P3** |
 | Multi-tenant | High | High | **P4** |
 | Mobile PWA | Medium | Medium | **P4** |
+| Interactive 2D canvas | High | High | **P5** |
+| Interactive 3D editing | High | High | **P5** |
+| Shared geometry config | Medium | Low | **P5** |
 
 ---
 
@@ -151,3 +182,4 @@ L├íniCAD is a 2D/3D CAD system for construction equipment rental. It serves f
 - **Phase 2**: Drawings generated from calculator data, PDF plans importable
 - **Phase 3**: Clients receive shareable quote links, E2E tests in CI
 - **Phase 4**: Second company onboarded, revenue generated
+- **Phase 5**: Users can interactively place, drag, and edit equipment in both 2D and 3D views

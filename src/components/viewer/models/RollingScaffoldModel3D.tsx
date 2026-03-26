@@ -1,14 +1,15 @@
 import { useRef } from 'react'
 import * as THREE from 'three'
+import { ROLLING } from '@/lib/geometry-config'
 
 interface RollingScaffoldModel3DProps {
   height: number  // platform height in meters
   width: 'narrow' | 'wide'
 }
 
-const TUBE_R = 0.024  // 48.3mm OD
-const BRACE_R = 0.016 // thin brace tubes
-const TUBE_COLOR = '#888'
+const TUBE_R = ROLLING.tubeRadius
+const BRACE_R = ROLLING.braceRadius
+const TUBE_COLOR = ROLLING.colors.tube
 
 function Tube({ start, end, radius = TUBE_R, color = TUBE_COLOR }: {
   start: [number, number, number]

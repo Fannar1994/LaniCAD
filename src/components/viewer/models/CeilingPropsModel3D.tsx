@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import * as THREE from 'three'
+import { CEILING } from '@/lib/geometry-config'
 
 interface CeilingPropsModel3DProps {
   propCount: number
@@ -9,12 +10,12 @@ interface CeilingPropsModel3DProps {
   roomDepth?: number  // meters (default 4)
 }
 
-const PROP_OUTER_R = 0.030  // ~60mm outer tube
-const PROP_INNER_R = 0.024  // ~48mm inner tube
-const BEAM_W = 0.08         // HT-20 beam web width
-const BEAM_H = 0.20         // HT-20 beam height
-const FLANGE_W = 0.12       // flange width for I-shape
-const FLANGE_T = 0.008      // flange thickness
+const PROP_OUTER_R = CEILING.propOuterRadius
+const PROP_INNER_R = CEILING.propInnerRadius
+const BEAM_W = CEILING.beamWebWidth
+const BEAM_H = CEILING.beamHeight
+const FLANGE_W = CEILING.flangeWidth
+const FLANGE_T = CEILING.flangeThickness
 
 function Tube({ start, end, radius, color }: {
   start: [number, number, number]

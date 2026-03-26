@@ -1,5 +1,6 @@
 import { useRef, type ReactNode } from 'react'
 import * as THREE from 'three'
+import { FORMWORK } from '@/lib/geometry-config'
 
 export type FormworkSystem3D = 'Rasto' | 'Takko' | 'Manto' | 'Alufort' | 'ID-15' | 'Robusto' | 'Column' | 'ST60'
 
@@ -9,10 +10,10 @@ interface FormworkModel3DProps {
   system: FormworkSystem3D
 }
 
-const PANEL_THICKNESS = 0.12
-const WALL_THICKNESS = 0.20  // concrete wall gap between panel faces
-const PROP_COLOR = '#666'
-const TIE_COLOR = '#333'
+const PANEL_THICKNESS = FORMWORK.panelThickness
+const WALL_THICKNESS = FORMWORK.wallThickness
+const PROP_COLOR = FORMWORK.colors.prop
+const TIE_COLOR = FORMWORK.colors.tie
 
 function Tube({ start, end, radius = 0.015, color = PROP_COLOR }: {
   start: [number, number, number]

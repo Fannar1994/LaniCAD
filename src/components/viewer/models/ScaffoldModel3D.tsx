@@ -1,5 +1,6 @@
 import { useRef, type ReactNode } from 'react'
 import * as THREE from 'three'
+import { SCAFFOLD } from '@/lib/geometry-config'
 
 interface ScaffoldModel3DProps {
   length: number    // meters
@@ -8,17 +9,17 @@ interface ScaffoldModel3DProps {
   legType: '50cm' | '100cm'
 }
 
-const TUBE_R = 0.024       // 48.3mm OD Layher standard tube
-const THIN_R = 0.016       // thinner braces / rails
-const BAY_L = 1.8          // Bay length (matches BOARD_LENGTH_M from data)
-const BAY_W = 0.73         // standard bay depth
-const BOARD_T = 0.04       // deck board thickness
-const TUBE_COLOR = '#777'
-const BOARD_COLOR = '#f5c800'
-const BASE_COLOR = '#555'
-const RAIL_COLOR = '#cc0000'
-const BRACE_COLOR = '#aaa'
-const ROSETTE_COLOR = '#555'
+const TUBE_R = SCAFFOLD.tubeRadius
+const THIN_R = SCAFFOLD.thinRadius
+const BAY_L = SCAFFOLD.bayLength
+const BAY_W = SCAFFOLD.bayWidth
+const BOARD_T = SCAFFOLD.boardThickness
+const TUBE_COLOR = SCAFFOLD.colors.tube
+const BOARD_COLOR = SCAFFOLD.colors.board
+const BASE_COLOR = SCAFFOLD.colors.base
+const RAIL_COLOR = SCAFFOLD.colors.rail
+const BRACE_COLOR = SCAFFOLD.colors.brace
+const ROSETTE_COLOR = SCAFFOLD.colors.rosette
 
 function Tube({ start, end, radius = TUBE_R, color = TUBE_COLOR }: {
   start: [number, number, number]
