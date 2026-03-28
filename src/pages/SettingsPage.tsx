@@ -27,6 +27,11 @@ const CALCULATOR_LABELS: Record<CalculatorType, string> = {
   formwork: 'Steypumót',
   rolling: 'Hjólapallar',
   ceiling: 'Loftastoðir',
+  robusto: 'Robusto',
+  alufort: 'Alufort',
+  id15: 'ID-15',
+  column: 'Súlumót',
+  topec: 'Topec',
 }
 
 export function SettingsPage() {

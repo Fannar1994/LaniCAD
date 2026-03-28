@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { LOFTASTODIR, MOTABITAR, AUKAHLUTIR, CLASS_INFO } from '@/data/ceiling-props'
@@ -54,9 +54,21 @@ export function CeilingPropsCalculator() {
   // Interactive 2D canvas
   const canvas = useCanvas2D()
   const roomWidth = Math.max(4, propQty * 1.2)
+  const canvasInitRef = useRef(false)
 
-  // Generate canvas objects from form parameters
+  // Load saved canvas objects or generate from form parameters
   useEffect(() => {
+    // On first mount, try loading from saved project data
+    if (!canvasInitRef.current) {
+      canvasInitRef.current = true
+      const saved = initData.canvasObjects as CanvasObject[] | undefined
+      if (saved && saved.length > 0) {
+        canvas.setObjects(saved)
+        return
+      }
+    }
+
+    // Auto-generate from form when parameters change
     const objs: CanvasObject[] = []
     const spacing = roomWidth / Math.max(propQty, 1)
     for (let i = 0; i < propQty; i++) {
@@ -167,6 +179,7 @@ export function CeilingPropsCalculator() {
     }))
     const data: Record<string, unknown> = {
       rentalDays, selectedPropIdx, propQty, selectedBeamIdx, beamQty, accessoryQtys, startDate, endDate, discount,
+      canvasObjects: canvas.objects,
     }
     try {
       setSaving(true)

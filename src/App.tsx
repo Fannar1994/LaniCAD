@@ -16,6 +16,11 @@ const ScaffoldCalculator = lazy(() => import('@/pages/calculators/ScaffoldCalcul
 const RollingScaffoldCalculator = lazy(() => import('@/pages/calculators/RollingScaffoldCalculator').then(m => ({ default: m.RollingScaffoldCalculator })))
 const CeilingPropsCalculator = lazy(() => import('@/pages/calculators/CeilingPropsCalculator').then(m => ({ default: m.CeilingPropsCalculator })))
 const FormworkCalculator = lazy(() => import('@/pages/calculators/FormworkCalculator').then(m => ({ default: m.FormworkCalculator })))
+const RobustoCalculator = lazy(() => import('@/pages/calculators/RobustoCalculator').then(m => ({ default: m.RobustoCalculator })))
+const AlufortCalculator = lazy(() => import('@/pages/calculators/AlufortCalculator').then(m => ({ default: m.AlufortCalculator })))
+const ID15Calculator = lazy(() => import('@/pages/calculators/ID15Calculator').then(m => ({ default: m.ID15Calculator })))
+const ColumnCalculator = lazy(() => import('@/pages/calculators/ColumnCalculator').then(m => ({ default: m.ColumnCalculator })))
+const TopecCalculator = lazy(() => import('@/pages/calculators/TopecCalculator').then(m => ({ default: m.TopecCalculator })))
 const DrawingPage = lazy(() => import('@/pages/DrawingPage').then(m => ({ default: m.DrawingPage })))
 const SchematicsPage = lazy(() => import('@/pages/SchematicsPage').then(m => ({ default: m.SchematicsPage })))
 const TemplatesPage = lazy(() => import('@/pages/TemplatesPage').then(m => ({ default: m.TemplatesPage })))
@@ -58,6 +63,11 @@ export function App() {
         <Route path="calculator/rolling" element={<Suspense fallback={<LazyFallback />}><RollingScaffoldCalculator /></Suspense>} />
         <Route path="calculator/ceiling" element={<Suspense fallback={<LazyFallback />}><CeilingPropsCalculator /></Suspense>} />
         <Route path="calculator/formwork" element={<Suspense fallback={<LazyFallback />}><FormworkCalculator /></Suspense>} />
+        <Route path="calculator/robusto" element={<Suspense fallback={<LazyFallback />}><RobustoCalculator /></Suspense>} />
+        <Route path="calculator/alufort" element={<Suspense fallback={<LazyFallback />}><AlufortCalculator /></Suspense>} />
+        <Route path="calculator/id15" element={<Suspense fallback={<LazyFallback />}><ID15Calculator /></Suspense>} />
+        <Route path="calculator/column" element={<Suspense fallback={<LazyFallback />}><ColumnCalculator /></Suspense>} />
+        <Route path="calculator/topec" element={<Suspense fallback={<LazyFallback />}><TopecCalculator /></Suspense>} />
         <Route path="drawing" element={<Suspense fallback={<LazyFallback />}><DrawingPage /></Suspense>} />
         <Route path="schematics" element={<Suspense fallback={<LazyFallback />}><SchematicsPage /></Suspense>} />
         <Route path="templates" element={<Suspense fallback={<LazyFallback />}><TemplatesPage /></Suspense>} />

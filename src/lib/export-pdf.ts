@@ -15,6 +15,8 @@ export interface PdfExportData {
   tableRows: (string | number)[][]
   totalLabel: string
   totalValue: string
+  /** Optional SVG drawing to include on a second page */
+  drawingSvg?: string
 }
 
 // Company info for PDF header — configurable per tenant in the future
@@ -27,7 +29,7 @@ const COMPANY = {
   web: 'byko.is/leiga',
 }
 
-export function exportPdf(data: PdfExportData) {
+export async function exportPdf(data: PdfExportData) {
   const doc = new jsPDF('p', 'mm', 'a4')
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()

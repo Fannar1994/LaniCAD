@@ -1,20 +1,13 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { FORMWORK_SYSTEMS, MANTO_HEIGHTS, TIE_BAR_OPTIONS } from '@/data/formwork'
-import type { ID15Combo } from '@/data/formwork'
 import {
   calculateModeA,
   calculateModeB,
-  calculateModeC,
-  calculateModeD,
-  calculateModeE,
-  calculateModeF,
-  findID15Towers,
   calcFormworkTotal,
   calcFormworkItemCost,
   type BoQItem,
-  type ID15TowerOption,
 } from '@/lib/calculations/formwork'
 import { formatKr } from '@/lib/format'
 import { ClientInfoPanel, DateRangePicker, ExportButtons, TemplateNameDialog } from '@/components/calculator'
@@ -24,11 +17,15 @@ import { createProject, updateProject, createTemplate } from '@/lib/db'
 import { ViewerPanel } from '@/components/viewer/ViewerPanel'
 import { createFormworkDrawing } from '@/components/viewer/drawings/FormworkDrawing2D'
 import { FormworkModel3D } from '@/components/viewer/models/FormworkModel3D'
+import { useCanvas2D, type CanvasObject } from '@/hooks/useCanvas2D'
+import { EQUIPMENT_COLORS } from '@/lib/geometry-config'
 import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
 
-type SystemKey = 'manto' | 'rasto' | 'alufort' | 'id15' | 'robusto' | 'column'
+type SystemKey = 'manto' | 'rasto'
+
+const WALL_SYSTEMS = FORMWORK_SYSTEMS.filter(s => s.key === 'manto' || s.key === 'rasto')
 
 export function FormworkCalculator() {
   const location = useLocation()
@@ -64,63 +61,48 @@ export function FormworkCalculator() {
   const [bOpenEnds, setBOpenEnds] = useState(initData.bOpenEnds as number ?? 0)
   const [bTieBar, setBTieBar] = useState(initData.bTieBar as string ?? TIE_BAR_OPTIONS[0].id)
 
-  // Mode C (Alufort)
-  const [cSlabLength, setCSlabLength] = useState(initData.cSlabLength as number ?? 6)
-  const [cSlabWidth, setCSlabWidth] = useState(initData.cSlabWidth as number ?? 5)
-  const [cSlabHeight, setCSlabHeight] = useState(initData.cSlabHeight as number ?? 2.8)
-  const [cConcreteThickness, setCConcreteThickness] = useState(initData.cConcreteThickness as number ?? 0.2)
-  const [cSpacingL, setCSpacingL] = useState(initData.cSpacingL as number ?? 1.5)
-  const [cSpacingW, setCSpacingW] = useState(initData.cSpacingW as number ?? 1.5)
-  const [cUseID, setCUseID] = useState(initData.cUseID as boolean ?? false)
+  // Interactive 2D canvas
+  const canvas = useCanvas2D()
+  const canvasInitRef = useRef(false)
 
-  // Mode D (ID-15)
-  const [dHeight, setDHeight] = useState(initData.dHeight as number ?? 3.0)
-  const [dSelectedIdx, setDSelectedIdx] = useState<number>(initData.dSelectedIdx as number ?? -1)
-  const [dTowerQty, setDTowerQty] = useState(initData.dTowerQty as number ?? 1)
-  const [dRackQty, setDRackQty] = useState(initData.dRackQty as number ?? 0)
+  // Current wall dimensions for canvas objects
+  const drawDims = useMemo(() => {
+    if (system === 'rasto') return { w: aWallLength, h: aSubSystem === 'rasto' ? 3.0 : 1.2 }
+    return { w: bWallLength, h: bHeight / 100 }
+  }, [system, aWallLength, aSubSystem, bWallLength, bHeight])
 
-  // Mode E (Robusto)
-  const [eWallLength, setEWallLength] = useState(initData.eWallLength as number ?? 12)
-  const [eInsideCorners, setEInsideCorners] = useState(initData.eInsideCorners as number ?? 0)
-  const [eOutsideCorners, setEOutsideCorners] = useState(initData.eOutsideCorners as number ?? 0)
-  const [eOpenEnds, setEOpenEnds] = useState(initData.eOpenEnds as number ?? 0)
-
-  // Mode F (Column)
-  const [fColWidth, setFColWidth] = useState(initData.fColWidth as number ?? 70)
-  const [fColHeight, setFColHeight] = useState(initData.fColHeight as number ?? 300)
-  const [fColQty, setFColQty] = useState(initData.fColQty as number ?? 1)
-
-  const dTowerOptions = useMemo<ID15TowerOption[]>(() => {
-    if (system !== 'id15') return []
-    if (dHeight < 1.42 || dHeight > 20.10) return []
-    return findID15Towers(dHeight)
-  }, [system, dHeight])
-
-  const dSelectedCombo = useMemo<ID15Combo | null>(() => {
-    if (dSelectedIdx < 0 || dSelectedIdx >= dTowerOptions.length) return null
-    return dTowerOptions[dSelectedIdx].combo
-  }, [dSelectedIdx, dTowerOptions])
+  useEffect(() => {
+    if (!canvasInitRef.current) {
+      canvasInitRef.current = true
+      const saved = initData.canvasObjects as CanvasObject[] | undefined
+      if (saved && saved.length > 0) {
+        canvas.setObjects(saved)
+        return
+      }
+    }
+    const objs: CanvasObject[] = [{
+      id: 'wall_0',
+      type: 'panel',
+      label: WALL_SYSTEMS.find(s => s.key === system)?.name ?? 'Mót',
+      x: 0.5,
+      y: 0.5,
+      width: drawDims.w,
+      height: drawDims.h,
+      rotation: 0,
+      color: EQUIPMENT_COLORS.formwork,
+    }]
+    canvas.setObjects(objs)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drawDims.w, drawDims.h, system])
 
   const result = useMemo(() => {
     if (system === 'rasto') {
       return calculateModeA(aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar)
-    } else if (system === 'manto') {
-      return calculateModeB(bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar)
-    } else if (system === 'id15') {
-      return calculateModeD(dSelectedCombo, dTowerQty, dRackQty)
-    } else if (system === 'robusto') {
-      return calculateModeE(eWallLength, eInsideCorners, eOutsideCorners, eOpenEnds)
-    } else if (system === 'column') {
-      return calculateModeF(fColWidth, fColHeight, fColQty)
     } else {
-      return calculateModeC(cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID)
+      return calculateModeB(bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar)
     }
   }, [system, aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
-      bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
-      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
-      dSelectedCombo, dTowerQty, dRackQty,
-      eWallLength, eInsideCorners, eOutsideCorners, eOpenEnds,
-      fColWidth, fColHeight, fColQty])
+      bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar])
 
   const totalCost = calcFormworkTotal(result.boq, rentalDays, discount)
 
@@ -168,10 +150,7 @@ export function FormworkCalculator() {
       system, rentalDays, discount, startDate, endDate,
       aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
       bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
-      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
-      dHeight, dSelectedIdx, dTowerQty, dRackQty,
-      eWallLength, eInsideCorners, eOutsideCorners, eOpenEnds,
-      fColWidth, fColHeight, fColQty,
+      canvasObjects: canvas.objects,
     }
     try {
       setSaving(true)
@@ -190,21 +169,13 @@ export function FormworkCalculator() {
     }
   }, [client, result.boq, rentalDays, system, discount, startDate, endDate,
       aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
-      bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
-      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
-      dHeight, dSelectedIdx, dTowerQty, dRackQty,
-      eWallLength, eInsideCorners, eOutsideCorners, eOpenEnds,
-      fColWidth, fColHeight, fColQty, projectId])
+      bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar, projectId])
 
   const handleSaveTemplate = useCallback(async (name: string) => {
     const config: Record<string, unknown> = {
       system, rentalDays, discount, startDate, endDate,
       aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
       bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
-      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
-      dHeight, dSelectedIdx, dTowerQty, dRackQty,
-      eWallLength, eInsideCorners, eOutsideCorners, eOpenEnds,
-      fColWidth, fColHeight, fColQty,
     }
     try {
       setSavingTemplate(true)
@@ -218,11 +189,7 @@ export function FormworkCalculator() {
     }
   }, [system, rentalDays, discount, startDate, endDate,
       aWallLength, aSubSystem, aInsideCorners, aOutsideCorners, aOpenEnds, aTieBar,
-      bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar,
-      cSlabLength, cSlabWidth, cSlabHeight, cConcreteThickness, cSpacingL, cSpacingW, cUseID,
-      dHeight, dSelectedIdx, dTowerQty, dRackQty,
-      eWallLength, eInsideCorners, eOutsideCorners, eOpenEnds,
-      fColWidth, fColHeight, fColQty])
+      bWallLength, bHeight, bInsideCorners, bOutsideCorners, bOpenEnds, bTieBar])
 
   return (
     <div className="space-y-6">
@@ -239,10 +206,10 @@ export function FormworkCalculator() {
 
       {/* System tabs */}
       <div className="flex gap-2">
-        {FORMWORK_SYSTEMS.map(s => (
+        {WALL_SYSTEMS.map(s => (
           <button
             key={s.key}
-            onClick={() => setSystem(s.key)}
+            onClick={() => setSystem(s.key as SystemKey)}
             className={`rounded-md border px-4 py-2 text-sm transition ${
               system === s.key
                 ? 'border-brand-accent bg-brand-accent/10 font-medium text-brand-dark'
@@ -358,212 +325,6 @@ export function FormworkCalculator() {
             </>
           )}
 
-          {/* MODE C: Alufort */}
-          {system === 'alufort' && (
-            <>
-              <h2 className="font-condensed text-lg font-semibold text-brand-dark">Alufort loftamót</h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Loftlengd (m)</label>
-                  <input type="number" min={0.5} step={0.1} value={cSlabLength} onChange={e => setCSlabLength(Math.max(0.5, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Loftlengd" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Loftbreidd (m)</label>
-                  <input type="number" min={0.5} step={0.1} value={cSlabWidth} onChange={e => setCSlabWidth(Math.max(0.5, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Loftbreidd" />
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Lofthæð (m)</label>
-                  <input type="number" min={0.5} step={0.1} value={cSlabHeight} onChange={e => setCSlabHeight(Math.max(0.5, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Lofthæð" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Steypuþykkt (m)</label>
-                  <input type="number" min={0.05} step={0.01} value={cConcreteThickness} onChange={e => setCConcreteThickness(Math.max(0.05, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Steypuþykkt" />
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Stoðabil lengd (m)</label>
-                  <input type="number" min={0.5} step={0.1} value={cSpacingL} onChange={e => setCSpacingL(Math.max(0.5, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Stoðabil lengd" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Stoðabil breidd (m)</label>
-                  <input type="number" min={0.5} step={0.1} value={cSpacingW} onChange={e => setCSpacingW(Math.max(0.5, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent" title="Stoðabil breidd" />
-                </div>
-              </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={cUseID} onChange={e => setCUseID(e.target.checked)} className="rounded text-brand-accent focus:ring-brand-accent" />
-                Nota ID-ramma (shoring towers)
-              </label>
-            </>
-          )}
-
-          {/* MODE D: ID-15 Towers */}
-          {system === 'id15' && (
-            <>
-              <h2 className="font-condensed text-lg font-semibold text-brand-dark">ID-15 Turnareiknivél</h2>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Turnhæð (m)</label>
-                <input
-                  type="number"
-                  min={1.42}
-                  max={20.1}
-                  step={0.01}
-                  value={dHeight}
-                  onChange={e => {
-                    setDHeight(Number(e.target.value))
-                    setDSelectedIdx(-1)
-                  }}
-                  className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-                  title="Turnhæð"
-                />
-                <p className="mt-1 text-xs text-gray-400">Bil: 1,42 – 20,10 m</p>
-              </div>
-
-              {dTowerOptions.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Veldu samsetningu</label>
-                  <div className="grid gap-3 md:grid-cols-3">
-                    {dTowerOptions.map((opt, i) => (
-                      <button
-                        key={opt.idx}
-                        onClick={() => setDSelectedIdx(i)}
-                        className={`rounded-lg border-2 p-3 text-left transition ${
-                          dSelectedIdx === i
-                            ? 'border-brand-accent bg-brand-accent/10'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="text-sm font-semibold text-brand-dark">{opt.label}</div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          {opt.combo[0].toFixed(2).replace('.', ',')} – {opt.combo[1].toFixed(2).replace('.', ',')} m
-                        </div>
-                        <div className="mt-0.5 text-xs text-gray-400">
-                          Þyngd: {opt.combo[10].toFixed(1).replace('.', ',')} kg
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {dTowerOptions.length === 0 && dHeight >= 1.42 && dHeight <= 20.1 && (
-                <p className="text-sm text-amber-600">Engin samsetning finnst fyrir þessa hæð.</p>
-              )}
-
-              {dSelectedIdx >= 0 && (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Fjöldi turna</label>
-                    <div className="mt-1 flex items-center gap-3">
-                      <button
-                        onClick={() => setDTowerQty(q => Math.max(1, q - 1))}
-                        className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 text-lg font-bold hover:border-brand-accent"
-                      >−</button>
-                      <span className="min-w-[2rem] text-center text-lg font-bold">{dTowerQty}</span>
-                      <button
-                        onClick={() => setDTowerQty(q => q + 1)}
-                        className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 text-lg font-bold hover:border-brand-accent"
-                      >+</button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Fylgihlutagrindir</label>
-                    <div className="mt-1 flex items-center gap-3">
-                      <button
-                        onClick={() => setDRackQty(q => Math.max(0, q - 1))}
-                        className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 text-lg font-bold hover:border-brand-accent"
-                      >−</button>
-                      <span className="min-w-[2rem] text-center text-lg font-bold">{dRackQty}</span>
-                      <button
-                        onClick={() => setDRackQty(q => q + 1)}
-                        className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 text-lg font-bold hover:border-brand-accent"
-                      >+</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-
-          {system === 'robusto' && (
-            <>
-              <h2 className="font-condensed text-lg font-semibold text-brand-dark">Robusto veggmót</h2>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Vegglengd (cm)</label>
-                <input type="number" min={30} step={1} value={eWallLength} title="Vegglengd (cm)"
-                  onChange={e => setEWallLength(Math.max(30, Number(e.target.value)))}
-                  className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-                />
-              </div>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Innhorn</label>
-                  <input type="number" min={0} value={eInsideCorners} title="Innhorn"
-                    onChange={e => setEInsideCorners(Math.max(0, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Úthorn</label>
-                  <input type="number" min={0} value={eOutsideCorners} title="Úthorn"
-                    onChange={e => setEOutsideCorners(Math.max(0, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Opnir endar</label>
-                  <input type="number" min={0} value={eOpenEnds} title="Opnir endar"
-                    onChange={e => setEOpenEnds(Math.max(0, Number(e.target.value)))}
-                    className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          {system === 'column' && (
-            <>
-              <h2 className="font-condensed text-lg font-semibold text-brand-dark">Súlumót</h2>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Súlubreidd (cm)</label>
-                <select value={fColWidth} title="Súlubreidd"
-                  onChange={e => setFColWidth(Number(e.target.value) as 60 | 70)}
-                  className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-                >
-                  <option value={70}>70 cm</option>
-                  <option value={60}>60 cm</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Súluhæð (cm)</label>
-                <select value={fColHeight} title="Súluhæð"
-                  onChange={e => setFColHeight(Number(e.target.value) as 75 | 300)}
-                  className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-accent focus:ring-brand-accent"
-                >
-                  <option value={300}>300 cm</option>
-                  <option value={75}>75 cm</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Fjöldi súlna</label>
-                <div className="mt-1 flex items-center gap-3">
-                  <button onClick={() => setFColQty(q => Math.max(1, q - 1))}
-                    className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 text-lg font-bold hover:border-brand-accent">−</button>
-                  <span className="min-w-[2rem] text-center text-lg font-bold">{fColQty}</span>
-                  <button onClick={() => setFColQty(q => q + 1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 text-lg font-bold hover:border-brand-accent">+</button>
-                </div>
-              </div>
-            </>
-          )}
         </div>
 
         {/* Summary */}
@@ -608,34 +369,17 @@ export function FormworkCalculator() {
 
       {/* 2D/3D Viewer */}
       {(() => {
-        // Map calculator system to drawing system params
-        let drawSystem: 'Rasto' | 'Takko' | 'Manto' | 'Alufort' | 'ID-15' | 'Robusto' | 'Column'
+        let drawSystem: 'Rasto' | 'Takko' | 'Manto'
         let drawLength: number
         let drawHeight: number
         if (system === 'rasto') {
           drawSystem = aSubSystem === 'rasto' ? 'Rasto' : 'Takko'
           drawLength = aWallLength
           drawHeight = aSubSystem === 'rasto' ? 3.0 : 1.2
-        } else if (system === 'manto') {
+        } else {
           drawSystem = 'Manto'
           drawLength = bWallLength
           drawHeight = bHeight / 100
-        } else if (system === 'alufort') {
-          drawSystem = 'Alufort'
-          drawLength = cSlabLength
-          drawHeight = cSlabHeight / 100
-        } else if (system === 'id15') {
-          drawSystem = 'ID-15'
-          drawLength = 1.5
-          drawHeight = dHeight / 100
-        } else if (system === 'robusto') {
-          drawSystem = 'Robusto'
-          drawLength = eWallLength
-          drawHeight = 3.0
-        } else {
-          drawSystem = 'Column'
-          drawLength = fColWidth / 100
-          drawHeight = fColHeight / 100
         }
         return (
           <ViewerPanel
@@ -643,6 +387,9 @@ export function FormworkCalculator() {
             model3D={
               <FormworkModel3D wallLength={drawLength} wallHeight={drawHeight} system={drawSystem} />
             }
+            canvas={canvas}
+            placementType="panel"
+            placementDefaults={{ width: drawLength, height: drawHeight, color: EQUIPMENT_COLORS.formwork }}
             onOpenInDrawing={() => navigate('/drawing', { state: { equipmentType: 'formwork', params: { length: drawLength, height: drawHeight, system: drawSystem } } })}
           />
         )

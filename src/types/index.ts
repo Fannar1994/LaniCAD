@@ -1,6 +1,6 @@
 // ── Calculator Types ──
 
-export type CalculatorType = 'fence' | 'scaffolding' | 'formwork' | 'rolling' | 'ceiling';
+export type CalculatorType = 'fence' | 'scaffolding' | 'formwork' | 'rolling' | 'ceiling' | 'robusto' | 'alufort' | 'id15' | 'column' | 'topec';
 
 export interface Product {
   id: string;

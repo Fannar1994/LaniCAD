@@ -2,7 +2,7 @@
 // Daily rental prices (kr/day), weights (kg), sale prices (kr)
 // Source: Leigulager allt.xlsx, sub-group 01-PAL-VP01 (50 items)
 
-export type ScaffoldSystemKey = 'mercury' | 'layher-ar' | 'speedyscaf'
+export type ScaffoldSystemKey = 'mercury' | 'layher-ar' | 'speedyscaf' | 'villalta'
 
 export interface ScaffoldSystem {
   key: ScaffoldSystemKey
@@ -15,6 +15,7 @@ export const SCAFFOLD_SYSTEMS: ScaffoldSystem[] = [
   { key: 'mercury', brand: 'Mercury', name: 'Mercury', sub: 'VP01 · Facade scaffolding' },
   { key: 'layher-ar', brand: 'Layher', name: 'Layher AR', sub: 'Allround · Facade scaffolding' },
   { key: 'speedyscaf', brand: 'SpeedyScaf', name: 'SpeedyScaf', sub: 'Facade scaffolding' },
+  { key: 'villalta', brand: 'Villalta', name: 'Villalta', sub: 'Facade scaffolding' },
 ]
 
 // ── Mercury (VP01) ──────────────────────────────
@@ -157,12 +158,58 @@ export const SPEEDYSCAF_ITEMS = [
 // Backwards compat alias
 export const SCAFFOLD_ITEMS = MERCURY_ITEMS
 
+// ── Villalta — Placeholder: populate when inventory arrives ──
+export const VILLALTA_ITEMS = [
+  // --- Frames & Risers ---
+  { itemNo: '', saleNo: '', name: 'Rammar 2,0m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Rammar 0,7m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: '12cm hækkun f/ramma', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Splitti f/ramma', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Floors & Platforms ---
+  { itemNo: '', saleNo: '', name: 'Gólfborð 1,8m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Stigapallar 1,8m', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Stairs ---
+  { itemNo: '', saleNo: '', name: 'Stigar 2,0m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Stigar 2,7m', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Legs ---
+  { itemNo: '', saleNo: '', name: 'Lappir 50cm', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Lappir 70cm', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Lappir 100cm', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Guardrails ---
+  { itemNo: '', saleNo: '', name: 'Handrið 1,8m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Tvöföld handrið 1,8m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Handriðastoðir', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Endahandrið', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Toeboards ---
+  { itemNo: '', saleNo: '', name: 'Táborð 1,0m galv.', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Táborð 1,8m galv.', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Wall Ties ---
+  { itemNo: '', saleNo: '', name: 'Veggfestingar 50cm', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Veggfestingar 80cm', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Diagonal Braces ---
+  { itemNo: '', saleNo: '', name: 'Skástífur 2,12m', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Clamps ---
+  { itemNo: '', saleNo: '', name: 'Klemmur fastar', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Snúklemmur', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Wideners ---
+  { itemNo: '', saleNo: '', name: 'Breikkanir f/vinnupalla 1,05m', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Breikkanir f/vinnupalla 0,55m', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Safety Nets ---
+  { itemNo: '', saleNo: '', name: 'Öryggisnet', dailyRate: 0, weight: 0, salePrice: 0 },
+  // --- Racks ---
+  { itemNo: '', saleNo: '', name: 'Rekkar fyrir ramma', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Rekkar fyrir gólf', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Rekki f/tvöföld handrið', dailyRate: 0, weight: 0, salePrice: 0 },
+  { itemNo: '', saleNo: '', name: 'Fylgihlutagrind', dailyRate: 0, weight: 0, salePrice: 0 },
+] as const
+
 /** Get the item array for a given scaffolding system */
 export function getScaffoldItems(system: ScaffoldSystemKey) {
   switch (system) {
     case 'mercury': return MERCURY_ITEMS
     case 'layher-ar': return LAYHER_AR_ITEMS
     case 'speedyscaf': return SPEEDYSCAF_ITEMS
+    case 'villalta': return VILLALTA_ITEMS
   }
 }
 

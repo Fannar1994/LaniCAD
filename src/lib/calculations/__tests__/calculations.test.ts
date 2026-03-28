@@ -393,7 +393,7 @@ describe('calculateFacadeMaterials', () => {
     expect(mats['Klemmur fastar']).toBe(11) // same as anchors
     expect(mats['Endahandrið']).toBe(2 * 3 * 2) // 12
     expect(mats['Splitti f/ramma']).toBe((13 * 3 + 13 * 0) * 2) // 78
-    expect(mats['LEGS_TOTAL']).toBe(13 * 2) // 26
+    expect(mats['Lappir 50cm']).toBe(13 * 2) // 26 (default legType='50cm')
   })
 
   it('second facade: no stairs', () => {

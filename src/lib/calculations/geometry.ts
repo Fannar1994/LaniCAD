@@ -65,10 +65,20 @@ export function calculateFacadeMaterials(
   levels2m: number,
   levels07m: number,
   endcaps: number,
-  isFirst: boolean
+  isFirst: boolean,
+  options?: {
+    legType?: '50cm' | '70cm' | '100cm'
+    widener?: 'none' | '0.55m' | '1.05m'
+    toeboards?: boolean
+    diagonalBraces?: boolean
+  }
 ): Record<string, number> {
   const BOARD_LENGTH = 1.8
   const WALL_ANCHOR_AREA = 15
+  const legType = options?.legType ?? '50cm'
+  const widener = options?.widener ?? 'none'
+  const toeboards = options?.toeboards ?? true
+  const diagonalBraces = options?.diagonalBraces ?? true
 
   const bays = Math.ceil(length / BOARD_LENGTH)
   const framesPerLevel = bays + 1
@@ -88,6 +98,23 @@ export function calculateFacadeMaterials(
   const splitPins = (frames2m + frames07m) * 2
   const legsTotal = (bays + 1) * 2
 
+  // Leg distribution based on selected type
+  const legs50 = legType === '50cm' ? legsTotal : 0
+  const legs70 = legType === '70cm' ? legsTotal : 0
+  const legs100 = legType === '100cm' ? legsTotal : 0
+
+  // Diagonal braces: 1 per bay per level
+  const totalLevels = levels2m + levels07m
+  const braceCount = diagonalBraces ? bays * totalLevels : 0
+
+  // Toeboards: 1.8m toeboard per bay at top level + 1.0m for endcaps
+  const toeboards18 = toeboards ? bays : 0
+  const toeboards10 = toeboards ? endcaps : 0
+
+  // Wideners
+  const wideners055 = widener === '0.55m' ? framesPerLevel * totalLevels : 0
+  const wideners105 = widener === '1.05m' ? framesPerLevel * totalLevels : 0
+
   return {
     'Rammar 2,0m': frames2m,
     'Rammar 0,7m': frames07m,
@@ -100,8 +127,15 @@ export function calculateFacadeMaterials(
     'Veggfestingar 50cm': anchors50cm,
     'Endahandrið': endClosures,
     'Klemmur fastar': anchors50cm,
+    'Skástífur 2,12m': braceCount,
     'Splitti f/ramma': splitPins,
-    'LEGS_TOTAL': legsTotal,
+    'Lappir 50cm': legs50,
+    'Lappir 70cm': legs70,
+    'Lappir 100cm': legs100,
+    'Táborð 1,8m galv.': toeboards18,
+    'Táborð 1,0m galv.': toeboards10,
+    'Breikkanir f/vinnupalla 0,55m': wideners055,
+    'Breikkanir f/vinnupalla 1,05m': wideners105,
   }
 }
 
@@ -132,9 +166,10 @@ export function calculateRacks(combined: Record<string, number>): void {
 export function calculateAccessoryGrids(combined: Record<string, number>, hasFacades: boolean): void {
   const SMALL_ITEMS_PER_GRID = 100
   const smallItemKeys = [
-    'Lappir 50cm', 'Lappir 100cm',
+    'Lappir 50cm', 'Lappir 70cm', 'Lappir 100cm',
     'Veggfestingar 50cm', 'Veggfestingar 80cm',
     'Endahandrið', 'Stálrör 1,2m', 'Handriðastoðir',
+    'Skástífur 2,12m',
   ]
   const total = smallItemKeys.reduce((sum, key) => sum + (combined[key] || 0), 0)
   if (!hasFacades || total === 0) {

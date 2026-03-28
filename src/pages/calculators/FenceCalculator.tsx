@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { FENCE_PRODUCTS, FENCE_TYPES, MIN_RENTAL_DAYS, type FenceProductData } from '@/data/fence'
@@ -12,6 +12,8 @@ import { createProject, updateProject, createTemplate } from '@/lib/db'
 import { ViewerPanel } from '@/components/viewer/ViewerPanel'
 import { createFenceDrawing } from '@/components/viewer/drawings/FenceDrawing2D'
 import { FenceModel3D } from '@/components/viewer/models/FenceModel3D'
+import { useCanvas2D, type CanvasObject } from '@/hooks/useCanvas2D'
+import { FENCE, EQUIPMENT_COLORS } from '@/lib/geometry-config'
 import type { ClientInfo, LineItem as SharedLineItem } from '@/types'
 
 const emptyClient: ClientInfo = { name: '', company: '', kennitala: '', phone: '', email: '', address: '', inspector: '' }
@@ -53,10 +55,71 @@ export function FenceCalculator() {
   const fenceType = FENCE_TYPES.find(t => t.key === selectedType)!
   const fenceProduct = FENCE_PRODUCTS[fenceType.productKey]
 
+  // Interactive 2D canvas
+  const canvas = useCanvas2D()
+  const canvasInitRef = useRef(false)
+  const panelHeight = fenceType.key === 'standard-low' ? 1.2 : fenceType.key === 'queue' ? 1.1 : 2.0
+
   const geometry = useMemo(
     () => calcFenceGeometry(totalLength, fenceType.fenceLength),
     [totalLength, fenceType.fenceLength]
   )
+
+  // Generate interactive canvas objects from geometry
+  useEffect(() => {
+    if (!canvasInitRef.current) {
+      canvasInitRef.current = true
+      const saved = initData.canvasObjects as CanvasObject[] | undefined
+      if (saved && saved.length > 0) {
+        canvas.setObjects(saved)
+        return
+      }
+    }
+
+    const objs: CanvasObject[] = []
+    const panelW = fenceType.fenceLength
+    for (let i = 0; i < geometry.panels; i++) {
+      objs.push({
+        id: `panel_${i}`,
+        type: 'panel',
+        label: `Grindar ${i + 1}`,
+        x: i * panelW,
+        y: 1,
+        width: panelW,
+        height: panelHeight,
+        rotation: 0,
+        color: EQUIPMENT_COLORS.fence,
+      })
+    }
+    for (let i = 0; i <= geometry.panels; i++) {
+      objs.push({
+        id: `stone_${i}`,
+        type: 'stone',
+        label: `Steinn ${i + 1}`,
+        x: i * panelW - FENCE.stoneWidth / 2,
+        y: 1 + panelHeight,
+        width: FENCE.stoneWidth,
+        height: FENCE.stoneHeight,
+        rotation: 0,
+        color: '#999',
+      })
+    }
+    if (includeGate) {
+      objs.push({
+        id: 'gate_0',
+        type: 'post',
+        label: 'Gönguhliðar',
+        x: geometry.panels * panelW + 0.5,
+        y: 1,
+        width: 1.2,
+        height: panelHeight,
+        rotation: 0,
+        color: '#c59b00',
+      })
+    }
+    canvas.setObjects(objs)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geometry.panels, geometry.stones, fenceType.fenceLength, panelHeight, includeGate])
 
   const effectiveDays = Math.max(rentalDays, MIN_RENTAL_DAYS)
 
@@ -196,6 +259,7 @@ export function FenceCalculator() {
     }))
     const data: Record<string, unknown> = {
       selectedType, totalLength, rentalDays: effectiveDays, includeGate, includeWheels, includeLock, stoneType, priceMode, discount, startDate, endDate,
+      canvasObjects: canvas.objects,
     }
     try {
       setSaving(true)
@@ -429,7 +493,7 @@ export function FenceCalculator() {
         svgContent={createFenceDrawing({
           panels: geometry.panels,
           panelWidth: fenceType.fenceLength,
-          panelHeight: fenceType.key === 'standard-low' ? 1.2 : fenceType.key === 'queue' ? 1.1 : 2.0,
+          panelHeight,
           stones: geometry.stones,
           clamps: geometry.clamps,
           includeGate,
@@ -438,11 +502,14 @@ export function FenceCalculator() {
           <FenceModel3D
             panels={geometry.panels}
             panelWidth={fenceType.fenceLength}
-            panelHeight={fenceType.key === 'standard-low' ? 1.2 : fenceType.key === 'queue' ? 1.1 : 2.0}
+            panelHeight={panelHeight}
             includeGate={includeGate}
           />
         }
-        onOpenInDrawing={() => navigate('/drawing', { state: { equipmentType: 'fence', params: { panels: geometry.panels, panelWidth: fenceType.fenceLength, panelHeight: fenceType.key === 'standard-low' ? 1.2 : fenceType.key === 'queue' ? 1.1 : 2.0, includeGate } } })}
+        canvas={canvas}
+        placementType="panel"
+        placementDefaults={{ width: fenceType.fenceLength, height: panelHeight, color: EQUIPMENT_COLORS.fence }}
+        onOpenInDrawing={() => navigate('/drawing', { state: { equipmentType: 'fence', params: { panels: geometry.panels, panelWidth: fenceType.fenceLength, panelHeight, includeGate } } })}
       />
 
       {/* Materials table */}

@@ -41,6 +41,11 @@ export function ScaffoldCalculator() {
   const [startDate, setStartDate] = useState(initData.startDate as string ?? '')
   const [endDate, setEndDate] = useState(initData.endDate as string ?? '')
   const [discount, setDiscount] = useState(initData.discount as number ?? 0)
+  const [legType, setLegType] = useState<'50cm' | '70cm' | '100cm'>(initData.legType as '50cm' | '70cm' | '100cm' ?? '50cm')
+  const [widener, setWidener] = useState<'none' | '0.55m' | '1.05m'>(initData.widener as 'none' | '0.55m' | '1.05m' ?? 'none')
+  const [toeboards, setToeboards] = useState(initData.toeboards as boolean ?? true)
+  const [diagonalBraces, setDiagonalBraces] = useState(initData.diagonalBraces as boolean ?? true)
+  const [showPerFacade, setShowPerFacade] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [projectId, setProjectId] = useState<string | null>(loadedProject?.id ?? null)
@@ -64,12 +69,13 @@ export function ScaffoldCalculator() {
     const totals: Record<string, number> = {}
     facades.forEach((f, i) => {
       const levels = calculateLevelsFromHeight(f.height)
-      const mats = calculateFacadeMaterials(f.length, levels.levels2m, levels.levels07m, f.endcaps, i === 0)
-      const legsTotal = mats['LEGS_TOTAL'] || 0
-      // Default: all legs as 50cm (user can adjust in future)
-      const perFacade: Record<string, number> = { ...mats, 'Lappir 50cm': legsTotal, 'Lappir 100cm': 0 }
-      delete perFacade['LEGS_TOTAL']
-      for (const [key, qty] of Object.entries(perFacade)) {
+      const mats = calculateFacadeMaterials(f.length, levels.levels2m, levels.levels07m, f.endcaps, i === 0, {
+        legType,
+        widener,
+        toeboards,
+        diagonalBraces,
+      })
+      for (const [key, qty] of Object.entries(mats)) {
         totals[key] = (totals[key] || 0) + qty
       }
     })
@@ -77,7 +83,23 @@ export function ScaffoldCalculator() {
     calculateRacks(totals)
     calculateAccessoryGrids(totals, facades.length > 0)
     return totals
-  }, [facades])
+  }, [facades, legType, widener, toeboards, diagonalBraces])
+
+  // Per-facade breakdown for detail view
+  const facadeBreakdowns = useMemo(() => {
+    return facades.map((f, i) => {
+      const levels = calculateLevelsFromHeight(f.height)
+      return {
+        facade: f,
+        materials: calculateFacadeMaterials(f.length, levels.levels2m, levels.levels07m, f.endcaps, i === 0, {
+          legType,
+          widener,
+          toeboards,
+          diagonalBraces,
+        }),
+      }
+    })
+  }, [facades, legType, widener, toeboards, diagonalBraces])
 
   const systemItems = useMemo(() => getScaffoldItems(system), [system])
 
@@ -130,7 +152,7 @@ export function ScaffoldCalculator() {
       rentalCost: l.rentalCost,
       weight: l.weight,
     }))
-    const data: Record<string, unknown> = { system, rentalDays, facades, startDate, endDate, discount }
+    const data: Record<string, unknown> = { system, rentalDays, facades, startDate, endDate, discount, legType, widener, toeboards, diagonalBraces }
     try {
       setSaving(true)
       if (projectId) {
@@ -146,10 +168,10 @@ export function ScaffoldCalculator() {
     } finally {
       setSaving(false)
     }
-  }, [client, lineItems, rentalDays, facades, startDate, endDate, projectId, system, discount])
+  }, [client, lineItems, rentalDays, facades, startDate, endDate, projectId, system, discount, legType, widener, toeboards, diagonalBraces])
 
   const handleSaveTemplate = useCallback(async (name: string) => {
-    const config: Record<string, unknown> = { system, rentalDays, facades, startDate, endDate, discount }
+    const config: Record<string, unknown> = { system, rentalDays, facades, startDate, endDate, discount, legType, widener, toeboards, diagonalBraces }
     try {
       setSavingTemplate(true)
       await createTemplate({ type: 'scaffolding', name, config })
@@ -160,7 +182,7 @@ export function ScaffoldCalculator() {
       setSavingTemplate(false)
       setTemplateDialogOpen(false)
     }
-  }, [rentalDays, facades, startDate, endDate, system, discount])
+  }, [rentalDays, facades, startDate, endDate, system, discount, legType, widener, toeboards, diagonalBraces])
 
   return (
     <div className="space-y-6">
@@ -266,6 +288,59 @@ export function ScaffoldCalculator() {
               Leigudagar: <span className="font-medium text-brand-dark">{rentalDays}</span> (stillt í leigutímabili hér að ofan)
             </div>
           </div>
+
+          {/* Scaffold options */}
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <h3 className="mb-3 font-condensed text-base font-semibold text-brand-dark">Stillingar</h3>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500">Lappir (fótur)</label>
+                <select
+                  value={legType}
+                  onChange={e => setLegType(e.target.value as '50cm' | '70cm' | '100cm')}
+                  className="mt-1 block w-full rounded-md border-gray-300 text-sm focus:border-brand-accent focus:ring-brand-accent"
+                  title="Veldu fótlengd"
+                >
+                  <option value="50cm">50 cm</option>
+                  <option value="70cm">70 cm</option>
+                  <option value="100cm">100 cm</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500">Breikkanir</label>
+                <select
+                  value={widener}
+                  onChange={e => setWidener(e.target.value as 'none' | '0.55m' | '1.05m')}
+                  className="mt-1 block w-full rounded-md border-gray-300 text-sm focus:border-brand-accent focus:ring-brand-accent"
+                  title="Veldu breikkanir"
+                >
+                  <option value="none">Engar</option>
+                  <option value="0.55m">0,55 m</option>
+                  <option value="1.05m">1,05 m</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 pt-4">
+                <input
+                  type="checkbox"
+                  id="toeboards"
+                  checked={toeboards}
+                  onChange={e => setToeboards(e.target.checked)}
+                  className="rounded border-gray-300 text-brand-accent focus:ring-brand-accent"
+                />
+                <label htmlFor="toeboards" className="text-sm text-gray-700">Táborð</label>
+              </div>
+              <div className="flex items-center gap-2 pt-4">
+                <input
+                  type="checkbox"
+                  id="diagonalBraces"
+                  checked={diagonalBraces}
+                  onChange={e => setDiagonalBraces(e.target.checked)}
+                  className="rounded border-gray-300 text-brand-accent focus:ring-brand-accent"
+                />
+                <label htmlFor="diagonalBraces" className="text-sm text-gray-700">Skástífur</label>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Summary */}
@@ -329,8 +404,16 @@ export function ScaffoldCalculator() {
 
       {/* Materials table */}
       <div className="rounded-lg border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 px-5 py-3">
+        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
           <h2 className="font-condensed text-lg font-semibold text-brand-dark">Efnislisti</h2>
+          {facades.length > 1 && (
+            <button
+              onClick={() => setShowPerFacade(!showPerFacade)}
+              className="text-xs text-brand-accent hover:underline"
+            >
+              {showPerFacade ? 'Fela sundurliðun' : 'Sýna sundurliðun á hlið'}
+            </button>
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -364,6 +447,41 @@ export function ScaffoldCalculator() {
           </table>
         </div>
       </div>
+
+      {/* Per-facade breakdown */}
+      {showPerFacade && facades.length > 1 && (
+        <div className="space-y-4">
+          {facadeBreakdowns.map(({ facade, materials }) => (
+            <div key={facade.id} className="rounded-lg border border-gray-200 bg-white">
+              <div className="border-b border-gray-200 bg-gray-50 px-5 py-2">
+                <h3 className="font-condensed text-sm font-semibold text-brand-dark">
+                  {facade.name} — {facade.length}m × {facade.height}m
+                </h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-5 py-2 text-left font-medium text-gray-600">Lýsing</th>
+                      <th className="px-5 py-2 text-right font-medium text-gray-600">Magn</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {Object.entries(materials)
+                      .filter(([, qty]) => qty > 0)
+                      .map(([name, qty]) => (
+                        <tr key={name}>
+                          <td className="px-5 py-1.5">{name}</td>
+                          <td className="px-5 py-1.5 text-right">{qty}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <TemplateNameDialog
         open={templateDialogOpen}

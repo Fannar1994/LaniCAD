@@ -13,6 +13,11 @@ import {
   Layers,
   ClipboardList,
   BarChart3,
+  Warehouse,
+  Grid3x3,
+  RectangleVertical,
+  TowerControl,
+  LayoutGrid,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n'
@@ -34,6 +39,11 @@ const calculatorItems = [
   { to: '/calculator/fence', icon: Fence, tKey: 'nav.fence' },
   { to: '/calculator/scaffolding', icon: Columns3, tKey: 'nav.scaffolding' },
   { to: '/calculator/formwork', icon: Box, tKey: 'nav.formwork' },
+  { to: '/calculator/robusto', icon: Warehouse, tKey: 'nav.robusto' },
+  { to: '/calculator/alufort', icon: LayoutGrid, tKey: 'nav.alufort' },
+  { to: '/calculator/id15', icon: TowerControl, tKey: 'nav.id15' },
+  { to: '/calculator/column', icon: RectangleVertical, tKey: 'nav.column' },
+  { to: '/calculator/topec', icon: Grid3x3, tKey: 'nav.topec' },
   { to: '/calculator/rolling', icon: ArrowUpDown, tKey: 'nav.rolling' },
   { to: '/calculator/ceiling', icon: Ruler, tKey: 'nav.ceiling' },
 ] as const

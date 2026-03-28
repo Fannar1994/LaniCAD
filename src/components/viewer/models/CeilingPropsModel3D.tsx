@@ -196,7 +196,7 @@ export function CeilingPropsModel3D({ propCount, propHeight, beamCount, roomWidt
         )
       })}
 
-      {/* === HT-20 BEAMS (I-section, running along room depth) === */}
+      {/* === HT-20 PRIMARY BEAMS (I-section, running along room depth / Z-axis) === */}
       {Array.from({ length: beamCount }, (_, i) => {
         const spacing = roomWidth / (beamCount + 1)
         const x = -hw + (i + 1) * spacing
@@ -208,6 +208,35 @@ export function CeilingPropsModel3D({ propCount, propHeight, beamCount, roomWidt
           />
         )
       })}
+
+      {/* === HT-20 SECONDARY BEAMS (cross-beams, running along room width / X-axis) === */}
+      {(() => {
+        const secondaryBeamY = beamY + BEAM_H + 0.005
+        const secondaryCount = Math.max(2, Math.ceil(roomDepth / 1.5))
+        return Array.from({ length: secondaryCount }, (_, i) => {
+          const spacing = roomDepth / (secondaryCount + 1)
+          const z = -hd + (i + 1) * spacing
+          return (
+            <group key={`xbeam_${i}`} position={[0, secondaryBeamY, z]} rotation={[0, Math.PI / 2, 0]}>
+              {/* Web (vertical plate) */}
+              <mesh>
+                <boxGeometry args={[BEAM_W * 0.4, BEAM_H * 0.85, roomWidth * 0.85]} />
+                <meshStandardMaterial color="#f5c800" roughness={0.5} />
+              </mesh>
+              {/* Top flange */}
+              <mesh position={[0, BEAM_H * 0.85 / 2 - FLANGE_T / 2, 0]}>
+                <boxGeometry args={[FLANGE_W * 0.9, FLANGE_T, roomWidth * 0.85]} />
+                <meshStandardMaterial color="#e0b000" roughness={0.5} />
+              </mesh>
+              {/* Bottom flange */}
+              <mesh position={[0, -BEAM_H * 0.85 / 2 + FLANGE_T / 2, 0]}>
+                <boxGeometry args={[FLANGE_W * 0.9, FLANGE_T, roomWidth * 0.85]} />
+                <meshStandardMaterial color="#e0b000" roughness={0.5} />
+              </mesh>
+            </group>
+          )
+        })
+      })()}
 
       {/* === PLYWOOD DECKING (on top of beams) === */}
       <mesh position={[0, plywoodY, 0]}>
