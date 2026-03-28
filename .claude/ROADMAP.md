@@ -131,13 +131,13 @@ L├íniCAD is a 2D/3D CAD system for construction equipment rental. It serves f
 > Goal: Transform static drawings into interactive, editable canvases where users sketch and adjust layouts directly
 
 ### 5.1 Interactive 2D Canvas
-- [ ] Integrate React-Konva for interactive 2D drawing (replace static SVG rendering)
-- [ ] Represent equipment (props, beams, panels) as draggable Konva objects in component state
-- [ ] Add mouse/touch handlers for creating new items on the canvas (click to place)
-- [ ] Keyboard shortcuts and context menus for deletion/duplication
-- [ ] Snap-to-grid for precise positioning
+- [x] Integrate React-Konva for interactive 2D drawing (replace static SVG rendering)
+- [x] Represent equipment (props, beams, panels) as draggable Konva objects in component state
+- [x] Add mouse/touch handlers for creating new items on the canvas (click to place)
+- [x] Keyboard shortcuts and context menus for deletion/duplication
+- [x] Snap-to-grid for precise positioning
 - [ ] Export interactive canvas state back to Maker.js/SVG for high-quality PDF output
-- [ ] Bidirectional sync between control panel inputs and canvas objects
+- [x] Bidirectional sync between control panel inputs and canvas objects
 
 ### 5.2 Interactive 3D Editing
 - [ ] Refactor 3D models to store editable geometry state (position, rotation, dimensions per object)
@@ -148,8 +148,8 @@ L├íniCAD is a 2D/3D CAD system for construction equipment rental. It serves f
 - [ ] Synchronize 3D scene changes with calculator form fields and rental cost recomputation
 
 ### 5.3 Shared Infrastructure
-- [ ] Centralize geometry parameters (dimensions, colors, spacing) in shared configuration
-- [ ] Add undo/redo stack for interactive 2D and 3D drawing state
+- [x] Centralize geometry parameters (dimensions, colors, spacing) in shared configuration
+- [x] Add undo/redo stack for interactive 2D and 3D drawing state
 - [ ] Persist interactive geometry (object positions/dimensions) in project save/load
 - [ ] Unify 2D and 3D object models so both views reference the same state
 
